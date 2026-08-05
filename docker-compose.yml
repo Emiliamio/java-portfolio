@@ -2,16 +2,14 @@
 # 日志审计系统 — Docker Compose 编排
 # ============================================
 # 一条命令启动所有服务:
-#   docker-compose up -d
+#   docker compose up -d
 #
 # 停止:
-#   docker-compose down
+#   docker compose down
 #
 # 停止并删除数据卷（重置数据库）:
-#   docker-compose down -v
+#   docker compose down -v
 # ============================================
-
-version: "3.9"
 
 services:
 
