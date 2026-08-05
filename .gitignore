@@ -30,6 +30,7 @@ Desktop.ini
 
 # Logs
 *.log
+!sample_logs/*.log
 
 # Docker
 docker-compose.override.yml
