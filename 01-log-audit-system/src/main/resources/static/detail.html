@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>日志详情 — AuditVault</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand">
+    <span class="nav-indicator"></span>
+    <span>AuditVault</span>
+  </div>
+  <div class="nav-tabs">
+    <a href="index.html" class="nav-tab">日志查询</a>
+    <a href="dashboard.html" class="nav-tab">统计面板</a>
+  </div>
+  <div class="nav-status">—</div>
+</nav>
+
+<main class="main">
+  <a href="index.html" class="detail-back">
+    <span class="detail-back-arrow">←</span> 返回日志列表
+  </a>
+
+  <div class="detail-card">
+    <div class="detail-card-header">
+      <h2>日志条目详情</h2>
+      <span class="detail-id" id="detailId">—</span>
+    </div>
+    <div class="detail-grid" id="detailGrid">
+      <div class="detail-item full">
+        <div class="detail-item-label">加载中…</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+(function(){
+  const id = new URLSearchParams(window.location.search).get('id');
+  if (!id) {
+    document.getElementById('detailGrid').innerHTML =
+      '<div class="detail-item full"><div class="detail-item-label">错误</div><div class="detail-item-value">缺少日志 ID 参数</div></div>';
+    return;
+  }
+
+  document.getElementById('detailId').textContent = '#' + id;
+
+  fetch('/api/logs/' + id)
+    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(item => {
+      const fields = [
+        { label: '时间戳',      value: fmt(item.timestamp) },
+        { label: '来源 IP',     value: esc(item.ipAddress) },
+        { label: '操作用户',    value: esc(item.username) },
+        { label: '操作类型',    value: esc(item.operation) },
+        { label: '操作结果',    value: esc(item.operationResult) },
+        { label: '严重级别',    value: item.severity },
+        { label: '来源文件',    value: esc(item.sourceFile) || '—' },
+        { label: '记录时间',    value: fmt(item.createdAt) },
+      ];
+
+      const detail = item.detail || '无';
+
+      let html = fields.map(f =>
+        `<div class="detail-item">
+          <div class="detail-item-label">${f.label}</div>
+          <div class="detail-item-value">${f.value || '—'}</div>
+        </div>`
+      ).join('');
+
+      html += `<div class="detail-item full">
+        <div class="detail-item-label">操作详情</div>
+        <div class="detail-item-value is-detail">${esc(detail)}</div>
+      </div>`;
+
+      document.getElementById('detailGrid').innerHTML = html;
+    })
+    .catch(() => {
+      document.getElementById('detailGrid').innerHTML =
+        '<div class="detail-item full"><div class="detail-item-label">加载失败</div><div class="detail-item-value">无法获取日志详情，请确认后端服务已启动</div></div>';
+    });
+
+  function fmt(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    const pad = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  }
+  function esc(s) { return s ? String(s).replace(/</g, '&lt;').replace(/>/g, '&gt;') : ''; }
+})();
+</script>
+</body>
+</html>

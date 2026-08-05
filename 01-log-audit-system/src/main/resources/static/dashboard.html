@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>统计面板 — AuditVault</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand">
+    <span class="nav-indicator" id="navIndicator"></span>
+    <span>AuditVault</span>
+  </div>
+  <div class="nav-tabs">
+    <a href="index.html" class="nav-tab">日志查询</a>
+    <a href="dashboard.html" class="nav-tab active">统计面板</a>
+  </div>
+  <div class="nav-status" id="navStatus">—</div>
+</nav>
+
+<main class="main">
+
+  <div class="dash-header">
+    <h2>系统概览</h2>
+    <p>实时监控日志审计系统运行指标</p>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat-cell total">
+      <div class="stat-number" id="dTotal">—</div>
+      <div class="stat-label">今日日志总量</div>
+      <div class="stat-sub">事件计数</div>
+    </div>
+    <div class="stat-cell err">
+      <div class="stat-number" id="dAbnormal">—</div>
+      <div class="stat-label">异常日志</div>
+      <div class="stat-sub">ERROR + CRITICAL</div>
+    </div>
+    <div class="stat-cell ip">
+      <div class="stat-number" id="dRate">—</div>
+      <div class="stat-label">异常率</div>
+      <div class="stat-sub" id="dRateSub">异常 / 总量</div>
+    </div>
+    <div class="stat-cell status">
+      <div class="stat-number" id="dStatus">运行中</div>
+      <div class="stat-label">服务状态</div>
+      <div class="stat-sub" id="dStatusSub">端口 8080</div>
+    </div>
+  </div>
+
+  <div class="dash-grid">
+    <!-- System Metrics -->
+    <div class="dash-panel">
+      <div class="dash-panel-header">系统指标</div>
+      <div class="dash-metric-list" id="sysMetrics">
+        <div class="dash-metric">
+          <span class="dash-metric-name">加载中…</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status Overview -->
+    <div class="dash-panel">
+      <div class="dash-panel-header">运行状态</div>
+      <div class="dash-metric-list" id="runStatus">
+        <div class="dash-metric">
+          <span class="dash-metric-name">加载中…</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+
+  fetch('/api/logs/today-stats')
+    .then(r => r.json())
+    .then(d => {
+      const total = d.total || 0;
+      const abnormal = d.abnormal || 0;
+      const rate = total > 0 ? ((abnormal / total) * 100).toFixed(1) : 0;
+
+      $('dTotal').textContent    = total.toLocaleString();
+      $('dAbnormal').textContent = abnormal.toLocaleString();
+      $('dRate').textContent     = rate + '%';
+      $('dRateSub').textContent  = `${abnormal} / ${total}`;
+
+      // Nav indicator
+      $('navIndicator').className = abnormal > 0 ? 'nav-indicator warn' : 'nav-indicator';
+      $('navStatus').textContent = `UTC+8 · ${new Date().toLocaleTimeString('zh-CN', { hour:'2-digit', minute:'2-digit' })}`;
+
+      // System metrics panel
+      const anomalyRate = rate > 10 ? 'danger' : (rate > 3 ? 'warn' : '');
+      $('sysMetrics').innerHTML = `
+        <div class="dash-metric">
+          <span class="dash-metric-name">今日事件总量</span>
+          <span class="dash-metric-value">${total.toLocaleString()} 条</span>
+        </div>
+        <div class="dash-metric">
+          <span class="dash-metric-name">异常事件</span>
+          <span class="dash-metric-value" style="color:var(--accent-red)">${abnormal.toLocaleString()} 条</span>
+        </div>
+        <div class="dash-metric">
+          <span class="dash-metric-name">异常率</span>
+          <span class="dash-metric-value">
+            ${rate}%
+            <div class="dash-bar-wrap">
+              <div class="dash-bar-fill ${anomalyRate}" style="width:${Math.min(rate, 100)}%"></div>
+            </div>
+          </span>
+        </div>
+        <div class="dash-metric">
+          <span class="dash-metric-name">数据库</span>
+          <span class="dash-metric-value" style="color:var(--accent-green)">已连接</span>
+        </div>
+      `;
+
+      // Run status panel
+      $('runStatus').innerHTML = `
+        <div class="dash-metric">
+          <span class="dash-metric-name">API 服务</span>
+          <span class="dash-metric-value" style="color:var(--accent-green)">运行中</span>
+        </div>
+        <div class="dash-metric">
+          <span class="dash-metric-name">监听端口</span>
+          <span class="dash-metric-value" style="font-family:var(--font-mono)">:8080</span>
+        </div>
+        <div class="dash-metric">
+          <span class="dash-metric-name">启动时间</span>
+          <span class="dash-metric-value">${new Date().toLocaleDateString('zh-CN')}</span>
+        </div>
+        <div class="dash-metric">
+          <span class="dash-metric-name">时区</span>
+          <span class="dash-metric-value">Asia/Shanghai (UTC+8)</span>
+        </div>
+      `;
+    })
+    .catch(() => {
+      $('dTotal').textContent    = '—';
+      $('dAbnormal').textContent = '—';
+      $('dRate').textContent     = '—';
+      $('dStatus').textContent   = '离线';
+      $('dStatusSub').textContent = '无法连接后端';
+      $('dStatus').style.color = 'var(--accent-red)';
+      $('navIndicator').className = 'nav-indicator off';
+      $('navStatus').textContent = '未连接';
+      $('sysMetrics').innerHTML = '<div class="dash-metric"><span class="dash-metric-name">无法获取系统指标</span></div>';
+      $('runStatus').innerHTML = '<div class="dash-metric"><span class="dash-metric-name">无法获取运行状态</span></div>';
+    });
+})();
+</script>
+</body>
+</html>

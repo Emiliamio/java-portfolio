@@ -1,0 +1,52 @@
+# Java
+target/
+*.class
+*.jar
+*.war
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Environment (CRITICAL: never commit!)
+.env
+*.env
+!env.example
+!.env.example
+
+# Logs
+*.log
+
+# Docker
+docker-compose.override.yml
+
+# Node
+node_modules/
+package-lock.json
+
+# Maven wrapper (use system maven)
+.mvn/
+
+# .claude internal files
+.claude/
+.playwright-mcp/
+
+# Claude session outputs
+.claude/
+
+# Hexo blog (not part of the portfolio)
+02-tech-blog/

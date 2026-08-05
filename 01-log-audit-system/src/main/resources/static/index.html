@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>AuditVault — 日志审计</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand">
+    <span class="nav-indicator" id="navIndicator"></span>
+    <span>AuditVault</span>
+  </div>
+  <div class="nav-tabs">
+    <a href="index.html" class="nav-tab active">日志查询</a>
+    <a href="dashboard.html" class="nav-tab">统计面板</a>
+  </div>
+  <div class="nav-status" id="navStatus">—</div>
+</nav>
+
+<main class="main">
+
+  <!-- ── Stat Row ── -->
+  <div class="stat-row">
+    <div class="stat-cell total">
+      <div class="stat-number" id="statTotal">—</div>
+      <div class="stat-label">今日事件</div>
+      <div class="stat-sub" id="statDate">—</div>
+    </div>
+    <div class="stat-cell err">
+      <div class="stat-number" id="statAbnormal">—</div>
+      <div class="stat-label">异常事件</div>
+      <div class="stat-sub" id="statRate">—</div>
+    </div>
+    <div class="stat-cell ip">
+      <div class="stat-number" id="statIps">—</div>
+      <div class="stat-label">活跃 IP</div>
+      <div class="stat-sub">过去 24 小时</div>
+    </div>
+    <div class="stat-cell status">
+      <div class="stat-number" id="statStatus">空闲</div>
+      <div class="stat-label">系统状态</div>
+      <div class="stat-sub" id="statPort">端口 8080</div>
+    </div>
+  </div>
+
+  <!-- ── Filter Bar ── -->
+  <div class="filter-bar">
+    <input class="filter-input" type="text" id="ipFilter" placeholder="按 IP 地址搜索…" autocomplete="off">
+    <select class="filter-select" id="operationFilter">
+      <option value="">全部操作</option>
+      <option value="LOGIN">LOGIN</option>
+      <option value="LOGOUT">LOGOUT</option>
+      <option value="QUERY">QUERY</option>
+      <option value="DELETE">DELETE</option>
+      <option value="EXPORT">EXPORT</option>
+      <option value="UPLOAD">UPLOAD</option>
+      <option value="UPDATE">UPDATE</option>
+      <option value="EXECUTE">EXECUTE</option>
+      <option value="CONFIG">CONFIG</option>
+      <option value="ACCESS">ACCESS</option>
+    </select>
+    <select class="filter-select" id="severityFilter">
+      <option value="">全部级别</option>
+      <option value="INFO">INFO</option>
+      <option value="WARN">WARN</option>
+      <option value="ERROR">ERROR</option>
+      <option value="CRITICAL">CRITICAL</option>
+    </select>
+    <button class="btn btn-primary" id="btnSearch" onclick="search(1)">查询</button>
+    <button class="btn btn-export" onclick="exportExcel()">导出 Excel</button>
+    <span style="font-family:var(--font-mono);font-size:0.68rem;color:var(--text-tertiary);margin-left:auto;" id="resultMeta"></span>
+  </div>
+
+  <!-- ── Table ── -->
+  <div class="table-shell">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:60px;">#</th>
+          <th style="width:170px;">时间戳</th>
+          <th style="width:140px;">源 IP</th>
+          <th style="width:90px;">用户</th>
+          <th style="width:90px;">操作</th>
+          <th style="width:80px;">结果</th>
+          <th style="width:90px;">级别</th>
+          <th>详情</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- ── Pagination ── -->
+  <div class="pgn" id="pagination"></div>
+
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

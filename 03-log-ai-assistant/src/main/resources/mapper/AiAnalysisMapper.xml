@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.logai.mapper.AiAnalysisMapper">
+
+    <resultMap id="AiAnalysisMap" type="com.logai.entity.AiAnalysis">
+        <id property="id" column="id"/>
+        <result property="logContent" column="log_content"/>
+        <result property="logSummary" column="log_summary"/>
+        <result property="operationType" column="operation_type"/>
+        <result property="riskLevel" column="risk_level"/>
+        <result property="needIntervention" column="need_intervention"/>
+        <result property="aiSuggestion" column="ai_suggestion"/>
+        <result property="sourceIp" column="source_ip"/>
+        <result property="modelUsed" column="model_used"/>
+        <result property="analysisTimeMs" column="analysis_time_ms"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.logai.entity.AiAnalysis"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ai_analysis (
+            log_content, log_summary, operation_type, risk_level,
+            need_intervention, ai_suggestion, source_ip,
+            model_used, analysis_time_ms
+        ) VALUES (
+            #{logContent}, #{logSummary}, #{operationType}, #{riskLevel},
+            #{needIntervention}, #{aiSuggestion}, #{sourceIp},
+            #{modelUsed}, #{analysisTimeMs}
+        )
+    </insert>
+
+    <select id="findById" resultMap="AiAnalysisMap">
+        SELECT * FROM ai_analysis WHERE id = #{id}
+    </select>
+
+    <select id="findRecent" resultMap="AiAnalysisMap">
+        SELECT * FROM ai_analysis ORDER BY created_at DESC LIMIT #{limit}
+    </select>
+
+    <select id="countTotal" resultType="int">
+        SELECT COUNT(*) FROM ai_analysis
+    </select>
+
+    <delete id="deleteById">
+        DELETE FROM ai_analysis WHERE id = #{id}
+    </delete>
+
+</mapper>

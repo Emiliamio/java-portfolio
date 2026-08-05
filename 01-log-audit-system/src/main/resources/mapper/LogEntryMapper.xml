@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.logaudit.mapper.LogEntryMapper">
+
+    <!-- 结果映射：数据库列名 → 实体类字段 -->
+    <resultMap id="logEntryMap" type="com.logaudit.entity.LogEntry">
+        <id column="id" property="id"/>
+        <result column="timestamp" property="timestamp"/>
+        <result column="ip_address" property="ipAddress"/>
+        <result column="username" property="username"/>
+        <result column="operation" property="operation"/>
+        <result column="operation_result" property="operationResult"/>
+        <result column="detail" property="detail"/>
+        <result column="severity" property="severity"/>
+        <result column="source_file" property="sourceFile"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <!-- 分页查询日志（多条件筛选） -->
+    <select id="findByConditions" resultMap="logEntryMap">
+        SELECT * FROM log_entry
+        <where>
+            <if test="startTime != null">
+                AND timestamp &gt;= #{startTime}
+            </if>
+            <if test="endTime != null">
+                AND timestamp &lt;= #{endTime}
+            </if>
+            <if test="ipAddress != null and ipAddress != ''">
+                AND ip_address = #{ipAddress}
+            </if>
+            <if test="operation != null and operation != ''">
+                AND operation = #{operation}
+            </if>
+            <if test="severity != null and severity != ''">
+                AND severity = #{severity}
+            </if>
+        </where>
+        ORDER BY timestamp DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <!-- 统计符合条件的总条数（分页用） -->
+    <select id="countByConditions" resultType="long">
+        SELECT COUNT(*) FROM log_entry
+        <where>
+            <if test="startTime != null">
+                AND timestamp &gt;= #{startTime}
+            </if>
+            <if test="endTime != null">
+                AND timestamp &lt;= #{endTime}
+            </if>
+            <if test="ipAddress != null and ipAddress != ''">
+                AND ip_address = #{ipAddress}
+            </if>
+            <if test="operation != null and operation != ''">
+                AND operation = #{operation}
+            </if>
+            <if test="severity != null and severity != ''">
+                AND severity = #{severity}
+            </if>
+        </where>
+    </select>
+
+    <!-- 根据ID查详情 -->
+    <select id="findById" resultMap="logEntryMap">
+        SELECT * FROM log_entry WHERE id = #{id}
+    </select>
+
+    <!-- 批量插入（异步导入用） -->
+    <insert id="batchInsert" parameterType="list">
+        INSERT INTO log_entry (timestamp, ip_address, username, operation, operation_result, detail, severity, source_file)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.timestamp}, #{item.ipAddress}, #{item.username},
+            #{item.operation}, #{item.operationResult}, #{item.detail},
+            #{item.severity}, #{item.sourceFile})
+        </foreach>
+    </insert>
+
+    <!-- 今日统计 -->
+    <select id="todayStats" resultType="map">
+        SELECT
+            COUNT(*) AS total,
+            SUM(CASE WHEN severity = 'ERROR' OR severity = 'CRITICAL' THEN 1 ELSE 0 END) AS abnormal
+        FROM log_entry
+        WHERE DATE(timestamp) = CURDATE()
+    </select>
+</mapper>

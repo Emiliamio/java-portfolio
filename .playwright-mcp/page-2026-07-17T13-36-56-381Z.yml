@@ -1,0 +1,186 @@
+- generic [active] [ref=f7e1]:
+  - generic [ref=f7e3]:
+    - img "avatar" [ref=f7e5]
+    - generic [ref=f7e6]:
+      - link "文章 2" [ref=f7e7] [cursor=pointer]:
+        - /url: /archives/
+        - generic [ref=f7e8]: 文章
+        - generic [ref=f7e9]: "2"
+      - link "标签 6" [ref=f7e10] [cursor=pointer]:
+        - /url: /tags/
+        - generic [ref=f7e11]: 标签
+        - generic [ref=f7e12]: "6"
+      - link "分类 1" [ref=f7e13] [cursor=pointer]:
+        - /url: /categories/
+        - generic [ref=f7e14]: 分类
+        - generic [ref=f7e15]: "1"
+    - generic [ref=f7e16]:
+      - link "首页" [ref=f7e18] [cursor=pointer]:
+        - /url: /
+      - link "归档" [ref=f7e21] [cursor=pointer]:
+        - /url: /archives/
+      - link "标签" [ref=f7e24] [cursor=pointer]:
+        - /url: /tags/
+      - link "分类" [ref=f7e27] [cursor=pointer]:
+        - /url: /categories/
+      - link "关于" [ref=f7e30] [cursor=pointer]:
+        - /url: /about/
+  - generic [ref=f7e32]:
+    - banner [ref=f7e33]:
+      - navigation [ref=f7e34]:
+        - link "Mio的技术博客" [ref=f7e36] [cursor=pointer]:
+          - /url: /
+        - generic [ref=f7e38]:
+          - link "首页" [ref=f7e40] [cursor=pointer]:
+            - /url: /
+          - link "归档" [ref=f7e43] [cursor=pointer]:
+            - /url: /archives/
+          - link "标签" [ref=f7e46] [cursor=pointer]:
+            - /url: /tags/
+          - link "分类" [ref=f7e49] [cursor=pointer]:
+            - /url: /categories/
+          - link "关于" [ref=f7e52] [cursor=pointer]:
+            - /url: /about/
+      - generic [ref=f7e57]:
+        - heading "Mio的技术博客" [level=1] [ref=f7e58]
+        - link "GitHub" [ref=f7e60] [cursor=pointer]:
+          - /url: https://github.com/Emiliamio
+    - main [ref=f7e64]:
+      - generic [ref=f7e66]:
+        - generic [ref=f7e68]:
+          - link "从零搭建日志审计系统——我的Spring Boot全栈项目复盘" [ref=f7e69] [cursor=pointer]:
+            - /url: /2026/07/17/%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%97%A5%E5%BF%97%E5%AE%A1%E8%AE%A1%E7%B3%BB%E7%BB%9F-%E6%88%91%E7%9A%84Spring-Boot%E5%85%A8%E6%A0%88%E9%A1%B9%E7%9B%AE%E5%A4%8D%E7%9B%98/
+          - generic [ref=f7e70]:
+            - generic [ref=f7e71]:
+              - text: 发表于
+              - time [ref=f7e73]: 2026-07-17
+            - generic [ref=f7e74]:
+              - text: "|"
+              - link "项目复盘" [ref=f7e76] [cursor=pointer]:
+                - /url: /categories/%E9%A1%B9%E7%9B%AE%E5%A4%8D%E7%9B%98/
+            - generic [ref=f7e77]:
+              - text: "|"
+              - link "Spring Boot" [ref=f7e79] [cursor=pointer]:
+                - /url: /tags/Spring-Boot/
+              - text: •
+              - link "Java" [ref=f7e81] [cursor=pointer]:
+                - /url: /tags/Java/
+              - text: •
+              - link "全栈" [ref=f7e83] [cursor=pointer]:
+                - /url: /tags/%E5%85%A8%E6%A0%88/
+              - text: •
+              - link "MySQL" [ref=f7e85] [cursor=pointer]:
+                - /url: /tags/MySQL/
+              - text: •
+              - link "Redis" [ref=f7e87] [cursor=pointer]:
+                - /url: /tags/Redis/
+              - text: •
+              - link "日志审计" [ref=f7e89] [cursor=pointer]:
+                - /url: /tags/%E6%97%A5%E5%BF%97%E5%AE%A1%E8%AE%A1/
+          - generic [ref=f7e90]: 项目背景大三暑假找实习前，我决定做一个能拿得出手的全栈项目。结合之前了解到的企业安全审计需求，选择做一个日志审计查询系统。 这个项目的目标很明确：不是做一个课程作业，而是模拟一个准生产级系统——有完整的前后端分离、有数据库索引优化、有异步处理、有操作审计自闭环。 技术选型 层级 技术 后端框架 Spring Boot 3.2 + JDK 17 数据库 MySQL 8 + MyBatis + HikariCP 缓存 Redis + Lettuce 异步处理 自定义线程池 + @Async 文件导出 Apache POI (Excel) 前端 原生 HTML + CSS + JavaScript（控制台风） 选 Spring Boot 而不是其他框架的原因很简单：实习岗位的主流技术栈就是它。用 MyBatis 而不是 JPA 是因为日志查询需要多条件动态筛选，MyBatis 的动态 SQL 比 JPA 的 Criteria API 直观得多。 数据库设计——索引是核心三张表：user（用户）、log_entry（日志记录）、audit_log（操作审...
+        - generic [ref=f7e92]:
+          - link "fix-style" [ref=f7e93] [cursor=pointer]:
+            - /url: /2026/07/17/theme-fix/
+          - generic [ref=f7e95]:
+            - text: 发表于
+            - time [ref=f7e97]: 2026-07-17
+      - generic [ref=f7e98]:
+        - generic [ref=f7e99]:
+          - img "avatar" [ref=f7e101]
+          - generic [ref=f7e102]: Emiliamio
+          - generic [ref=f7e103]:
+            - link "文章 2" [ref=f7e104] [cursor=pointer]:
+              - /url: /archives/
+              - generic [ref=f7e105]: 文章
+              - generic [ref=f7e106]: "2"
+            - link "标签 6" [ref=f7e107] [cursor=pointer]:
+              - /url: /tags/
+              - generic [ref=f7e108]: 标签
+              - generic [ref=f7e109]: "6"
+            - link "分类 1" [ref=f7e110] [cursor=pointer]:
+              - /url: /categories/
+              - generic [ref=f7e111]: 分类
+              - generic [ref=f7e112]: "1"
+          - link "Follow Me" [ref=f7e113] [cursor=pointer]:
+            - /url: https://github.com/xxxxxx
+          - link "GitHub" [ref=f7e116] [cursor=pointer]:
+            - /url: https://github.com/Emiliamio
+        - generic [ref=f7e118]:
+          - generic [ref=f7e119]: 公告
+          - generic [ref=f7e121]: This is my Blog
+        - generic [ref=f7e122]:
+          - generic [ref=f7e123]:
+            - generic [ref=f7e124]: 最新文章
+            - generic [ref=f7e126]:
+              - generic [ref=f7e128]:
+                - link "从零搭建日志审计系统——我的Spring Boot全栈项目复盘" [ref=f7e129] [cursor=pointer]:
+                  - /url: /2026/07/17/%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%97%A5%E5%BF%97%E5%AE%A1%E8%AE%A1%E7%B3%BB%E7%BB%9F-%E6%88%91%E7%9A%84Spring-Boot%E5%85%A8%E6%A0%88%E9%A1%B9%E7%9B%AE%E5%A4%8D%E7%9B%98/
+                - time [ref=f7e130]: 2026-07-17
+              - generic [ref=f7e132]:
+                - link "fix-style" [ref=f7e133] [cursor=pointer]:
+                  - /url: /2026/07/17/theme-fix/
+                - time [ref=f7e134]: 2026-07-17
+          - generic [ref=f7e135]:
+            - generic [ref=f7e136]: 分类
+            - list [ref=f7e138]:
+              - listitem [ref=f7e139]:
+                - link "项目复盘1" [ref=f7e140] [cursor=pointer]:
+                  - /url: /categories/%E9%A1%B9%E7%9B%AE%E5%A4%8D%E7%9B%98/
+          - generic [ref=f7e141]:
+            - generic [ref=f7e142]: 标签
+            - generic [ref=f7e144]:
+              - link "Java" [ref=f7e145] [cursor=pointer]:
+                - /url: /tags/Java/
+              - link "MySQL" [ref=f7e146] [cursor=pointer]:
+                - /url: /tags/MySQL/
+              - link "全栈" [ref=f7e147] [cursor=pointer]:
+                - /url: /tags/%E5%85%A8%E6%A0%88/
+              - link "日志审计" [ref=f7e148] [cursor=pointer]:
+                - /url: /tags/%E6%97%A5%E5%BF%97%E5%AE%A1%E8%AE%A1/
+              - link "Redis" [ref=f7e149] [cursor=pointer]:
+                - /url: /tags/Redis/
+              - link "Spring Boot" [ref=f7e150] [cursor=pointer]:
+                - /url: /tags/Spring-Boot/
+          - generic [ref=f7e151]:
+            - generic [ref=f7e152]: 归档
+            - list [ref=f7e154]:
+              - listitem [ref=f7e155]:
+                - link "七月 2026 2" [ref=f7e156] [cursor=pointer]:
+                  - /url: /archives/2026/07/
+          - generic [ref=f7e157]:
+            - generic [ref=f7e158]: 网站信息
+            - generic [ref=f7e160]:
+              - generic [ref=f7e161]:
+                - generic [ref=f7e162]: "文章数目 :"
+                - generic [ref=f7e163]: "2"
+              - generic [ref=f7e164]:
+                - generic [ref=f7e165]: "本站总字数 :"
+                - generic [ref=f7e166]: 1.1k
+              - generic [ref=f7e167]:
+                - generic [ref=f7e168]: "本站访客数 :"
+                - generic [ref=f7e169]: "56122536"
+              - generic [ref=f7e170]:
+                - generic [ref=f7e171]: "本站总浏览量 :"
+                - generic [ref=f7e172]: "79759505"
+              - generic [ref=f7e173]:
+                - generic [ref=f7e174]: "最后更新时间 :"
+                - generic [ref=f7e175]: 1 分钟前
+    - contentinfo [ref=f7e176]:
+      - generic [ref=f7e177]:
+        - generic [ref=f7e178]:
+          - text: © 2026 By Emiliamio
+          - generic [ref=f7e179]:
+            - text: 框架
+            - link "Hexo 8.1.2" [ref=f7e180] [cursor=pointer]:
+              - /url: https://hexo.io
+            - text: "|主题"
+            - link "Butterfly 5.5.5" [ref=f7e181] [cursor=pointer]:
+              - /url: https://github.com/jerryc127/hexo-theme-butterfly
+        - generic [ref=f7e182]: Powered by Hexo and Butterfly | Umaru
+  - generic [ref=f7e183]:
+    - generic [ref=f7e184]:
+      - button "日间和夜间模式切换" [ref=f7e185]
+      - button "单栏和双栏切换" [ref=f7e187]
+    - generic [ref=f7e189]:
+      - button "设置" [ref=f7e190]
+      - button "回到顶部" [ref=f7e192]
