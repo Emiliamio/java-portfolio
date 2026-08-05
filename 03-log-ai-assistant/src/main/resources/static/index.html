@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Nexus AI — 日志智能分析</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- Top Bar -->
+<header class="topbar">
+  <div class="topbar-left">
+    <span class="topbar-dot" id="apiDot"></span>
+    <span>Nexus AI</span>
+  </div>
+  <div class="topbar-right" id="topbarRight">
+    <span id="topTime">—</span>
+    <span id="topCount">0 次分析</span>
+  </div>
+</header>
+
+<!-- Main Grid -->
+<div class="layout">
+
+  <!-- Left: Input + Result -->
+  <main class="panel-left">
+
+    <h1>日志智能分析<span> — 粘贴一段日志，AI 为你解读</span></h1>
+
+    <!-- Quick chips -->
+    <div class="chips">
+      <button class="chip" data-preset="bruteforce">暴力破解</button>
+      <button class="chip" data-preset="sqli">SQL 注入</button>
+      <button class="chip" data-preset="xss">XSS 攻击</button>
+      <button class="chip" data-preset="traversal">路径遍历</button>
+      <button class="chip" data-preset="normal">正常操作</button>
+      <button class="chip" data-preset="denied">未授权访问</button>
+    </div>
+
+    <!-- Input -->
+    <div class="input-shell">
+      <textarea id="logInput"
+        rows="8"
+        maxlength="5000"
+        placeholder="在此粘贴日志文本&hellip;
+
+2025-01-15 09:20:00 172.31.0.50 User attacker LOGIN FAIL &quot;SQL injection: ' OR '1'='1&quot; CRITICAL auth-service.log"
+      ></textarea>
+      <div class="input-footer">
+        <span class="char-count" id="charCount">0 / 5000</span>
+        <button class="btn btn-primary" id="analyzeBtn" disabled onclick="analyze()">分析</button>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="inline-loading hidden" id="loadingBlock">
+      <span class="progress-dots"><span></span><span></span><span></span></span>
+      正在分析日志…
+    </div>
+
+    <!-- Error -->
+    <div class="inline-error hidden" id="errorBlock"></div>
+
+    <!-- Result -->
+    <div class="result-card hidden" id="resultCard">
+      <div class="result-header">
+        <h3>分析报告</h3>
+        <span class="time-cost" id="resMeta">—</span>
+      </div>
+      <div class="result-body">
+        <div class="result-tags" id="resTags"></div>
+        <div class="result-block">
+          <div class="result-block-label">摘要</div>
+          <div class="result-block-text" id="resSummary">—</div>
+        </div>
+        <div class="result-block">
+          <div class="result-block-label">处置建议</div>
+          <div class="result-block-text suggestion" id="resSuggestion">—</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Right: History -->
+  <aside class="panel-right">
+    <div class="panel-right-header">
+      <h2>分析历史</h2>
+      <span class="count" id="historyCount">0 条记录</span>
+    </div>
+    <div class="history-list" id="historyList">
+      <div class="history-none">暂无分析记录<br><span style="font-size:0.8rem;">提交一条日志后，这里会出现历史</span></div>
+    </div>
+  </aside>
+
+</div>
+
+<!-- Detail Overlay -->
+<div class="overlay hidden" id="detailOverlay">
+  <div class="overlay-bg"></div>
+  <div class="overlay-panel">
+    <div class="overlay-panel-header">
+      <h3>分析详情</h3>
+      <button class="overlay-close" id="closeOverlay">&times;</button>
+    </div>
+    <div class="overlay-body" id="overlayBody"></div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>

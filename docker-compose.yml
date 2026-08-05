@@ -1,0 +1,114 @@
+# ============================================
+# 日志审计系统 — Docker Compose 编排
+# ============================================
+# 一条命令启动所有服务:
+#   docker-compose up -d
+#
+# 停止:
+#   docker-compose down
+#
+# 停止并删除数据卷（重置数据库）:
+#   docker-compose down -v
+# ============================================
+
+version: "3.9"
+
+services:
+
+  # ─── MySQL 8.0 ───────────────────────────
+  mysql:
+    image: mysql:8.0
+    container_name: audit-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123456}
+      MYSQL_DATABASE: log_audit
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATION: utf8mb4_unicode_ci
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./01-log-audit-system/src/main/resources/sql/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./03-log-ai-assistant/src/main/resources/sql/schema.sql:/docker-entrypoint-initdb.d/02-ai-schema.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root123456}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - audit-net
+
+  # ─── Redis 7 ────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: audit-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - audit-net
+
+  # ─── 项目一：日志审计查询系统 ────────────
+  log-audit:
+    build:
+      context: ./01-log-audit-system
+      dockerfile: Dockerfile
+    container_name: audit-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/log_audit?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123456}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - audit-net
+
+  # ─── 项目三：日志智能分析助手 ────────────
+  log-ai:
+    build:
+      context: ./03-log-ai-assistant
+      dockerfile: Dockerfile
+    container_name: audit-ai
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/log_audit?useUnicode=true&characterEncoding=utf8mb4&serverTimezone=Asia/Shanghai
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123456}
+      AI_API_KEY: ${AI_API_KEY}
+      AI_API_URL: ${AI_API_URL:-https://api.anthropic.com/v1/messages}
+      AI_MODEL: ${AI_MODEL:-claude-sonnet-5-20251001}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - audit-net
+
+volumes:
+  mysql_data:
+    name: audit_mysql_data
+  redis_data:
+    name: audit_redis_data
+
+networks:
+  audit-net:
+    name: audit_network
+    driver: bridge

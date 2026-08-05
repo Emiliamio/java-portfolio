@@ -1,0 +1,50 @@
+timestamp,ip_address,username,operation,operation_result,detail,severity,source_file
+2025-01-15 08:00:01,192.168.1.10,admin,LOGIN,SUCCESS,"User admin logged in from workstation",INFO,auth-service.log
+2025-01-15 08:00:05,10.0.0.55,zhangsan,LOGIN,FAIL,"Invalid password attempt",WARN,auth-service.log
+2025-01-15 08:00:12,10.0.0.55,zhangsan,LOGIN,FAIL,"Invalid password attempt",WARN,auth-service.log
+2025-01-15 08:00:18,10.0.0.55,zhangsan,LOGIN,FAIL,"Invalid password attempt",WARN,auth-service.log
+2025-01-15 08:00:25,10.0.0.55,zhangsan,LOGIN,FAIL,"Invalid password attempt",WARN,auth-service.log
+2025-01-15 08:00:30,10.0.0.55,zhangsan,LOGIN,FAIL,"Invalid password attempt",WARN,auth-service.log
+2025-01-15 08:00:35,10.0.0.55,zhangsan,LOGIN,FAIL,"Account locked after repeated failures",ERROR,auth-service.log
+2025-01-15 08:01:00,192.168.1.15,lisi,QUERY,SUCCESS,"Query user list with filter: dept=IT",INFO,query-service.log
+2025-01-15 08:02:15,192.168.1.20,wangwu,EXPORT,SUCCESS,"Exported 1500 records to Excel",INFO,export-service.log
+2025-01-15 08:03:00,192.168.1.10,admin,UPDATE,SUCCESS,"Updated user role: zhangsan -> ADMIN",INFO,admin-service.log
+2025-01-15 08:04:30,172.16.0.88,hacker1,LOGIN,FAIL,"Invalid password attempt",WARN,auth-service.log
+2025-01-15 08:04:35,172.16.0.88,hacker1,LOGIN,FAIL,"Invalid password attempt",WARN,auth-service.log
+2025-01-15 08:04:40,172.16.0.88,root,LOGIN,FAIL,"Invalid password attempt for root",WARN,auth-service.log
+2025-01-15 08:04:45,172.16.0.88,root,LOGIN,FAIL,"Invalid password attempt for root",WARN,auth-service.log
+2025-01-15 08:04:50,172.16.0.88,admin,LOGIN,FAIL,"Invalid password attempt",WARN,auth-service.log
+2025-01-15 08:04:55,172.16.0.88,admin,LOGIN,FAIL,"Invalid password attempt",WARN,auth-service.log
+2025-01-15 08:05:00,172.16.0.88,admin,LOGIN,FAIL,"Invalid password attempt",WARN,auth-service.log
+2025-01-15 08:05:05,172.16.0.88,admin,LOGIN,FAIL,"Invalid password attempt",WARN,auth-service.log
+2025-01-15 08:05:10,172.16.0.88,test,LOGIN,FAIL,"Invalid password attempt",WARN,auth-service.log
+2025-01-15 08:05:15,172.16.0.88,test,LOGIN,FAIL,"Brute force detected — IP blocked",ERROR,auth-service.log
+2025-01-15 08:10:00,10.0.0.100,monitor,QUERY,SUCCESS,"Health check OK",DEBUG,monitor-service.log
+2025-01-15 08:15:00,10.0.0.100,monitor,QUERY,SUCCESS,"Health check OK",DEBUG,monitor-service.log
+2025-01-15 08:20:00,192.168.1.30,zhaoliu,DELETE,FAIL,"Permission denied — requires ADMIN role",ERROR,admin-service.log
+2025-01-15 08:25:00,192.168.1.30,zhaoliu,DELETE,FAIL,"Permission denied — requires ADMIN role",ERROR,admin-service.log
+2025-01-15 08:30:00,192.168.1.10,admin,DELETE,SUCCESS,"Deleted expired tokens (247 records)",WARN,admin-service.log
+2025-01-15 08:35:00,192.168.1.10,admin,CONFIG,SUCCESS,"Updated rate-limit: 100 req/min -> 200 req/min",INFO,config-service.log
+2025-01-15 08:40:00,10.0.0.200,scanner,ACCESS,DENIED,"Unauthorized access attempt to /admin",ERROR,gateway.log
+2025-01-15 08:40:05,10.0.0.200,scanner,ACCESS,DENIED,"Unauthorized access attempt to /api/users",ERROR,gateway.log
+2025-01-15 08:40:10,10.0.0.200,scanner,ACCESS,DENIED,"Unauthorized access attempt to /api/config",ERROR,gateway.log
+2025-01-15 08:40:15,10.0.0.200,scanner,ACCESS,DENIED,"Unauthorized access attempt to /actuator",ERROR,gateway.log
+2025-01-15 08:40:20,10.0.0.200,scanner,ACCESS,DENIED,"Path traversal attempt: ../../etc/passwd",CRITICAL,gateway.log
+2025-01-15 08:45:00,192.168.1.50,devops,DOWNLOAD,SUCCESS,"Downloaded log archive: 2025-01-14.tar.gz",INFO,file-service.log
+2025-01-15 08:50:00,192.168.1.55,tester,UPLOAD,SUCCESS,"Uploaded test data: fixtures.json",INFO,file-service.log
+2025-01-15 08:55:00,192.168.1.10,admin,QUERY,SUCCESS,"Audit log query: 2025-01-01 ~ 2025-01-15",INFO,audit-service.log
+2025-01-15 09:00:00,10.0.0.55,zhangsan,LOGIN,SUCCESS,"User zhangsan logged in after password reset",INFO,auth-service.log
+2025-01-15 09:05:00,192.168.1.10,admin,LOGOUT,SUCCESS,"Session ended",INFO,auth-service.log
+2025-01-15 09:10:00,192.168.1.10,admin,LOGIN,SUCCESS,"User admin logged in",INFO,auth-service.log
+2025-01-15 09:15:00,192.168.1.99,guest,LOGIN,FAIL,"Account disabled",WARN,auth-service.log
+2025-01-15 09:20:00,172.31.0.50,attacker,LOGIN,FAIL,"SQL injection attempt in username field",CRITICAL,auth-service.log
+2025-01-15 09:20:05,172.31.0.50,attacker,LOGIN,FAIL,"SQL injection attempt in username field",CRITICAL,auth-service.log
+2025-01-15 09:20:10,172.31.0.50,attacker,LOGIN,FAIL,"XSS attempt in redirect param",CRITICAL,auth-service.log
+2025-01-15 09:20:15,172.31.0.50,attacker,LOGIN,FAIL,"XSS attempt in redirect param",CRITICAL,auth-service.log
+2025-01-15 09:25:00,192.168.1.10,admin,EXECUTE,SUCCESS,"Scheduled job: cleanup_expired_sessions",INFO,job-service.log
+2025-01-15 09:30:00,10.0.0.100,monitor,QUERY,FAIL,"Database connection timeout",ERROR,monitor-service.log
+2025-01-15 09:35:00,10.0.0.100,monitor,QUERY,FAIL,"Database connection timeout",ERROR,monitor-service.log
+2025-01-15 09:40:00,10.0.0.100,monitor,QUERY,FAIL,"Database connection timeout",ERROR,monitor-service.log
+2025-01-15 09:45:00,10.0.0.100,monitor,QUERY,FAIL,"Database connection timeout",ERROR,monitor-service.log
+2025-01-15 09:50:00,10.0.0.100,monitor,QUERY,SUCCESS,"Health check restored",INFO,monitor-service.log
+2025-01-15 10:00:00,192.168.1.10,admin,LOGOUT,SUCCESS,"Session ended",INFO,auth-service.log

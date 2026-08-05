@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>LogScope — 日志解析可视化</title>
+  <style>
+    /* ═══════════════════════════════════════════════
+       LogScope — 日志解析可视化
+       Design: Data Dossier — 数据档案的精确美学
+       ═══════════════════════════════════════════════ */
+    @import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;500;600&family=Inter:wght@400;450;500;600;700&display=swap');
+
+    :root {
+      --bg-page:    #faf9f7;
+      --bg-card:    #ffffff;
+      --bg-raised:  #f5f3ef;
+      --bg-hover:   #f0ede8;
+      --bg-code:    #fbfaf8;
+
+      --border-hairline: #eae5dc;
+      --border-standard: #ddd6cb;
+      --border-active:   #c4bAA2;
+
+      --text-body:      #2d2922;
+      --text-secondary: #6b6560;
+      --text-tertiary:  #96918b;
+      --text-placeholder:#bfb9b2;
+
+      --color-accent:  #c4733a;
+      --color-blue:    #4b7fc5;
+      --color-green:   #5c9170;
+      --color-red:     #c4543e;
+      --color-amber:   #b8860b;
+      --color-violet:  #7b4fc7;
+
+      --red-bg:   #fdf2ef;
+      --green-bg: #eef6f0;
+      --amber-bg: #fdf6e8;
+      --blue-bg:  #eef4fb;
+      --orange-bg:#fdf1e8;
+
+      --font-mono: 'Source Code Pro', 'JetBrains Mono', 'Cascadia Code', 'Consolas', monospace;
+      --font-ui:   'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: var(--bg-page); color: var(--text-body);
+      font-family: var(--font-ui); line-height: 1.55;
+      min-height: 100vh;
+    }
+
+    /* ── Nav ── */
+    .bar {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 52px; padding: 0 32px;
+      background: var(--bg-card); border-bottom: 1px solid var(--border-hairline);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .bar-brand {
+      display: flex; align-items: center; gap: 8px;
+      font-family: var(--font-mono); font-size: 0.85rem; font-weight: 600;
+      color: var(--text-body); letter-spacing: -0.3px; user-select: none;
+    }
+    .bar-brand mark { background: var(--orange-bg); color: var(--color-accent); padding: 1px 6px; border-radius: 2px; }
+    .bar-right {
+      font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-tertiary);
+    }
+
+    /* ── Layout ── */
+    .main { max-width: 1160px; margin: 0 auto; padding: 36px 32px 80px; }
+
+    /* ── Upload Zone ── */
+    .dropzone {
+      border: 2px dashed var(--border-standard); border-radius: 6px;
+      padding: 40px 24px; text-align: center; cursor: pointer;
+      transition: all 160ms; background: var(--bg-card); margin-bottom: 32px;
+    }
+    .dropzone:hover { border-color: var(--border-active); background: var(--bg-raised); }
+    .dropzone.dragover { border-color: var(--color-blue); background: var(--blue-bg); }
+    .dropzone-icon { font-size: 2rem; margin-bottom: 8px; }
+    .dropzone-text { font-size: 0.9rem; color: var(--text-body); font-weight: 500; }
+    .dropzone-hint { font-size: 0.75rem; color: var(--text-tertiary); margin-top: 4px; }
+    .dropzone-file { font-family: var(--font-mono); font-size: 0.75rem; color: var(--color-blue); margin-top: 6px; }
+
+    /* ── Stat Row ── */
+    .kpi-row {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+      background: var(--border-hairline); border: 1px solid var(--border-hairline);
+      border-radius: 4px; overflow: hidden; margin-bottom: 32px;
+    }
+    .kpi {
+      background: var(--bg-card); padding: 20px 22px;
+      text-align: center; transition: background 150ms;
+    }
+    .kpi:hover { background: var(--bg-raised); }
+    .kpi-number { font-family: var(--font-mono); font-size: 2rem; font-weight: 500; letter-spacing: -1px; line-height: 1; margin-bottom: 4px; }
+    .kpi-label { font-size: 0.73rem; color: var(--text-secondary); font-weight: 500; }
+    .kpi-sub  { font-size: 0.65rem; color: var(--text-tertiary); margin-top: 3px; font-family: var(--font-mono); }
+    .kpi-number.blue { color: var(--color-blue); }
+    .kpi-number.red  { color: var(--color-red); }
+    .kpi-number.amber { color: var(--color-amber); }
+    .kpi-number.green { color: var(--color-green); }
+
+    /* ── Section ── */
+    .section { margin-bottom: 36px; }
+    .section-title {
+      font-size: 0.82rem; font-weight: 600; color: var(--text-body);
+      margin-bottom: 14px; letter-spacing: -0.1px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-title .count {
+      font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-tertiary); font-weight: 400;
+    }
+
+    /* ── Suspicious IP Table ── */
+    .table-wrap {
+      background: var(--bg-card); border: 1px solid var(--border-hairline);
+      border-radius: 4px; overflow: hidden;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      padding: 10px 16px; text-align: left;
+      font-family: var(--font-mono); font-size: 0.65rem; font-weight: 600;
+      color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.6px;
+      background: var(--bg-raised); border-bottom: 1px solid var(--border-hairline);
+    }
+    tbody td {
+      padding: 10px 16px; font-family: var(--font-mono); font-size: 0.76rem;
+      color: var(--text-body); border-bottom: 1px solid rgba(234,229,220,0.6);
+    }
+    tbody tr { transition: background 80ms; }
+    tbody tr:hover { background: var(--bg-hover); }
+    tbody tr:last-child td { border-bottom: none; }
+
+    .risk-pill {
+      display: inline-block; padding: 2px 8px; border-radius: 2px;
+      font-size: 0.64rem; font-weight: 600; letter-spacing: 0.3px; text-transform: uppercase;
+    }
+    .risk-pill.HIGH     { background: var(--red-bg); color: var(--color-red); }
+    .risk-pill.MEDIUM   { background: var(--orange-bg); color: var(--color-accent); }
+    .risk-pill.LOW      { background: var(--amber-bg); color: var(--color-amber); }
+    .risk-pill.NORMAL   { background: var(--green-bg); color: var(--color-green); }
+
+    /* severity mini bars */
+    .mini-bar-wrap {
+      display: inline-flex; gap: 1px; height: 16px; align-items: flex-end;
+    }
+    .mini-bar { width: 4px; border-radius: 0; transition: height 0.6s ease; }
+    .mini-bar.CRITICAL { background: var(--color-red); }
+    .mini-bar.ERROR    { background: var(--color-accent); }
+    .mini-bar.WARN     { background: var(--color-amber); }
+    .mini-bar.INFO     { background: var(--color-blue); }
+    .mini-bar.DEBUG    { background: var(--text-tertiary); }
+
+    /* ── Distribution Bars ── */
+    .dist-row {
+      background: var(--bg-card); border: 1px solid var(--border-hairline);
+      border-radius: 4px; padding: 18px 22px; margin-bottom: 16px;
+    }
+    .dist-item { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+    .dist-item:last-child { margin-bottom: 0; }
+    .dist-label {
+      width: 80px; font-family: var(--font-mono); font-size: 0.7rem;
+      color: var(--text-secondary); font-weight: 500; text-align: right;
+    }
+    .dist-bar-track {
+      flex: 1; height: 8px; background: var(--bg-raised); border-radius: 2px; overflow: hidden;
+    }
+    .dist-bar-fill {
+      height: 100%; border-radius: 2px; transition: width 0.8s ease;
+    }
+    .dist-bar-fill.blue   { background: var(--color-blue); }
+    .dist-bar-fill.red    { background: var(--color-red); }
+    .dist-bar-fill.amber  { background: var(--color-amber); }
+    .dist-bar-fill.orange { background: var(--color-accent); }
+    .dist-bar-fill.green  { background: var(--color-green); }
+    .dist-count {
+      width: 42px; font-family: var(--font-mono); font-size: 0.72rem;
+      color: var(--text-body); text-align: left; font-weight: 500;
+    }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center; padding: 64px 20px;
+      color: var(--text-tertiary); font-size: 0.9rem;
+    }
+    .empty-state .icon { font-size: 2.4rem; margin-bottom: 12px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 800px) {
+      .kpi-row { grid-template-columns: 1fr 1fr; }
+      .main { padding: 20px 16px; }
+    }
+    @media (max-width: 500px) {
+      .kpi-row { grid-template-columns: 1fr; }
+    }
+
+    /* hidden util */
+    .hidden { display: none !important; }
+
+    /* tooltip */
+    .tt {
+      position: relative; cursor: help;
+      border-bottom: 1px dotted var(--text-tertiary);
+    }
+    .tt:hover::after {
+      content: attr(data-tt);
+      position: absolute; bottom: 120%; left: 0;
+      background: var(--text-body); color: #fff; font-size: 0.7rem;
+      padding: 4px 10px; border-radius: 3px; white-space: nowrap;
+      font-family: var(--font-ui); pointer-events: none; z-index: 10;
+    }
+
+    /* severity bar wrapper */
+    .severity-strip { display: flex; gap: 2px; align-items: center; }
+  </style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="bar-brand">
+    Log<mark>Scope</mark>
+  </div>
+  <div class="bar-right" id="barStatus">就绪</div>
+</header>
+
+<main class="main">
+
+  <!-- Upload -->
+  <div class="dropzone" id="dropzone">
+    <div class="dropzone-icon" id="dzIcon">📂</div>
+    <div class="dropzone-text" id="dzText">拖放 CSV 或日志文件到此处</div>
+    <div class="dropzone-hint">支持 .csv / .log / .txt · 也支持点击选择文件</div>
+    <div class="dropzone-file hidden" id="dzFile"></div>
+    <input type="file" id="fileInput" accept=".csv,.log,.txt" style="display:none;">
+  </div>
+
+  <!-- KPI Row -->
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="kpi-number blue" id="kpiTotal">—</div>
+      <div class="kpi-label">总日志条数</div>
+      <div class="kpi-sub">records parsed</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-number red" id="kpiFailed">—</div>
+      <div class="kpi-label">失败操作</div>
+      <div class="kpi-sub" id="kpiFailRate">—</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-number amber" id="kpiIps">—</div>
+      <div class="kpi-label">独立 IP 数</div>
+      <div class="kpi-sub">unique sources</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-number green" id="kpiSuspicious">—</div>
+      <div class="kpi-label">可疑 IP</div>
+      <div class="kpi-sub" id="kpiThreshold">阈值: 5</div>
+    </div>
+  </div>
+
+  <!-- Severity Distribution -->
+  <div class="section" id="severitySection">
+    <div class="section-title">严重程度分布<span class="count" id="sevCount"></span></div>
+    <div class="dist-row" id="severityBars"></div>
+  </div>
+
+  <!-- Fail Operations -->
+  <div class="section" id="failOpsSection">
+    <div class="section-title">失败操作类型<span class="count" id="failCount"></span></div>
+    <div class="dist-row" id="failBars"></div>
+  </div>
+
+  <!-- Suspicious IPs Table -->
+  <div class="section" id="suspiciousSection">
+    <div class="section-title">⚠️ 可疑 IP 列表<span class="count" id="suspiciousCount"></span></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>IP 地址</th>
+            <th>失败次数</th>
+            <th>风险等级</th>
+            <th>首次出现</th>
+            <th>末次出现</th>
+            <th>尝试用户</th>
+          </tr>
+        </thead>
+        <tbody id="suspiciousBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Empty state -->
+  <div class="empty-state" id="emptyState">
+    <div class="icon">📂</div>
+    <div>上传一个日志文件开始分析</div>
+    <div style="font-size:0.8rem;margin-top:4px;">支持 CSV 和纯文本格式</div>
+  </div>
+
+</main>
+
+<script>
+  /**
+   * LogScope — 日志解析可视化
+   * 纯前端解析 + 渲染，使用项目二的 parser 逻辑（JavaScript 重写）
+   */
+  const $ = id => document.getElementById(id);
+  const API_BASE = ''; // No backend — all parsing is client-side
+
+  // ── File Upload ──────────────────────────────────────
+  const dropzone = $('dropzone');
+  const fileInput = $('fileInput');
+
+  dropzone.addEventListener('click', () => fileInput.click());
+
+  ['dragenter', 'dragover'].forEach(ev => {
+    dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+  });
+  ['dragleave', 'drop'].forEach(ev => {
+    dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.remove('dragover'); });
+  });
+
+  dropzone.addEventListener('drop', e => {
+    const file = e.dataTransfer.files[0];
+    if (file) processFile(file);
+  });
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files[0];
+    if (file) processFile(file);
+  });
+
+  function processFile(file) {
+    $('dzFile').textContent = `已选择: ${file.name} (${formatBytes(file.size)})`;
+    $('dzFile').classList.remove('hidden');
+    $('dzIcon').textContent = '⏳';
+    $('dzText').textContent = '正在解析…';
+    $('barStatus').textContent = `解析中: ${file.name}`;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = reader.result;
+      const isCSV = file.name.toLowerCase().endsWith('.csv');
+      const df = isCSV ? parseCSV(text) : parseText(text);
+      $('barStatus').textContent = `${file.name} · ${df.length} 条记录已加载`;
+      renderDashboard(df);
+    };
+    reader.onerror = () => {
+      $('barStatus').textContent = '文件读取失败';
+      $('dzIcon').textContent = '❌';
+      $('dzText').textContent = '文件读取失败，请重试';
+    };
+    reader.readAsText(file);
+  }
+
+  // ── Parsers (JS port of project 2's parser.py logic) ─
+  const IP_RE = /((?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)/;
+  const TS_RE = /(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}(?:\.\d+)?)/;
+  const OPS = ['LOGIN','LOGOUT','QUERY','DELETE','UPDATE','INSERT','EXPORT','IMPORT','DOWNLOAD','UPLOAD','CREATE','MODIFY','READ','WRITE','EXECUTE','CONFIG','RESTART','SHUTDOWN','ACCESS','DENIED','TIMEOUT','ERROR','ATTACK'];
+  const SEV_RE = [
+    [/CRITICAL|FATAL/i, 'CRITICAL'],
+    [/ERROR|错误/i, 'ERROR'],
+    [/WARN|WARNING|警告/i, 'WARN'],
+    [/INFO|信息/i, 'INFO'],
+    [/DEBUG|TRACE/i, 'DEBUG'],
+  ];
+
+  function parseCSV(text) {
+    const lines = text.trim().split('\n');
+    if (lines.length < 2) return [];
+
+    // Parse header
+    const header = lines[0].toLowerCase().split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+    const fieldMap = {};
+    header.forEach((h, i) => {
+      const m = { timestamp:'timestamp', ip_address:'ip_address', ip:'ip_address',
+        username:'username', user:'username', operation:'operation', action:'operation',
+        operation_result:'operation_result', result:'operation_result',
+        detail:'detail', message:'detail', severity:'severity', level:'severity',
+        source_file:'source_file', file:'source_file' };
+      fieldMap[i] = m[h] || h;
+    });
+
+    return lines.slice(1).map(line => {
+      const cols = parseCSVLine(line);
+      const row = {};
+      cols.forEach((c, i) => { if (fieldMap[i]) row[fieldMap[i]] = c.replace(/^"|"$/g, ''); });
+      // Fill defaults
+      row.operation_result = row.operation_result || 'UNKNOWN';
+      row.severity = row.severity || 'INFO';
+      return row;
+    }).filter(r => r.timestamp || r.ip_address);
+  }
+
+  function parseCSVLine(line) {
+    const result = []; let current = ''; let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') { inQuotes = !inQuotes; }
+      else if (ch === ',' && !inQuotes) { result.push(current.trim()); current = ''; }
+      else { current += ch; }
+    }
+    result.push(current.trim());
+    return result;
+  }
+
+  function parseText(text) {
+    const records = [];
+    const lines = text.split('\n');
+    lines.forEach((line, idx) => {
+      line = line.trim();
+      if (!line) return;
+
+      const timestamp = (TS_RE.exec(line) || [])[1] || null;
+      const ip_address = (IP_RE.exec(line) || [])[1] || null;
+      let operation = 'UNKNOWN';
+      const upper = line.toUpperCase();
+      for (const op of OPS) { if (upper.includes(op)) { operation = op; break; } }
+      let operation_result = 'UNKNOWN';
+      if (/SUCCESS|成功/i.test(line)) operation_result = 'SUCCESS';
+      else if (/FAIL|FAILED|失败|DENIED/i.test(line)) operation_result = 'FAIL';
+      let severity = 'INFO';
+      for (const [re, lvl] of SEV_RE) { if (re.test(line)) { severity = lvl; break; } }
+      const username = ((/(?:user(?:name)?[=:]\s*|User\s+)([^\s,;)]+)/i.exec(line) || [])[1] || 'unknown').replace(/['"]/g, '');
+      const detail = (/"([^"]*)"/.exec(line) || [])[1] || null;
+      const source_file = (/([^\s]+\.(?:log|py|java|go|js|ts))\b/.exec(line) || [])[1] || null;
+
+      records.push({ timestamp, ip_address, username, operation, operation_result, detail, severity, source_file, line_number: idx + 1 });
+    });
+
+    // Parse timestamps
+    records.forEach(r => {
+      if (r.timestamp) {
+        const d = new Date(r.timestamp);
+        if (!isNaN(d.getTime())) r._ts = d;
+      }
+    });
+
+    return records;
+  }
+
+  // ── Dashboard ───────────────────────────────────────
+  function renderDashboard(records) {
+    if (records.length === 0) {
+      $('emptyState').classList.remove('hidden');
+      return;
+    }
+    $('emptyState').classList.add('hidden');
+
+    const total = records.length;
+    const failed = records.filter(r => r.operation_result === 'FAIL');
+    const failCount = failed.length;
+    const uniqueIps = new Set(records.map(r => r.ip_address).filter(Boolean)).size;
+    const threshold = 5;
+
+    // Detect suspicious IPs
+    const ipFailMap = {};
+    const ipDetails = {};
+    failed.forEach(r => {
+      const ip = r.ip_address;
+      if (!ip) return;
+      ipFailMap[ip] = (ipFailMap[ip] || 0) + 1;
+      if (!ipDetails[ip]) ipDetails[ip] = { first: r.timestamp, last: r.timestamp, users: new Set() };
+      if (r.timestamp) {
+        if (!ipDetails[ip].first || r.timestamp < ipDetails[ip].first) ipDetails[ip].first = r.timestamp;
+        if (!ipDetails[ip].last  || r.timestamp > ipDetails[ip].last)  ipDetails[ip].last = r.timestamp;
+      }
+      ipDetails[ip].users.add(r.username);
+    });
+
+    const suspicious = Object.entries(ipFailMap)
+      .map(([ip, count]) => {
+        let risk = 'NORMAL';
+        if (count >= threshold * 3) risk = 'HIGH';
+        else if (count >= threshold * 2) risk = 'MEDIUM';
+        else if (count >= threshold) risk = 'LOW';
+        return { ip, failed_attempts: count, risk_level: risk, ...ipDetails[ip], users: [...(ipDetails[ip].users || [])] };
+      })
+      .filter(s => s.risk_level !== 'NORMAL')
+      .sort((a, b) => b.failed_attempts - a.failed_attempts);
+
+    // KPI
+    $('kpiTotal').textContent = total.toLocaleString();
+    $('kpiFailed').textContent = failCount.toLocaleString();
+    $('kpiFailRate').textContent = total > 0 ? `失败率 ${((failCount / total) * 100).toFixed(1)}%` : '失败率 0%';
+    $('kpiIps').textContent = uniqueIps.toLocaleString();
+    $('kpiSuspicious').textContent = suspicious.length.toLocaleString();
+    $('kpiThreshold').textContent = `阈值: ${threshold}`;
+
+    // Severity distribution
+    const sevCount = {};
+    records.forEach(r => { const s = r.severity || 'INFO'; sevCount[s] = (sevCount[s] || 0) + 1; });
+    const sevOrder = ['CRITICAL','ERROR','WARN','INFO','DEBUG'];
+    const sevColors = { CRITICAL:'red', ERROR:'orange', WARN:'amber', INFO:'blue', DEBUG:'green' };
+    $('sevCount').textContent = `${Object.values(sevCount).reduce((a,b)=>a+b,0)} 条`;
+    $('severityBars').innerHTML = sevOrder
+      .filter(l => sevCount[l])
+      .map(l => `
+        <div class="dist-item">
+          <span class="dist-label">${l}</span>
+          <div class="dist-bar-track"><div class="dist-bar-fill ${sevColors[l]}" style="width:${Math.max((sevCount[l]/total)*100, 2)}%"></div></div>
+          <span class="dist-count">${sevCount[l]}</span>
+        </div>`).join('');
+
+    // Fail operations
+    const failOps = {};
+    failed.forEach(r => { if (r.operation) { failOps[r.operation] = (failOps[r.operation] || 0) + 1; } });
+    const sortedOps = Object.entries(failOps).sort((a,b) => b[1] - a[1]);
+    $('failCount').textContent = `${failCount} 条`;
+    if (sortedOps.length === 0) {
+      $('failBars').innerHTML = '<div class="dist-item"><span class="dist-label" style="color:var(--text-tertiary);width:auto;text-align:left;">无失败操作</span></div>';
+    } else {
+      const opColors = ['red','orange','amber','blue','green'];
+      $('failBars').innerHTML = sortedOps.map(([op, cnt], i) => `
+        <div class="dist-item">
+          <span class="dist-label">${esc(op)}</span>
+          <div class="dist-bar-track"><div class="dist-bar-fill ${opColors[i % opColors.length]}" style="width:${Math.max((cnt/failCount)*100, 2)}%"></div></div>
+          <span class="dist-count">${cnt}</span>
+        </div>`).join('');
+    }
+
+    // Suspicious table
+    $('suspiciousCount').textContent = `${suspicious.length} 个`;
+    $('suspiciousBody').innerHTML = suspicious.length === 0
+      ? '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-tertiary);">未发现可疑 IP</td></tr>'
+      : suspicious.map(s => `
+        <tr>
+          <td><strong>${esc(s.ip)}</strong></td>
+          <td>${s.failed_attempts}</td>
+          <td><span class="risk-pill ${s.risk_level}">${s.risk_level}</span></td>
+          <td>${esc(s.first || '—')}</td>
+          <td>${esc(s.last || '—')}</td>
+          <td>${esc(s.users.slice(0,3).join(', ') + (s.users.length > 3 ? ` +${s.users.length - 3}` : ''))}</td>
+        </tr>
+      `).join('');
+  }
+
+  // ── Helpers ──────────────────────────────────────────
+  function formatBytes(b) { return b < 1024 ? `${b} B` : b < 1048576 ? `${(b/1024).toFixed(1)} KB` : `${(b/1048576).toFixed(1)} MB`; }
+  function esc(s) { return s ? String(s).replace(/</g, '&lt;').replace(/>/g, '&gt;') : ''; }
+</script>
+</body>
+</html>

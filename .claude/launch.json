@@ -1,0 +1,21 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Project 1 - AuditVault",
+      "runtimeExecutable": "mvn",
+      "runtimeArgs": ["-f", "01-log-audit-system/pom.xml", "spring-boot:run"],
+      "port": 8080
+    },
+    {
+      "name": "Project 3 - Nexus AI",
+      "runtimeExecutable": "mvn",
+      "runtimeArgs": ["-f", "03-log-ai-assistant/pom.xml", "spring-boot:run"],
+      "port": 8081
+    },
+    {
+      "name": "Project 2 - LogScope",
+      "url": "http://localhost:8082"
+    }
+  ]
+}
