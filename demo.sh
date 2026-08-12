@@ -68,7 +68,20 @@ check_api_key() {
 # ── 启动服务 ────────────────────────────────────
 start_services() {
   echo ""
-  echo -e "${CYAN}▶ 正在构建并启动所有服务...${NC}"
+  echo -e "${CYAN}▶ 本地 Maven 打包 (跳过 Docker 内下载依赖)...${NC}"
+
+  # 项目一
+  echo "  打包 AuditVault..."
+  (cd 01-log-audit-system && mvn package -DskipTests -q)
+  echo -e "  ${GREEN}✓${NC} AuditVault 打包完成"
+
+  # 项目三
+  echo "  打包 Nexus AI..."
+  (cd 03-log-ai-assistant && mvn package -DskipTests -q)
+  echo -e "  ${GREEN}✓${NC} Nexus AI 打包完成"
+
+  echo ""
+  echo -e "${CYAN}▶ 正在构建 Docker 镜像并启动服务...${NC}"
   echo ""
 
   docker compose up -d --build
