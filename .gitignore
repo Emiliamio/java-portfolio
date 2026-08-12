@@ -51,3 +51,6 @@ package-lock.json
 
 # Hexo blog (not part of the portfolio)
 02-tech-blog/
+
+# Interview prep (private)
+docs/INTERVIEW.md

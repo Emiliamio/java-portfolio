@@ -137,7 +137,11 @@ function renderResult(result) {
   const card = $('resultCard');
 
   // Meta
-  $('resMeta').textContent = `${result.modelUsed || 'AI'} · ${result.analysisTimeMs || '—'}ms`;
+  let metaText = `${result.modelUsed || 'AI'} · ${result.analysisTimeMs || '—'}ms`;
+  if (result.fallback) {
+    metaText += ' · <span class="fallback-badge" title="AI API Key 未配置或调用失败，使用本地关键词规则引擎">降级模式</span>';
+  }
+  $('resMeta').innerHTML = metaText;
 
   // Tags
   let tags = '';

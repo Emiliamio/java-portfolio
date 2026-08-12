@@ -93,10 +93,26 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123456}
       AI_API_KEY: ${AI_API_KEY}
       AI_API_URL: ${AI_API_URL:-https://api.anthropic.com/v1/messages}
-      AI_MODEL: ${AI_MODEL:-claude-sonnet-5-20251001}
+      AI_MODEL: ${AI_MODEL:-claude-sonnet-5}
     depends_on:
       mysql:
         condition: service_healthy
+    networks:
+      - audit-net
+
+  # ─── 项目二：日志解析与异常检测（CLI） ────
+  # 这是一个命令行工具，不会常驻运行。
+  # 解析 CSV 日志：
+  #   docker compose run --rm log-parser -i sample_logs/access.csv -o /app/output --excel
+  # 解析纯文本日志：
+  #   docker compose run --rm log-parser -i sample_logs/server.log -o /app/output --excel
+  log-parser:
+    build:
+      context: ./02-log-parser
+      dockerfile: Dockerfile
+    container_name: log-parser
+    profiles:
+      - tools
     networks:
       - audit-net
 

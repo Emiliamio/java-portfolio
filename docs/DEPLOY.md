@@ -94,7 +94,7 @@ vim .env
 MYSQL_ROOT_PASSWORD=替换成安全密码
 AI_API_KEY=sk-ant-你的真实Key
 AI_API_URL=https://api.anthropic.com/v1/messages
-AI_MODEL=claude-sonnet-5-20251001
+AI_MODEL=claude-sonnet-5
 ```
 
 ---
