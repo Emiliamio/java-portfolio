@@ -34,7 +34,7 @@ docker compose up -d             # MySQL + Redis + AuditVault + Nexus AI
 日志解析器按需运行：
 
 ```bash
-docker compose run --rm log-parser \
+docker compose --profile tools run --rm log-parser \
   -i sample_logs/access.csv -o /app/output --excel --sql
 ```
 
