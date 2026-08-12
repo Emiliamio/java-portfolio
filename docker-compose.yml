@@ -102,18 +102,17 @@ services:
       - audit-net
 
   # ─── 项目二：日志解析与异常检测（CLI） ────
-  # 这是一个命令行工具，不会常驻运行。
-  # 解析 CSV 日志：
-  #   docker compose run --rm log-parser -i sample_logs/access.csv -o /app/output --excel
-  # 解析纯文本日志：
-  #   docker compose run --rm log-parser -i sample_logs/server.log -o /app/output --excel
+  # 命令行工具，不随 docker compose up 启动。
+  # 按需运行：
+  #   docker compose --profile tools run --rm log-parser -i sample_logs/access.csv -o /app/output --excel
+  #   docker compose --profile tools run --rm log-parser -i sample_logs/server.log -o /app/output --excel
   log-parser:
     build:
       context: ./02-log-parser
       dockerfile: Dockerfile
     container_name: log-parser
-    stdin_open: true
-    tty: true
+    profiles:
+      - tools
     networks:
       - audit-net
 
