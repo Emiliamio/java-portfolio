@@ -69,20 +69,43 @@ public class LlmService {
 
         String apiKey = System.getenv("AI_API_KEY");
         if (apiKey == null || apiKey.isBlank()) {
-            throw new IllegalStateException(
-                "AI_API_KEY 环境变量未设置。请在环境变量中配置你的大模型 API Key。"
-            );
+            log.warn("AI_API_KEY not set — falling back to keyword-based rule engine.");
+            // 优雅降级：使用关键词规则引擎，不抛异常
+            int elapsedMs = (int) (System.currentTimeMillis() - startTime);
+            AnalysisResult result = fallbackAnalysis(logContent);
+            result.setAnalysisTimeMs(elapsedMs);
+            result.setModelUsed("rule-engine (fallback)");
+            result.setFallback(true);
+            saveToHistory(logContent, result);
+            log.info("Fallback analysis complete in {}ms — risk={}, intervention={}",
+                    elapsedMs, result.getRiskLevel(), result.isNeedIntervention());
+            return result;
         }
 
-        // ── 1. 构造 Prompt ──
+        // ── 1. 构造 Prompt + 调用 LLM ──
         String systemPrompt = buildSystemPrompt();
-        String aiResponseJson = callLlmApi(apiKey, systemPrompt, logContent);
+        String aiResponseJson;
+        try {
+            aiResponseJson = callLlmApi(apiKey, systemPrompt, logContent);
+        } catch (RuntimeException e) {
+            log.error("LLM API call failed, falling back to rule engine. Error: {}", e.getMessage());
+            int elapsedMs = (int) (System.currentTimeMillis() - startTime);
+            AnalysisResult result = fallbackAnalysis(logContent);
+            result.setAnalysisTimeMs(elapsedMs);
+            result.setModelUsed("rule-engine (api-failure fallback)");
+            result.setFallback(true);
+            saveToHistory(logContent, result);
+            log.info("Fallback analysis (API failure) complete in {}ms — risk={}, intervention={}",
+                    elapsedMs, result.getRiskLevel(), result.isNeedIntervention());
+            return result;
+        }
 
         // ── 2. 解析 LLM 响应 ──
         AnalysisResult result = parseResponse(aiResponseJson);
         int elapsedMs = (int) (System.currentTimeMillis() - startTime);
         result.setAnalysisTimeMs(elapsedMs);
         result.setModelUsed(apiModel);
+        result.setFallback(false);
 
         // ── 3. 存入数据库 ──
         saveToHistory(logContent, result);

@@ -19,4 +19,5 @@ public class AnalysisResult {
     private String sourceIp;
     private String modelUsed;
     private int analysisTimeMs;
+    private boolean fallback;  // true 表示使用了降级规则引擎（非 AI）
 }
