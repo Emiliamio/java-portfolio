@@ -79,8 +79,7 @@ docker compose run --rm log-parser \
 ├── docker-compose.yml      # 一键编排全部服务
 ├── demo.sh                 # 本地演示脚本
 ├── docs/
-│   ├── DEPLOY.md           # 云服务器部署指南
-│   └── INTERVIEW.md        # 面试演示准备（不公开）
+│   └── DEPLOY.md           # 云服务器部署指南
 └── .env.example
 ```
 
