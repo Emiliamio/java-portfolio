@@ -29,6 +29,7 @@ services:
       - mysql_data:/var/lib/mysql
       - ./01-log-audit-system/src/main/resources/sql/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
       - ./03-log-ai-assistant/src/main/resources/sql/schema.sql:/docker-entrypoint-initdb.d/02-ai-schema.sql
+      - ./01-log-audit-system/src/main/resources/sql/seed-data.sql:/docker-entrypoint-initdb.d/03-seed.sql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root123456}"]
       interval: 10s
@@ -111,8 +112,8 @@ services:
       context: ./02-log-parser
       dockerfile: Dockerfile
     container_name: log-parser
-    profiles:
-      - tools
+    stdin_open: true
+    tty: true
     networks:
       - audit-net
 
