@@ -179,12 +179,22 @@ public class LlmService {
         try {
             JSONObject requestBody = buildRequestBody(systemPrompt, userContent);
 
-            HttpRequest request = HttpRequest.newBuilder()
+            HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                     .uri(URI.create(apiUrl))
                     .header("Content-Type", "application/json")
-                    .header("x-api-key", apiKey)
-                    .header("anthropic-version", "2023-06-01")
-                    .timeout(Duration.ofSeconds(timeoutSeconds))
+                    .timeout(Duration.ofSeconds(timeoutSeconds));
+
+            // 根据 API 类型设置认证头：
+            // - Anthropic: x-api-key + anthropic-version
+            // - OpenAI 兼容 (含 DeepSeek): Authorization: Bearer
+            if (isAnthropic()) {
+                requestBuilder.header("x-api-key", apiKey)
+                              .header("anthropic-version", "2023-06-01");
+            } else {
+                requestBuilder.header("Authorization", "Bearer " + apiKey);
+            }
+
+            HttpRequest request = requestBuilder
                     .POST(HttpRequest.BodyPublishers.ofString(requestBody.toJSONString()))
                     .build();
 
@@ -223,8 +233,12 @@ public class LlmService {
      * 根据 API URL 自动选择请求体格式。
      * 通过判断 URL 中是否含 "anthropic" 来选择 Anthropic / OpenAI 格式。
      */
+    private boolean isAnthropic() {
+        return apiUrl != null && apiUrl.contains("anthropic");
+    }
+
     private JSONObject buildRequestBody(String systemPrompt, String userContent) {
-        if (apiUrl.contains("anthropic")) {
+        if (isAnthropic()) {
             // Anthropic Messages API 格式
             JSONObject body = new JSONObject();
             body.put("model", apiModel);
