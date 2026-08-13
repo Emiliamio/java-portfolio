@@ -31,6 +31,13 @@ docker compose up -d             # MySQL + Redis + AuditVault + Nexus AI
 | Nexus AI — 智能分析 | http://localhost:8081 |
 | 技术博客 | https://emiliamio.github.io |
 
+**演示账号**（AuditVault 与 Nexus AI 共用）：
+
+| 账号 | 密码 | 权限 |
+|---|---|---|
+| `admin` | `admin123` | 管理员：查询 + 导入 + 导出 |
+| `user` | `user123` | 普通用户：仅查询 |
+
 日志解析器按需运行：
 
 ```bash
@@ -89,8 +96,9 @@ docker compose --profile tools run --rm log-parser \
 
 ```
 Java 17 · Spring Boot 3.2 · MyBatis · MySQL 8 · Redis 7
+Spring Security · JWT · BCrypt · httpOnly Cookie
 Python 3.12 · Pandas · Regex · argparse
-Anthropic Messages API · LLM Prompt Engineering · JSON 容错解析
+Anthropic Messages API / DeepSeek · LLM Prompt Engineering · JSON 容错解析
 Docker · Docker Compose · 多阶段构建 · HEALTHCHECK
 Hexo · GitHub Pages · GitHub Actions
 ```

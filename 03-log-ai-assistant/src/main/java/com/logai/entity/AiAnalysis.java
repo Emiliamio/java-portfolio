@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class AiAnalysis {
     private Long id;
+    private String username;
     private String logContent;
     private String logSummary;
     private String operationType;

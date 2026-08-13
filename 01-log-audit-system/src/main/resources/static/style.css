@@ -106,6 +106,14 @@ body {
   display: flex; align-items: center; gap: 8px;
   font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-tertiary);
 }
+.nav-logout {
+  margin-left: 16px; padding: 5px 12px;
+  font-family: var(--font-mono); font-size: 0.7rem;
+  color: var(--text-secondary); text-decoration: none;
+  border: 1px solid var(--border-std); border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+.nav-logout:hover { color: var(--accent-red); border-color: var(--accent-red); }
 
 /* ── Main Layout ───────────────────────────────────── */
 .main {

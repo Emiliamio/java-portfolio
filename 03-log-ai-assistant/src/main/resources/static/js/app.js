@@ -24,11 +24,30 @@ const PRESETS = {
 2025-01-15 08:40:10 10.0.0.200 User scanner ACCESS DENIED "Unauthorized access attempt to /api/config" ERROR gateway.log`,
 };
 
+// ── 认证守卫 + 退出 ──────────────────────────────────────
+function logout() {
+  fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' })
+    .finally(() => { window.location.href = '/login.html'; });
+}
+
+function requireAuth() {
+  return fetch('/api/auth/me', { credentials: 'same-origin' })
+    .then(r => {
+      if (r.status === 401) {
+        window.location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname);
+        return false;
+      }
+      return true;
+    })
+    .catch(() => true);
+}
+
 // ── DOM refs ─────────────────────────────────────────────
 const $ = id => document.getElementById(id);
 
 // ── Setup ────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  requireAuth().then(ok => { if (!ok) return; });
   // Quick chips
   document.querySelectorAll('.chip').forEach(btn => {
     btn.addEventListener('click', () => {
