@@ -10,6 +10,7 @@ USE log_audit;
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS ai_analysis (
     id              BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username        VARCHAR(50)  COMMENT '提交分析的用户名（用于历史隔离）',
     log_content     TEXT         NOT NULL COMMENT '用户提交的原始日志内容',
     log_summary     VARCHAR(500) COMMENT 'AI 摘要（操作类型）',
     operation_type  VARCHAR(100) COMMENT '操作类型（AI 识别）',
@@ -23,5 +24,6 @@ CREATE TABLE IF NOT EXISTS ai_analysis (
 
     INDEX idx_risk_level (risk_level),
     INDEX idx_created_at (created_at),
-    INDEX idx_operation_type (operation_type)
+    INDEX idx_operation_type (operation_type),
+    INDEX idx_username (username)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AI 分析历史记录表';

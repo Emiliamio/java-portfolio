@@ -3,11 +3,14 @@ package com.logaudit.controller;
 import com.logaudit.entity.LogEntry;
 import com.logaudit.service.AuditLogService;
 import com.logaudit.service.LogEntryService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -30,35 +33,35 @@ public class LogEntryController {
             @RequestParam(required = false) String operation,
             @RequestParam(required = false) String severity,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int pageSize) {
+            @RequestParam(defaultValue = "20") int pageSize,
+            HttpServletRequest request) {
 
         Map<String, Object> result = logEntryService.searchLogs(
                 startTime, endTime, ipAddress, operation, severity, page, pageSize);
 
-        // 审计记录：谁查了日志
-        auditLogService.recordSuccess("admin", "VIEW_LOGS",
-                "ip=" + ipAddress + ", operation=" + operation, "127.0.0.1");
+        // 审计记录：谁查了日志（真实登录用户 + 真实 IP）
+        auditLogService.recordSuccess(currentUser(), "VIEW_LOGS",
+                "ip=" + ipAddress + ", operation=" + operation, clientIp(request));
 
         return ResponseEntity.ok(result);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<LogEntry> getDetail(@PathVariable Long id) {
+    public ResponseEntity<LogEntry> getDetail(@PathVariable Long id, HttpServletRequest request) {
         LogEntry logEntry = logEntryService.getDetail(id);
 
-        // 审计记录：谁看了某条日志的详情
-        auditLogService.recordSuccess("admin", "VIEW_DETAIL",
-                "logId=" + id, "127.0.0.1");
+        auditLogService.recordSuccess(currentUser(), "VIEW_DETAIL",
+                "logId=" + id, clientIp(request));
 
         return ResponseEntity.ok(logEntry);
     }
 
     @PostMapping("/batch-import")
-    public ResponseEntity<String> batchImport(@RequestBody List<LogEntry> logList) {
+    public ResponseEntity<String> batchImport(@RequestBody List<LogEntry> logList, HttpServletRequest request) {
         logEntryService.asyncBatchImport(logList);
 
-        auditLogService.recordSuccess("admin", "UPLOAD_LOGS",
-                "count=" + logList.size(), "127.0.0.1");
+        auditLogService.recordSuccess(currentUser(), "UPLOAD_LOGS",
+                "count=" + logList.size(), clientIp(request));
 
         return ResponseEntity.ok("导入任务已提交，正在后台处理，共 " + logList.size() + " 条");
     }
@@ -74,16 +77,32 @@ public class LogEntryController {
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime endTime,
             @RequestParam(required = false) String ipAddress,
             @RequestParam(required = false) String operation,
-            @RequestParam(required = false) String severity) {
+            @RequestParam(required = false) String severity,
+            HttpServletRequest request) {
 
         byte[] excelData = logEntryService.exportLogs(startTime, endTime, ipAddress, operation, severity);
 
-        auditLogService.recordSuccess("admin", "EXPORT_LOGS",
-                "ip=" + ipAddress + ", operation=" + operation, "127.0.0.1");
+        auditLogService.recordSuccess(currentUser(), "EXPORT_LOGS",
+                "ip=" + ipAddress + ", operation=" + operation, clientIp(request));
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=logs.xlsx")
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(excelData);
+    }
+
+    /** 从 Spring Security 上下文取当前登录用户名。 */
+    private String currentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.isAuthenticated() ? auth.getName() : "anonymous";
+    }
+
+    /** 取客户端真实 IP（处理代理转发头）。 */
+    private String clientIp(HttpServletRequest request) {
+        String forwarded = request.getHeader("X-Forwarded-For");
+        if (forwarded != null && !forwarded.isBlank()) {
+            return forwarded.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 }

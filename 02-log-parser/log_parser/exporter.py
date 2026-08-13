@@ -29,10 +29,17 @@ INSERT_TEMPLATE = (
 
 
 def _escape_sql(value: Optional[str]) -> str:
-    """转义 SQL 字符串值。"""
+    """转义 SQL 字符串值，防止日志内容中的引号破坏 INSERT 语句。
+
+    注意：生成的 SQL 是给 DBA 手动审阅后导入的离线文件，不是直接执行；
+    这里做转义是为了生成语法正确的 SQL，避免日志内容（可能含攻击 payload）
+    被当成 SQL 语法的一部分。真正的防注入由项目一的 MyBatis 参数化查询保证。
+    """
     if value is None or pd.isna(value):
         return "NULL"
-    escaped = str(value).replace("\\", "\\\\").replace("'", "\\'")
+    # 去掉可能存在的 NUL 字节等控制字符，避免破坏文件
+    cleaned = str(value).replace("\x00", "").replace("\r", "").replace("\n", " ")
+    escaped = cleaned.replace("\\", "\\\\").replace("'", "\\'")
     return f"'{escaped}'"
 
 

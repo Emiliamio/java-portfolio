@@ -5,6 +5,29 @@
 
 const API = '/api/logs';
 
+// ── 认证守卫 ────────────────────────────────────────────
+async function requireAuth() {
+  try {
+    const resp = await fetch('/api/auth/me', { credentials: 'same-origin' });
+    if (resp.status === 401) {
+      window.location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname + location.search);
+      return false;
+    }
+    return true;
+  } catch (e) {
+    // 网络异常时先放行，让后续请求自己报错
+    return true;
+  }
+}
+
+// ── 退出登录 ────────────────────────────────────────────
+async function logout() {
+  try {
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
+  } catch (e) { /* ignore */ }
+  window.location.href = '/login.html';
+}
+
 // ── DOM refs ────────────────────────────────────────────
 const dom = {
   get tableBody()    { return document.getElementById('tableBody'); },
@@ -197,6 +220,9 @@ document.addEventListener('keydown', e => {
 // ── Init ────────────────────────────────────────────────
 (function init() {
   if (!dom.tableBody) return;
-  loadStats();
-  search(1);
+  requireAuth().then(ok => {
+    if (!ok) return;
+    loadStats();
+    search(1);
+  });
 })();

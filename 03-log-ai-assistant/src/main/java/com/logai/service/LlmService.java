@@ -65,6 +65,17 @@ public class LlmService {
      * @return 结构化的分析结果
      */
     public AnalysisResult analyze(String logContent) {
+        return analyze(logContent, null);
+    }
+
+    /**
+     * 分析一段日志文本，返回结构化分析结果。
+     *
+     * @param logContent 用户提交的原始日志文本
+     * @param username 提交分析的用户名（用于历史隔离，可为 null）
+     * @return 结构化的分析结果
+     */
+    public AnalysisResult analyze(String logContent, String username) {
         long startTime = System.currentTimeMillis();
 
         String apiKey = System.getenv("AI_API_KEY");
@@ -76,7 +87,7 @@ public class LlmService {
             result.setAnalysisTimeMs(elapsedMs);
             result.setModelUsed("rule-engine (fallback)");
             result.setFallback(true);
-            saveToHistory(logContent, result);
+            saveToHistory(logContent, result, username);
             log.info("Fallback analysis complete in {}ms — risk={}, intervention={}",
                     elapsedMs, result.getRiskLevel(), result.isNeedIntervention());
             return result;
@@ -94,7 +105,7 @@ public class LlmService {
             result.setAnalysisTimeMs(elapsedMs);
             result.setModelUsed("rule-engine (api-failure fallback)");
             result.setFallback(true);
-            saveToHistory(logContent, result);
+            saveToHistory(logContent, result, username);
             log.info("Fallback analysis (API failure) complete in {}ms — risk={}, intervention={}",
                     elapsedMs, result.getRiskLevel(), result.isNeedIntervention());
             return result;
@@ -108,7 +119,7 @@ public class LlmService {
         result.setFallback(false);
 
         // ── 3. 存入数据库 ──
-        saveToHistory(logContent, result);
+        saveToHistory(logContent, result, username);
         log.info("Analysis complete in {}ms — risk={}, intervention={}",
                 elapsedMs, result.getRiskLevel(), result.isNeedIntervention());
 
@@ -116,24 +127,27 @@ public class LlmService {
     }
 
     /**
-     * 查询最近 N 条分析历史。
+     * 查询当前用户最近 N 条分析历史（历史隔离）。
      */
-    public List<AiAnalysis> getHistory(int limit) {
-        return analysisMapper.findRecent(limit);
+    public List<AiAnalysis> getHistory(int limit, String username) {
+        if (username == null) return analysisMapper.findRecent(limit);
+        return analysisMapper.findRecentByUser(username, limit);
     }
 
     /**
-     * 查看单条分析详情。
+     * 查看单条分析详情（仅限本人，越权返回 null）。
      */
-    public AiAnalysis getDetail(Long id) {
-        return analysisMapper.findById(id);
+    public AiAnalysis getDetail(Long id, String username) {
+        if (username == null) return analysisMapper.findById(id);
+        return analysisMapper.findByIdAndUser(id, username);
     }
 
     /**
      * 获取历史总数。
      */
-    public int getHistoryCount() {
-        return analysisMapper.countTotal();
+    public int getHistoryCount(String username) {
+        if (username == null) return analysisMapper.countTotal();
+        return analysisMapper.countByUser(username);
     }
 
     // ── 私有方法 ──────────────────────────────────────────
@@ -414,8 +428,9 @@ public class LlmService {
     /**
      * 将分析结果存入 MySQL 历史记录。
      */
-    private void saveToHistory(String logContent, AnalysisResult result) {
+    private void saveToHistory(String logContent, AnalysisResult result, String username) {
         AiAnalysis record = new AiAnalysis();
+        record.setUsername(username);
         record.setLogContent(logContent);
         record.setLogSummary(result.getSummary());
         record.setOperationType(result.getOperationType());

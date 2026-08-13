@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>登录 — Nexus AI</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .login-wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+    .login-card {
+      width:100%; max-width:380px; background:var(--bg-panel);
+      border:1px solid var(--border-hairline); border-radius:var(--radius-lg);
+      padding:40px 36px; box-shadow:0 10px 30px rgba(0,0,0,0.06);
+    }
+    .login-title { font-family:var(--font-mono); font-size:1.1rem; font-weight:650; margin-bottom:4px; }
+    .login-sub { font-size:0.78rem; color:var(--text-tertiary); margin-bottom:28px; }
+    .login-field { margin-bottom:18px; }
+    .login-field label { display:block; font-family:var(--font-mono); font-size:0.68rem; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:6px; }
+    .login-field input { width:100%; padding:10px 13px; background:var(--bg-input); border:1px solid var(--border-standard); border-radius:var(--radius-sm); font-family:var(--font-mono); font-size:0.85rem; outline:none; transition:border-color 180ms; }
+    .login-field input:focus { border-color:var(--accent-blue); box-shadow:0 0 0 3px rgba(59,111,212,0.08); }
+    .login-btn { width:100%; padding:11px; background:var(--text-body); color:var(--text-inverse); border:none; border-radius:var(--radius-sm); font-family:var(--font-mono); font-size:0.85rem; font-weight:600; cursor:pointer; letter-spacing:0.3px; }
+    .login-btn:hover { background:#3f3a32; }
+    .login-btn:disabled { opacity:0.5; cursor:not-allowed; }
+    .login-error { display:none; margin-top:16px; padding:11px 14px; background:var(--red-dim); color:var(--accent-red); border-left:2px solid var(--accent-red); border-radius:var(--radius-sm); font-size:0.8rem; }
+    .login-hint { margin-top:20px; padding-top:16px; border-top:1px solid var(--border-hairline); font-family:var(--font-mono); font-size:0.68rem; color:var(--text-tertiary); line-height:1.8; }
+    .login-hint code { color:var(--accent-orange); }
+  </style>
+</head>
+<body>
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="login-title">Nexus AI 登录</div>
+    <div class="login-sub">日志智能分析助手</div>
+
+    <form id="loginForm">
+      <div class="login-field">
+        <label>用户名</label>
+        <input type="text" id="username" autocomplete="username" placeholder="admin" autofocus>
+      </div>
+      <div class="login-field">
+        <label>密码</label>
+        <input type="password" id="password" autocomplete="current-password" placeholder="••••••••">
+      </div>
+      <button type="submit" class="login-btn" id="loginBtn">登 录</button>
+    </form>
+
+    <div class="login-error" id="loginError"></div>
+
+    <div class="login-hint">
+      与 AuditVault 共用账号：<br>
+      · <code>admin</code> / <code>admin123</code><br>
+      · <code>user</code> / <code>user123</code>
+    </div>
+  </div>
+</div>
+<script src="js/login.js"></script>
+</body>
+</html>

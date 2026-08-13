@@ -134,6 +134,32 @@ def main(argv: list = None) -> int:
         logger.error("Input file not found: %s", args.input)
         return 1
 
+    # 安全校验：文件大小上限（防止解析超大文件拖垮内存）
+    MAX_FILE_SIZE = 100 * 1024 * 1024  # 100 MB
+    try:
+        file_size = os.path.getsize(args.input)
+        if file_size > MAX_FILE_SIZE:
+            logger.error(
+                "Input file too large: %.1f MB (limit %d MB). "
+                "请先拆分日志文件再解析。",
+                file_size / (1024 * 1024), MAX_FILE_SIZE // (1024 * 1024),
+            )
+            return 3
+    except OSError as e:
+        logger.error("Failed to stat input file: %s", e)
+        return 3
+
+    # 安全校验：阈值必须为正整数
+    if args.threshold < 1:
+        logger.error("Threshold must be >= 1, got %d", args.threshold)
+        return 4
+
+    # 安全校验：输出目录不允许为文件系统根或用户主目录（防止误写）
+    output_abs = os.path.abspath(args.output_dir)
+    if output_abs in (os.path.abspath(os.sep), os.path.expanduser("~")):
+        logger.error("拒绝将输出写入系统根目录或用户主目录: %s", output_abs)
+        return 4
+
     logger.info("=" * 60)
     logger.info("Log Parser v1.0.0 — 日志解析与异常检测工具")
     logger.info("=" * 60)

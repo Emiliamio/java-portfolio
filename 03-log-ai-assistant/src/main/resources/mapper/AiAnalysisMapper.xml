@@ -5,6 +5,7 @@
 
     <resultMap id="AiAnalysisMap" type="com.logai.entity.AiAnalysis">
         <id property="id" column="id"/>
+        <result property="username" column="username"/>
         <result property="logContent" column="log_content"/>
         <result property="logSummary" column="log_summary"/>
         <result property="operationType" column="operation_type"/>
@@ -20,11 +21,11 @@
     <insert id="insert" parameterType="com.logai.entity.AiAnalysis"
             useGeneratedKeys="true" keyProperty="id">
         INSERT INTO ai_analysis (
-            log_content, log_summary, operation_type, risk_level,
+            username, log_content, log_summary, operation_type, risk_level,
             need_intervention, ai_suggestion, source_ip,
             model_used, analysis_time_ms
         ) VALUES (
-            #{logContent}, #{logSummary}, #{operationType}, #{riskLevel},
+            #{username}, #{logContent}, #{logSummary}, #{operationType}, #{riskLevel},
             #{needIntervention}, #{aiSuggestion}, #{sourceIp},
             #{modelUsed}, #{analysisTimeMs}
         )
@@ -34,12 +35,26 @@
         SELECT * FROM ai_analysis WHERE id = #{id}
     </select>
 
+    <select id="findRecentByUser" resultMap="AiAnalysisMap">
+        SELECT * FROM ai_analysis
+        WHERE username = #{username}
+        ORDER BY created_at DESC LIMIT #{limit}
+    </select>
+
+    <select id="findByIdAndUser" resultMap="AiAnalysisMap">
+        SELECT * FROM ai_analysis WHERE id = #{id} AND username = #{username}
+    </select>
+
     <select id="findRecent" resultMap="AiAnalysisMap">
         SELECT * FROM ai_analysis ORDER BY created_at DESC LIMIT #{limit}
     </select>
 
     <select id="countTotal" resultType="int">
         SELECT COUNT(*) FROM ai_analysis
+    </select>
+
+    <select id="countByUser" resultType="int">
+        SELECT COUNT(*) FROM ai_analysis WHERE username = #{username}
     </select>
 
     <delete id="deleteById">
