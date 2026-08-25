@@ -16,10 +16,13 @@
   <div class="nav-tabs">
     <a href="index.html" class="nav-tab active">日志查询</a>
     <a href="dashboard.html" class="nav-tab">统计面板</a>
+    <a href="#" class="nav-tab" onclick="openWebhookModal();return false;">📡 Webhook 模拟器</a>
+    <a href="/swagger-ui.html" target="_blank" class="nav-tab">API 文档 ↗</a>
   </div>
   <div class="nav-status" id="navStatus">—</div>
   <a href="#" class="nav-logout" id="navLogout" onclick="logout();return false;">退出</a>
 </nav>
+
 
 <main class="main">
 
@@ -99,6 +102,50 @@
 
 </main>
 
+<!-- ── Webhook Simulator Modal ── -->
+<div class="modal-overlay hidden" id="webhookModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title">
+        <span style="color:var(--accent-blue)">📡</span> Logback / Webhook 实时采集模拟器
+      </div>
+      <button class="modal-close" onclick="closeWebhookModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-desc">
+        模拟微服务通过 HTTP / Logback Appender 实时推送日志至 AuditVault (<code>POST /api/logs/webhook</code>)。
+      </div>
+
+      <div class="preset-label">选择预置场景一键载入：</div>
+      <div class="preset-chips">
+        <button class="btn-chip" onclick="setPreset('payment_error')">🔴 500 订单支付超时 (含堆栈)</button>
+        <button class="btn-chip" onclick="setPreset('rate_limit')">🟠 429 防爆破频控拦截</button>
+        <button class="btn-chip" onclick="setPreset('sqli_probe')">🚨 SQL 注入探针告警</button>
+        <button class="btn-chip" onclick="setPreset('sso_login')">🟢 SSO 用户单点登录</button>
+        <button class="btn-chip" onclick="setPreset('batch_logs')">📦 批量 JSON 数组</button>
+      </div>
+
+      <div class="form-group" style="margin-top:14px;">
+        <label class="form-label">X-Audit-Token 接入令牌</label>
+        <input type="text" id="webhookToken" class="form-input" value="auditvault-webhook-default-secret-token-2026">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">日志 Payload (JSON / Logback 格式)</label>
+        <textarea id="webhookPayload" class="form-textarea" rows="8"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeWebhookModal()">取消</button>
+      <button class="btn btn-primary" id="btnSendWebhook" onclick="sendWebhookPayload()">🚀 发送实时 Webhook</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast Notifications ── -->
+<div class="toast-container" id="toastContainer"></div>
+
 <script src="app.js"></script>
 </body>
 </html>
+

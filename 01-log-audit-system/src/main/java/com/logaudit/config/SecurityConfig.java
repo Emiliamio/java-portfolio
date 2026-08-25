@@ -45,13 +45,15 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // 静态资源放行
+                        // 静态资源与 Swagger API 文档放行
                         .requestMatchers("/", "/index.html", "/dashboard.html", "/detail.html",
                                 "/style.css", "/app.js", "/login.html", "/login.js",
-                                "/favicon.ico", "/error").permitAll()
+                                "/favicon.ico", "/error",
+                                "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         // 认证接口与 Webhook 采集接口放行（Webhook 内部做 X-Audit-Token 专用令牌鉴权）
                         .requestMatchers("/api/auth/login", "/api/auth/logout").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/logs/webhook").permitAll()
+
                         // 写操作仅 ADMIN（批量导入、导出）
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/logs/batch-import").hasRole("ADMIN")
 

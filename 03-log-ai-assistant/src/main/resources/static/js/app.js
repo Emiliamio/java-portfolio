@@ -243,9 +243,106 @@ function renderResult(result) {
   $('resSummary').textContent = result.summary || '—';
   $('resSuggestion').textContent = result.suggestion || '—';
 
+  // 保存当前分析结果供上报与导出
+  window.currentAnalysisResult = result;
+
   card.classList.remove('hidden');
   card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
+
+// ── Toast & Actions ──────────────────────────────────────
+function showToast(msg, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.innerHTML = `<span style="font-size:1.1rem;">${type === 'success' ? '✓' : type === 'error' ? '!' : 'ℹ'}</span><span>${esc(msg)}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => {
+    if (toast.parentNode) toast.parentNode.removeChild(toast);
+  }, 4500);
+}
+
+async function reportToAuditVault() {
+  const res = window.currentAnalysisResult;
+  if (!res) {
+    showToast('暂无分析结果可上报', 'error');
+    return;
+  }
+  const btn = $('btnReportAudit');
+  btn.disabled = true;
+  btn.textContent = '正在推送至 AuditVault…';
+
+  const payload = {
+    time: new Date().toISOString(),
+    level: res.riskLevel === 'CRITICAL' ? 'CRITICAL' : (res.riskLevel === 'HIGH' ? 'ERROR' : (res.riskLevel === 'MEDIUM' ? 'WARN' : 'INFO')),
+    logger: 'com.logai.NexusAiSecurityAnalyzer',
+    message: `[Nexus AI告警] ${res.summary || '检测到异常安全日志'}`,
+    detail: `[AI摘要] ${res.summary || '—'}\n[处置建议] ${res.suggestion || '—'}\n[风险等级] ${res.riskLevel || 'NORMAL'}\n[操作类型] ${res.operationType || 'UNKNOWN'}\n[需人工介入] ${res.needIntervention ? '是' : '否'}\n[分析模型] ${res.modelUsed || 'AI'}\n[原始日志] ${$('logInput').value.trim()}`,
+    user: 'nexus-ai',
+    clientIp: res.sourceIp || '127.0.0.1',
+    operation: res.operationType || 'SECURITY_ANALYSIS'
+  };
+
+  try {
+    const auditHost = window.location.hostname;
+    const resp = await fetch(`http://${auditHost}:8080/api/logs/webhook`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Audit-Token': 'auditvault-webhook-default-secret-token-2026'
+      },
+      body: JSON.stringify(payload)
+    });
+    const data = await resp.json();
+    if (resp.ok && data.success) {
+      showToast('✓ 已成功将本次安全分析告警推送到 AuditVault 实时归档！', 'success');
+    } else {
+      showToast('上报失败: ' + (data.message || ('HTTP ' + resp.status)), 'error');
+    }
+  } catch (e) {
+    showToast('上报失败 (请确认 AuditVault 8080 服务已运行): ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '📡 一键上报告警至 AuditVault (Webhook)';
+  }
+}
+
+function copyMarkdownReport() {
+  const res = window.currentAnalysisResult;
+  if (!res) {
+    showToast('暂无分析结果可复制', 'error');
+    return;
+  }
+  const originalLog = $('logInput').value.trim();
+  const md = `# 🛡️ Nexus AI 安全分析事件报告
+
+- **报告时间**: ${new Date().toLocaleString('zh-CN')}
+- **风险等级**: \`${res.riskLevel || 'NORMAL'}\`
+- **操作类型**: \`${res.operationType || 'UNKNOWN'}\`
+- **来源 IP**: \`${res.sourceIp || '未知'}\`
+- **需人工介入**: ${res.needIntervention ? '🚨 **是**' : '🟢 **否**'}
+- **分析模型**: ${res.modelUsed || 'AI'} (${res.analysisTimeMs || 0}ms)
+
+---
+
+### 📌 1. 事件摘要
+${res.summary || '无摘要'}
+
+### 💡 2. 处置与防御建议
+${res.suggestion || '无建议'}
+
+### 📋 3. 原始日志片段
+\`\`\`log
+${originalLog}
+\`\`\`
+`;
+
+  navigator.clipboard.writeText(md)
+    .then(() => showToast('✓ Markdown 安全报告已成功复制到剪贴板！', 'success'))
+    .catch(() => showToast('复制到剪贴板失败，请手动复制', 'error'));
+}
+
 
 // ── UI State ─────────────────────────────────────────────
 function showLoading() { $('loadingBlock').classList.remove('hidden'); }

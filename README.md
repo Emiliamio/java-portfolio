@@ -3,8 +3,9 @@
 > 日志审计与分析领域 — 4 个项目，覆盖 Java / Python / AI / DevOps / CI/CD 全链路
 
 [![CI/CD Pipeline](https://github.com/Emiliamio/java-portfolio/actions/workflows/ci.yml/badge.svg)](https://github.com/Emiliamio/java-portfolio/actions/workflows/ci.yml)
-![Tests](https://img.shields.io/badge/Tests-93%20passed-brightgreen)
+![Tests](https://img.shields.io/badge/Tests-96%20passed-brightgreen)
 ![Coverage](https://img.shields.io/badge/Coverage-100%25-brightgreen)
+![OpenAPI](https://img.shields.io/badge/OpenAPI%203.0-Swagger%20UI-blue)
 
 ---
 
@@ -12,11 +13,10 @@
 
 | # | 项目 | 技术栈 | 一句话 | 入口 |
 |---|---|---|---|---|
-| ① | **AuditVault** 日志审计 | Spring Boot + MySQL + Redis | 日志采集(Webhook/批量)、查询、导出，操作审计自闭环 | `:8080` |
-| ② | **LogScope** 日志解析器 | Python + Pandas + CLI | CSV/文本日志解析，异常检测，多格式报告 | CLI |
-| ③ | **Nexus AI** 智能分析 | Spring Boot + Anthropic / DeepSeek | 粘贴日志 → AI 分析风险 + 处置建议 (SSE 打字机) | `:8081` |
+| ① | **AuditVault** 日志审计 | Spring Boot + MySQL + Redis | 实时 Webhook 采集、查询、导出，操作审计自闭环 | `:8080` |
+| ② | **LogScope** 日志解析器 | Python + Pandas + CLI | CSV/文本日志解析，异常检测，HTML/Excel 可视化报告 | CLI |
+| ③ | **Nexus AI** 智能分析 | Spring Boot + Anthropic / DeepSeek | 粘贴日志 → AI 分析风险 + 处置建议 (SSE 打字机) + 跨服务告警 | `:8081` |
 | ④ | **技术博客** | Hexo + GitHub Pages | 项目复盘与技术文章 | [emiliamio.github.io](https://emiliamio.github.io) |
-
 
 ---
 
@@ -29,12 +29,14 @@ cp .env.example .env            # 首次（可用默认值，AI 分析可选）
 docker compose up -d             # MySQL + Redis + AuditVault + Nexus AI
 ```
 
-| 服务 | URL |
-|---|---|
-| AuditVault — 日志查询 | http://localhost:8080 |
-| AuditVault — 数据面板 | http://localhost:8080/dashboard.html |
-| Nexus AI — 智能分析 | http://localhost:8081 |
-| 技术博客 | https://emiliamio.github.io |
+| 服务 | URL | 说明 |
+|---|---|---|
+| AuditVault — 日志检索 | http://localhost:8080 | 含 Webhook 实时采集模拟器与导出 |
+| AuditVault — 数据面板 | http://localhost:8080/dashboard.html | 今日事件、异常率与独立 IP 统计 |
+| AuditVault — API 文档 | http://localhost:8080/swagger-ui.html | SpringDoc OpenAPI 3.0 交互接口中心 |
+| Nexus AI — 智能分析 | http://localhost:8081 | SSE 流式分析、Markdown 导出与跨服务上报 |
+| Nexus AI — API 文档 | http://localhost:8081/swagger-ui.html | SpringDoc OpenAPI 3.0 交互接口中心 |
+| 技术博客 | https://emiliamio.github.io | 项目复盘与架构技术文章 |
 
 **演示账号**（AuditVault 与 Nexus AI 共用）：
 
@@ -43,11 +45,11 @@ docker compose up -d             # MySQL + Redis + AuditVault + Nexus AI
 | `admin` | `admin123` | 管理员：查询 + 导入 + 导出 |
 | `user` | `user123` | 普通用户：仅查询 |
 
-日志解析器按需运行：
+日志解析器按需运行（一键导出 HTML 可视化报告、Excel 与 SQL）：
 
 ```bash
 docker compose --profile tools run --rm log-parser \
-  -i sample_logs/access.csv -o /app/output --excel --sql
+  -i sample_logs/access.csv -o /app/output --html --excel --sql
 ```
 
 ---

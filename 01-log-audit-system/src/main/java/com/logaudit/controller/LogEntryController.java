@@ -4,6 +4,8 @@ import com.logaudit.entity.LogEntry;
 import com.logaudit.service.AuditLogService;
 import com.logaudit.service.LogEntryService;
 import jakarta.servlet.http.HttpServletRequest;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
@@ -20,13 +22,16 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/logs")
 @RequiredArgsConstructor
+@Tag(name = "日志检索与审计", description = "多条件组合查询、详情获取、流式 Excel 导出、批量导入与统计分析")
 public class LogEntryController {
 
     private final LogEntryService logEntryService;
     private final AuditLogService auditLogService;
 
     @GetMapping
+    @Operation(summary = "多条件分页查询日志", description = "支持时间范围、IP、操作类型、严重程度等多维度筛选，并自动留存查询操作审计")
     public ResponseEntity<Map<String, Object>> searchLogs(
+
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime startTime,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime endTime,
             @RequestParam(required = false) String ipAddress,

@@ -93,10 +93,16 @@ def build_parser() -> argparse.ArgumentParser:
         help="导出 Excel 格式的汇总报告",
     )
     parser.add_argument(
+        "--html",
+        action="store_true",
+        help="导出现代化单文件交互式 HTML 可视化分析报告",
+    )
+    parser.add_argument(
         "--sql",
         action="store_true",
         help="导出 MySQL INSERT SQL 文件 (可导入项目一的 log_entry 表)",
     )
+
     parser.add_argument(
         "--csv-output",
         action="store_true",
@@ -127,7 +133,9 @@ def main(argv: list = None) -> int:
         export_to_excel,
         export_suspicious_csv,
     )
+    from log_parser.reporter_html import export_to_html
     from log_parser.exporter import export_to_sql_file
+
 
     # ── 1. 检查输入文件 ──
     if not os.path.isfile(args.input):
@@ -204,6 +212,11 @@ def main(argv: list = None) -> int:
         excel_path = os.path.join(args.output_dir, f"{base_name}_report.xlsx")
         export_to_excel(report, excel_path)
 
+    # 导出 HTML（可选）
+    if args.html:
+        html_path = os.path.join(args.output_dir, f"{base_name}_report.html")
+        export_to_html(report, html_path)
+
     # 导出 SQL（可选）
     if args.sql:
         sql_path = os.path.join(args.output_dir, f"{base_name}_data.sql")
@@ -216,8 +229,11 @@ def main(argv: list = None) -> int:
         logger.info("  ✓ Suspicious IPs:  %s", suspicious_csv)
     if args.excel:
         logger.info("  ✓ Excel report:    %s", excel_path)
+    if args.html:
+        logger.info("  ✓ HTML report:     %s", html_path)
     if args.sql:
         logger.info("  ✓ SQL dump:        %s", sql_path)
+
 
     logger.info("Done.")
     return 0

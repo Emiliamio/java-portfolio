@@ -217,6 +217,151 @@ document.addEventListener('keydown', e => {
   }
 });
 
+// ── Toast Notifications ─────────────────────────────────
+function showToast(msg, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.innerHTML = `<span style="font-size:1.1rem;">${type === 'success' ? '✓' : type === 'error' ? '!' : 'ℹ'}</span><span>${escHtml(msg)}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => {
+    if (toast.parentNode) toast.parentNode.removeChild(toast);
+  }, 4500);
+}
+
+// ── Webhook Simulator ───────────────────────────────────
+const WEBHOOK_PRESETS = {
+  payment_error: {
+    time: new Date().toISOString(),
+    level: "ERROR",
+    logger: "com.payment.gateway.AlipayAdapter",
+    message: "支付网关 HTTP 504 Gateway Timeout，订单号: ORD-202608250089",
+    clientIp: "192.168.1.108",
+    user: "pay-worker-01",
+    thread: "http-nio-8080-exec-12",
+    stack_trace: "java.net.SocketTimeoutException: Read timed out\n\tat java.net.http.HttpClient.send(HttpClient.java:550)\n\tat com.payment.gateway.AlipayAdapter.execute(AlipayAdapter.java:88)"
+  },
+  rate_limit: {
+    time: new Date().toISOString(),
+    level: "WARN",
+    logger: "com.logaudit.security.RedisRateLimiter",
+    message: "检测到同一 IP 连续 5 次登录失败，触发 Redis 频控锁定 15 分钟",
+    clientIp: "172.16.88.99",
+    user: "anonymous",
+    thread: "http-nio-8080-exec-4"
+  },
+  sqli_probe: {
+    time: new Date().toISOString(),
+    level: "CRITICAL",
+    logger: "com.logaudit.security.WafFilter",
+    message: "WAF 拦截 SQL 注入探针攻击: ' UNION SELECT null, username, password FROM user --",
+    clientIp: "203.0.113.42",
+    user: "attacker",
+    thread: "http-nio-8080-exec-9"
+  },
+  sso_login: {
+    time: new Date().toISOString(),
+    level: "INFO",
+    logger: "com.logaudit.controller.AuthController",
+    message: "用户 admin 通过 SSO 单点登录成功，分配角色: ADMIN",
+    clientIp: "10.0.0.15",
+    user: "admin",
+    thread: "http-nio-8080-exec-1"
+  },
+  batch_logs: [
+    {
+      time: new Date().toISOString(),
+      level: "INFO",
+      logger: "com.service.OrderService",
+      message: "订单 ORD-202608250090 创建成功",
+      clientIp: "192.168.1.120",
+      user: "zhangsan"
+    },
+    {
+      time: new Date().toISOString(),
+      level: "WARN",
+      logger: "com.service.StockService",
+      message: "商品 SKU-8899 库存不足 10 件预警",
+      clientIp: "192.168.1.121",
+      user: "inventory-job"
+    }
+  ]
+};
+
+function openWebhookModal() {
+  const modal = document.getElementById('webhookModal');
+  if (modal) {
+    modal.classList.remove('hidden');
+    setPreset('payment_error');
+  }
+}
+
+function closeWebhookModal() {
+  const modal = document.getElementById('webhookModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function setPreset(key) {
+  const payloadEl = document.getElementById('webhookPayload');
+  if (!payloadEl) return;
+  const data = WEBHOOK_PRESETS[key];
+  if (data) {
+    payloadEl.value = JSON.stringify(data, null, 2);
+  }
+}
+
+async function sendWebhookPayload() {
+  const token = (document.getElementById('webhookToken').value || '').trim();
+  const rawPayload = (document.getElementById('webhookPayload').value || '').trim();
+  const btn = document.getElementById('btnSendWebhook');
+
+  if (!rawPayload) {
+    showToast('Payload 不能为空', 'error');
+    return;
+  }
+
+  let parsed;
+  try {
+    parsed = JSON.parse(rawPayload);
+  } catch (e) {
+    showToast('JSON 格式错误: ' + e.message, 'error');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '发送中…';
+
+  try {
+    const resp = await fetch('/api/logs/webhook', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Audit-Token': token
+      },
+      body: JSON.stringify(parsed)
+    });
+
+    const resData = await resp.json();
+    if (resp.ok && resData.success) {
+      showToast(`✓ Webhook 采集成功：已接收 ${resData.accepted} 条日志并在后台异步入库！`, 'success');
+      closeWebhookModal();
+      // 触发界面实时刷新
+      setTimeout(() => {
+        loadStats();
+        search(1);
+      }, 300);
+    } else {
+      showToast('上报失败: ' + (resData.message || ('HTTP ' + resp.status)), 'error');
+    }
+  } catch (e) {
+    showToast('网络错误: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🚀 发送实时 Webhook';
+  }
+}
+
 // ── Init ────────────────────────────────────────────────
 (function init() {
   if (!dom.tableBody) return;
@@ -226,3 +371,4 @@ document.addEventListener('keydown', e => {
     search(1);
   });
 })();
+

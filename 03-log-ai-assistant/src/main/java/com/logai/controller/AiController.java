@@ -5,6 +5,8 @@ import com.logai.entity.AnalyzeRequest;
 import com.logai.entity.AnalysisResult;
 import com.logai.entity.ApiResponse;
 import com.logai.service.LlmService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +32,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/ai")
+@Tag(name = "AI 日志分析", description = "基于大语言模型与规则引擎的日志安全分析、SSE 打字机流式输出及历史审计")
 public class AiController {
 
     private static final Logger log = LoggerFactory.getLogger(AiController.class);
@@ -40,7 +43,9 @@ public class AiController {
     }
 
     @PostMapping("/analyze")
+    @Operation(summary = "同步分析日志", description = "提交待分析日志文本，由大模型分析安全风险等级、事件摘要及处置建议")
     public ApiResponse<AnalysisResult> analyze(@Valid @RequestBody AnalyzeRequest request) {
+
         log.info("Received analyze request, log length={}", request.getLogContent().length());
         AnalysisResult result = llmService.analyze(request.getLogContent(), currentUser());
         return ApiResponse.success(result);

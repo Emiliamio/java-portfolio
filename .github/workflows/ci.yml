@@ -73,9 +73,10 @@ jobs:
         working-directory: ./02-log-parser
         run: |
           mkdir -p output
-          python -m log_parser.cli -i sample_logs/access.csv -o output --excel --sql
-          python -m log_parser.cli -i sample_logs/server.log -o output --excel --sql
+          python -m log_parser.cli -i sample_logs/access.csv -o output --excel --html --sql
+          python -m log_parser.cli -i sample_logs/server.log -o output --excel --html --sql
           ls -la output/
+
 
   # ────────────────────────────────────────────────────────
   # 3. Nexus AI (Spring Boot · AI 日志分析助手)

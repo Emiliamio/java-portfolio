@@ -10,6 +10,8 @@ import com.logaudit.service.LogEntryService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +34,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/logs/webhook")
 @RequiredArgsConstructor
+@Tag(name = "日志采集 Webhook", description = "供微服务与 Logback Appender 实时推送日志的端点")
 public class WebhookController {
 
     private final LogEntryService logEntryService;
@@ -42,7 +45,9 @@ public class WebhookController {
     private String webhookSecretKey;
 
     @PostMapping
+    @Operation(summary = "实时摄入日志", description = "接收单条或批量 JSON 格式日志，经令牌校验后异步批量写入数据库并更新活跃 IP 统计")
     public ResponseEntity<Map<String, Object>> ingestLogs(
+
             @RequestHeader(value = "X-Audit-Token", required = false) String auditTokenHeader,
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestBody(required = false) JsonNode payload,

@@ -7,6 +7,8 @@ import com.logaudit.security.JwtAuthFilter;
 import com.logaudit.security.JwtUtil;
 import com.logaudit.security.RedisRateLimiter;
 import com.logaudit.security.TokenBlacklistService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -29,6 +31,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Tag(name = "认证鉴权", description = "用户登录、登出及当前身份会话接口")
 public class AuthController {
 
     private final UserMapper userMapper;
@@ -38,7 +41,9 @@ public class AuthController {
     private final TokenBlacklistService tokenBlacklistService;
 
     @PostMapping("/login")
+    @Operation(summary = "用户登录", description = "校验账号密码、执行 Redis 防爆破频控检查并写入 httpOnly Cookie")
     public ResponseEntity<Map<String, Object>> login(
+
             @Valid @RequestBody LoginRequest request,
             HttpServletRequest httpRequest,
             HttpServletResponse response) {
