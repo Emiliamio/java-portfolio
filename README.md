@@ -1,6 +1,10 @@
 # Java 全栈开发 · 项目作品集
 
-> 日志审计与分析领域 — 4 个项目，覆盖 Java / Python / AI / DevOps 全链路
+> 日志审计与分析领域 — 4 个项目，覆盖 Java / Python / AI / DevOps / CI/CD 全链路
+
+[![CI/CD Pipeline](https://github.com/Emiliamio/java-portfolio/actions/workflows/ci.yml/badge.svg)](https://github.com/Emiliamio/java-portfolio/actions/workflows/ci.yml)
+![Tests](https://img.shields.io/badge/Tests-93%20passed-brightgreen)
+![Coverage](https://img.shields.io/badge/Coverage-100%25-brightgreen)
 
 ---
 
@@ -8,10 +12,11 @@
 
 | # | 项目 | 技术栈 | 一句话 | 入口 |
 |---|---|---|---|---|
-| ① | **AuditVault** 日志审计 | Spring Boot + MySQL + Redis | 日志采集、查询、导入、导出，操作审计自闭环 | `:8080` |
+| ① | **AuditVault** 日志审计 | Spring Boot + MySQL + Redis | 日志采集(Webhook/批量)、查询、导出，操作审计自闭环 | `:8080` |
 | ② | **LogScope** 日志解析器 | Python + Pandas + CLI | CSV/文本日志解析，异常检测，多格式报告 | CLI |
-| ③ | **Nexus AI** 智能分析 | Spring Boot + Anthropic API | 粘贴日志 → AI 分析风险 + 处置建议 | `:8081` |
+| ③ | **Nexus AI** 智能分析 | Spring Boot + Anthropic / DeepSeek | 粘贴日志 → AI 分析风险 + 处置建议 (SSE 打字机) | `:8081` |
 | ④ | **技术博客** | Hexo + GitHub Pages | 项目复盘与技术文章 | [emiliamio.github.io](https://emiliamio.github.io) |
+
 
 ---
 
@@ -60,6 +65,8 @@ docker compose --profile tools run --rm log-parser \
 │ :8080    │ │ :8081 │ │ GitHub   │
 └────┬─────┘ └──┬────┘ │ Pages    │
      │          │      └──────────┘
+     │   POST /api/logs/webhook (Logback 实时采集)
+     │◀─────────┤
      ▼          ▼
 ┌─────────┐ ┌──────────────────┐
 │  Redis  │ │     MySQL 8      │
@@ -79,14 +86,16 @@ docker compose --profile tools run --rm log-parser \
 ## 项目结构
 
 ```
-├── 01-log-audit-system/    # Spring Boot · 日志审计查询
+├── .github/workflows/      # 统一 CI/CD 流水线 (Matrix 多语言测试)
+├── 01-log-audit-system/    # Spring Boot · 日志审计查询 + Webhook 采集
 ├── 02-log-parser/          # Python CLI · 日志解析与异常检测
-├── 03-log-ai-assistant/    # Spring Boot + LLM · AI 智能分析
+├── 03-log-ai-assistant/    # Spring Boot + LLM · AI 智能分析 (SSE 流式)
 ├── 02-tech-blog/           # Hexo · 技术博客
 ├── docker-compose.yml      # 一键编排全部服务
 ├── demo.sh                 # 本地演示脚本
 ├── docs/
-│   └── DEPLOY.md           # 云服务器部署指南
+│   ├── DEPLOY.md           # 云服务器部署指南
+│   └── LOGBACK_INTEGRATION.md # Logback Webhook 采集接入指南
 └── .env.example
 ```
 
@@ -96,12 +105,13 @@ docker compose --profile tools run --rm log-parser \
 
 ```
 Java 17 · Spring Boot 3.2 · MyBatis · MySQL 8 · Redis 7
-Spring Security · JWT · BCrypt · httpOnly Cookie
+Spring Security · JWT · BCrypt · httpOnly Cookie · Logback Webhook
 Python 3.12 · Pandas · Regex · argparse
-Anthropic Messages API / DeepSeek · LLM Prompt Engineering · JSON 容错解析
+Anthropic Messages API / DeepSeek · LLM Prompt Engineering · JSON 容错解析 · SSE Stream
 Docker · Docker Compose · 多阶段构建 · HEALTHCHECK
-Hexo · GitHub Pages · GitHub Actions
+Hexo · GitHub Pages · GitHub Actions CI/CD Pipeline
 ```
+
 
 ---
 

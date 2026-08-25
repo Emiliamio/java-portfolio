@@ -47,3 +47,6 @@ app:
   jwt:
     secret: ${JWT_SECRET:auditvault-demo-secret-key-change-me-in-production-32bytes-min}
     expiration-ms: 86400000
+  # Webhook 日志采集配置
+  webhook:
+    secret-key: ${WEBHOOK_SECRET_KEY:auditvault-webhook-default-secret-token-2026}

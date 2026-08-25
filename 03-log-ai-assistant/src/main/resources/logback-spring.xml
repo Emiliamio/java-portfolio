@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="30 seconds">
+
+    <springProperty scope="context" name="APP_NAME" source="spring.application.name" defaultValue="log-ai-assistant"/>
+    <springProperty scope="context" name="AUDIT_WEBHOOK_URL" source="auditvault.webhook.url" defaultValue="http://localhost:8080/api/logs/webhook"/>
+    <springProperty scope="context" name="AUDIT_WEBHOOK_TOKEN" source="auditvault.webhook.token" defaultValue="auditvault-webhook-default-secret-token-2026"/>
+
+    <!-- 彩色控制台输出 -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%-5level) [%thread] %cyan(%logger{36}) : %msg%n%throwable</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- 异步包装器，防止 I/O 阻塞业务线程 -->
+    <appender name="ASYNC_CONSOLE" class="ch.qos.logback.classic.AsyncAppender">
+        <discardingThreshold>0</discardingThreshold>
+        <queueSize>512</queueSize>
+        <appender-ref ref="CONSOLE"/>
+    </appender>
+
+    <!--
+      【AuditVault 实时采集集成说明】
+      微服务可引入 logstash-logback-encoder 或 HTTP Appender，将 ERROR/WARN 事件实时上报至 AuditVault：
+      端点: POST ${AUDIT_WEBHOOK_URL}
+      请求头: X-Audit-Token: ${AUDIT_WEBHOOK_TOKEN}
+      Payload: { "level": "%level", "logger": "%logger", "message": "%message", "stack_trace": "%exception" }
+    -->
+
+    <!-- 全局日志级别 -->
+    <root level="INFO">
+        <appender-ref ref="ASYNC_CONSOLE"/>
+    </root>
+
+    <!-- 本项目包日志级别 -->
+    <logger name="com.logai" level="DEBUG"/>
+
+</configuration>
