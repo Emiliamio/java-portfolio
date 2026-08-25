@@ -79,12 +79,22 @@
         </foreach>
     </insert>
 
-    <!-- 今日统计 -->
+    <!-- 今日统计（含活跃 IP 数） -->
     <select id="todayStats" resultType="map">
         SELECT
             COUNT(*) AS total,
-            SUM(CASE WHEN severity = 'ERROR' OR severity = 'CRITICAL' THEN 1 ELSE 0 END) AS abnormal
+            COALESCE(SUM(CASE WHEN severity = 'ERROR' OR severity = 'CRITICAL' THEN 1 ELSE 0 END), 0) AS abnormal,
+            COUNT(DISTINCT ip_address) AS uniqueIps
         FROM log_entry
         WHERE DATE(timestamp) = CURDATE()
+    </select>
+
+    <!-- 全局统计（当今日无数据时兜底） -->
+    <select id="overallStats" resultType="map">
+        SELECT
+            COUNT(*) AS total,
+            COALESCE(SUM(CASE WHEN severity = 'ERROR' OR severity = 'CRITICAL' THEN 1 ELSE 0 END), 0) AS abnormal,
+            COUNT(DISTINCT ip_address) AS uniqueIps
+        FROM log_entry
     </select>
 </mapper>

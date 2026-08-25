@@ -210,41 +210,83 @@ def parse_csv(filepath: str) -> pd.DataFrame:
     return df
 
 
-def parse_text(filepath: str) -> pd.DataFrame:
+def is_continuation_line(line: str) -> bool:
     """
-    解析纯文本格式的非结构化日志文件。
+    判断一行是否为上一条日志的延续行（如 Java 异常堆栈、换行数据等）。
+    """
+    # 堆栈特征前缀
+    if line.startswith(("\tat ", "at ", "Caused by: ", "... ", "Suppressed: ")):
+        return True
+    # 缩进行且不以时间戳开头
+    if (line.startswith("  ") or line.startswith("\t")) and extract_timestamp(line) is None:
+        return True
+    # 没有时间戳且没有 IP 的普通延续行
+    if extract_timestamp(line) is None and extract_ip(line) is None:
+        return True
+    return False
 
-    逐行用正则提取字段，转成结构化 DataFrame。
+
+def parse_text(filepath: str, merge_multiline: bool = True) -> pd.DataFrame:
+    """
+    解析纯文本格式的非结构化日志文件，支持多行堆栈（StackTrace）自动聚合。
+
+    逐行用正则提取字段，遇到异常堆栈行自动追加到上一条记录的 detail 中。
 
     Args:
         filepath: 文本日志文件路径
+        merge_multiline: 是否开启多行日志/堆栈合并
 
     Returns:
         pd.DataFrame: 解析后的 DataFrame
     """
-    logger.info("Parsing text log file: %s", filepath)
+    logger.info("Parsing text log file: %s (merge_multiline=%s)", filepath, merge_multiline)
 
     records = []
+    current_record = None
+    multiline_buffer = []
+
+    def commit_current():
+        nonlocal current_record, multiline_buffer
+        if current_record:
+            if multiline_buffer:
+                stack_trace = "\n".join(multiline_buffer)
+                if current_record.get("detail"):
+                    current_record["detail"] += "\n" + stack_trace
+                else:
+                    current_record["detail"] = stack_trace
+                current_record["raw_line"] += "\n" + stack_trace
+            records.append(current_record)
+            current_record = None
+            multiline_buffer = []
+
     with open(filepath, "r", encoding="utf-8", errors="replace") as f:
-        for line_num, line in enumerate(f, 1):
-            line = line.strip()
-            if not line:
+        for line_num, raw_line in enumerate(f, 1):
+            line = raw_line.rstrip("\r\n")
+            if not line.strip():
                 continue
-            record = parse_line(line)
-            record["line_number"] = line_num
-            records.append(record)
+
+            if merge_multiline and current_record is not None and is_continuation_line(line):
+                # 延续行：聚合到当前日志记录的 detail 中
+                multiline_buffer.append(line.strip())
+            else:
+                # 遇到新记录（含有时间戳或非延续行）
+                commit_current()
+                current_record = parse_line(line)
+                current_record["line_number"] = line_num
+
+        commit_current()
 
     df = pd.DataFrame(records)
-    logger.info("Text parsed: %d lines → %d records", line_num, len(df))
+    logger.info("Text parsed: %d records generated", len(df))
 
     # 尝试解析时间戳列为 datetime
-    if "timestamp" in df.columns and not df["timestamp"].isna().all():
+    if not df.empty and "timestamp" in df.columns and not df["timestamp"].isna().all():
         df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
 
     return df
 
 
-def parse_file(filepath: str) -> pd.DataFrame:
+def parse_file(filepath: str, merge_multiline: bool = True) -> pd.DataFrame:
     """
     自动检测文件类型并解析日志文件。
 
@@ -252,6 +294,7 @@ def parse_file(filepath: str) -> pd.DataFrame:
 
     Args:
         filepath: 日志文件路径 (.csv 或 .log / .txt)
+        merge_multiline: 是否开启多行日志/堆栈合并 (默认开启)
 
     Returns:
         pd.DataFrame: 结构化日志数据
@@ -259,4 +302,5 @@ def parse_file(filepath: str) -> pd.DataFrame:
     if filepath.lower().endswith(".csv"):
         return parse_csv(filepath)
     else:
-        return parse_text(filepath)
+        return parse_text(filepath, merge_multiline=merge_multiline)
+

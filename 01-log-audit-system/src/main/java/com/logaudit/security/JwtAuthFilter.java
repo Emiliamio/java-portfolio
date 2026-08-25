@@ -23,9 +23,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     public static final String COOKIE_NAME = "auditvault_token";
 
     private final JwtUtil jwtUtil;
+    private final TokenBlacklistService tokenBlacklistService;
 
-    public JwtAuthFilter(JwtUtil jwtUtil) {
+    public JwtAuthFilter(JwtUtil jwtUtil, TokenBlacklistService tokenBlacklistService) {
         this.jwtUtil = jwtUtil;
+        this.tokenBlacklistService = tokenBlacklistService;
     }
 
     @Override
@@ -35,7 +37,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
         String token = extractToken(request);
-        if (token != null) {
+        if (token != null && !tokenBlacklistService.isBlacklisted(token)) {
             String username = jwtUtil.getUsername(token);
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 String role = jwtUtil.getRole(token);
@@ -44,6 +46,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         List.of(new SimpleGrantedAuthority("ROLE_" + (role == null ? "USER" : role)))
                 );
                 SecurityContextHolder.getContext().setAuthentication(auth);
+                request.setAttribute("username", username);
+                request.setAttribute("role", role);
             }
         }
         filterChain.doFilter(request, response);

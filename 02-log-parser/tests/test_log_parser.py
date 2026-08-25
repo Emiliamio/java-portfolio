@@ -289,3 +289,23 @@ class TestIntegration:
         suspicious_ips = report["suspicious_ips"]["ip_address"].tolist()
         assert "10.0.0.55" in suspicious_ips
         assert "172.16.0.88" in suspicious_ips
+
+
+class TestMultiLineParser:
+    def test_merge_java_stacktrace(self, tmp_path):
+        content = (
+            '2025-01-15 08:30:00 192.168.1.50 User admin QUERY ERROR "Database connection timeout"\n'
+            '\tat com.mysql.cj.jdbc.exceptions.CommunicationsException: Communications link failure\n'
+            '\tat com.zaxxer.hikari.pool.PoolBase.newConnection(PoolBase.java:364)\n'
+            'Caused by: java.net.ConnectException: Connection refused: connect\n'
+            '2025-01-15 08:30:05 192.168.1.50 User admin QUERY SUCCESS "Query finished after retry"\n'
+        )
+        log_file = tmp_path / "stacktrace.log"
+        log_file.write_text(content, encoding="utf-8")
+
+        df = parse_file(str(log_file), merge_multiline=True)
+        assert len(df) == 2
+        assert "CommunicationsException" in df.iloc[0]["detail"]
+        assert "Caused by" in df.iloc[0]["detail"]
+        assert df.iloc[1]["operation_result"] == "SUCCESS"
+

@@ -116,7 +116,7 @@ function checkHealth() {
     });
 }
 
-// ── Analyze ──────────────────────────────────────────────
+// ── Analyze (SSE Stream) ─────────────────────────────────
 async function analyze() {
   const logContent = $('logInput').value.trim();
   if (logContent.length < 5) return;
@@ -125,23 +125,83 @@ async function analyze() {
   hideError();
   showLoading();
   $('analyzeBtn').classList.add('loading');
-  $('analyzeBtn').textContent = '分析中…';
+  $('analyzeBtn').textContent = 'AI 推理中…';
 
   try {
-    const resp = await fetch(API + '/analyze', {
+    const resp = await fetch(API + '/analyze-stream', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ logContent }),
     });
-    const data = await resp.json();
 
-    if (data.code === 200) {
-      renderResult(data.data);
-    } else {
-      showError(data.message || '分析失败');
+    if (!resp.ok) {
+      throw new Error(`HTTP ${resp.status}`);
+    }
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let buffer = '';
+    let streamText = '';
+    let parsedResult = null;
+
+    hideLoading();
+    // Prepare result card in streaming state
+    $('resMeta').innerHTML = '<span class="tag tag-op">流式生成中...</span>';
+    $('resTags').innerHTML = '';
+    $('resSummary').textContent = '';
+    $('resSuggestion').textContent = '';
+    $('resultCard').classList.remove('hidden');
+    $('resultCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+
+      let currentEvent = 'message';
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('event:')) {
+          currentEvent = trimmed.substring(6).trim();
+        } else if (trimmed.startsWith('data:')) {
+          const data = trimmed.substring(5).trim();
+          if (currentEvent === 'chunk') {
+            streamText += data;
+            $('resSummary').textContent = streamText;
+          } else if (currentEvent === 'done') {
+            try {
+              parsedResult = JSON.parse(data);
+            } catch (e) {
+              console.warn('Failed to parse final done data', e);
+            }
+          }
+        }
+      }
+    }
+
+    if (parsedResult) {
+      renderResult(parsedResult);
     }
   } catch (err) {
-    showError(`无法连接到后端服务。请确认服务已启动 (${err.message})`);
+    console.warn('SSE stream failed, falling back to sync endpoint', err);
+    try {
+      const syncResp = await fetch(API + '/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ logContent }),
+      });
+      const data = await syncResp.json();
+      if (data.code === 200) {
+        renderResult(data.data);
+      } else {
+        showError(data.message || '分析失败');
+      }
+    } catch (syncErr) {
+      showError(`无法连接到后端服务 (${syncErr.message})`);
+    }
   } finally {
     hideLoading();
     $('analyzeBtn').classList.remove('loading');

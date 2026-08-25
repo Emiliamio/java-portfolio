@@ -7,12 +7,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -23,7 +24,11 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class LogEntryServiceImpl implements LogEntryService {
 
+    private static final int MAX_EXPORT_LIMIT = 50000;
+    private static final String HLL_KEY_PREFIX = "auditvault:unique_ips:";
+
     private final LogEntryMapper logEntryMapper;
+    private final StringRedisTemplate redisTemplate;
 
     @Override
     public Map<String, Object> searchLogs(LocalDateTime startTime, LocalDateTime endTime,
@@ -55,26 +60,66 @@ public class LogEntryServiceImpl implements LogEntryService {
 
         logEntryMapper.batchInsert(logList);
 
+        // 异步更新活跃 IP 到 Redis HyperLogLog 极速统计结构中
+        try {
+            String todayKey = HLL_KEY_PREFIX + LocalDate.now();
+            String[] ips = logList.stream()
+                    .map(LogEntry::getIpAddress)
+                    .filter(ip -> ip != null && !ip.isBlank())
+                    .distinct()
+                    .toArray(String[]::new);
+            if (ips.length > 0) {
+                redisTemplate.opsForHyperLogLog().add(todayKey, ips);
+            }
+        } catch (Exception e) {
+            log.warn("Redis HyperLogLog add failed: {}", e.getMessage());
+        }
+
         long elapsed = System.currentTimeMillis() - start;
         log.info("批量导入完成，数量：{}，耗时：{}ms", logList.size(), elapsed);
     }
 
     @Override
     public Map<String, Object> todayStats() {
-        return logEntryMapper.todayStats();
+        Map<String, Object> stats = logEntryMapper.todayStats();
+        Number totalNum = stats != null ? (Number) stats.get("total") : 0;
+        long total = totalNum != null ? totalNum.longValue() : 0;
+
+        // 尝试优先读取 Redis HyperLogLog 独立 IP 统计
+        try {
+            String todayKey = HLL_KEY_PREFIX + LocalDate.now();
+            Long hllCount = redisTemplate.opsForHyperLogLog().size(todayKey);
+            if (hllCount != null && hllCount > 0 && stats != null) {
+                stats = new HashMap<>(stats);
+                stats.put("uniqueIps", hllCount);
+            }
+        } catch (Exception e) {
+            log.warn("Redis HyperLogLog query failed: {}", e.getMessage());
+        }
+
+        // 如果今日尚无日志（如演示环境只有历史种子数据），智能回退查询全局统计，避免面板全 0
+        if (total == 0) {
+            Map<String, Object> overall = logEntryMapper.overallStats();
+            if (overall != null && overall.get("total") != null && ((Number) overall.get("total")).longValue() > 0) {
+                return overall;
+            }
+        }
+        return stats != null ? stats : Map.of("total", 0, "abnormal", 0, "uniqueIps", 0);
     }
 
     @Override
     public byte[] exportLogs(LocalDateTime startTime, LocalDateTime endTime,
                              String ipAddress, String operation, String severity) {
-        // 查全量数据（不分页）
         long total = logEntryMapper.countByConditions(startTime, endTime, ipAddress, operation, severity);
+        int fetchSize = (int) Math.min(total, MAX_EXPORT_LIMIT);
+
         List<LogEntry> records = logEntryMapper.findByConditions(
-                startTime, endTime, ipAddress, operation, severity, 0, (int) total);
+                startTime, endTime, ipAddress, operation, severity, 0, fetchSize);
 
-        try (Workbook workbook = new XSSFWorkbook();
-             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-
+        // 使用 SXSSFWorkbook 流式写入（内存保留 100 行窗口，其余溢出到临时文件），彻底防止 OOM
+        SXSSFWorkbook workbook = new SXSSFWorkbook(100);
+        try (workbook; ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            workbook.setCompressTempFiles(true);
             Sheet sheet = workbook.createSheet("日志记录");
 
             // 表头
@@ -86,17 +131,17 @@ public class LogEntryServiceImpl implements LogEntryService {
 
             // 数据行
             int rowNum = 1;
-            for (LogEntry log : records) {
+            for (LogEntry logEntry : records) {
                 Row row = sheet.createRow(rowNum++);
-                row.createCell(0).setCellValue(log.getId() != null ? log.getId() : 0);
-                row.createCell(1).setCellValue(log.getTimestamp() != null ? log.getTimestamp().toString() : "");
-                row.createCell(2).setCellValue(log.getIpAddress() != null ? log.getIpAddress() : "");
-                row.createCell(3).setCellValue(log.getUsername() != null ? log.getUsername() : "");
-                row.createCell(4).setCellValue(log.getOperation() != null ? log.getOperation() : "");
-                row.createCell(5).setCellValue(log.getOperationResult() != null ? log.getOperationResult() : "");
-                row.createCell(6).setCellValue(log.getDetail() != null ? log.getDetail() : "");
-                row.createCell(7).setCellValue(log.getSeverity() != null ? log.getSeverity() : "");
-                row.createCell(8).setCellValue(log.getSourceFile() != null ? log.getSourceFile() : "");
+                row.createCell(0).setCellValue(logEntry.getId() != null ? logEntry.getId() : 0);
+                row.createCell(1).setCellValue(logEntry.getTimestamp() != null ? logEntry.getTimestamp().toString() : "");
+                row.createCell(2).setCellValue(logEntry.getIpAddress() != null ? logEntry.getIpAddress() : "");
+                row.createCell(3).setCellValue(logEntry.getUsername() != null ? logEntry.getUsername() : "");
+                row.createCell(4).setCellValue(logEntry.getOperation() != null ? logEntry.getOperation() : "");
+                row.createCell(5).setCellValue(logEntry.getOperationResult() != null ? logEntry.getOperationResult() : "");
+                row.createCell(6).setCellValue(logEntry.getDetail() != null ? logEntry.getDetail() : "");
+                row.createCell(7).setCellValue(logEntry.getSeverity() != null ? logEntry.getSeverity() : "");
+                row.createCell(8).setCellValue(logEntry.getSourceFile() != null ? logEntry.getSourceFile() : "");
             }
 
             workbook.write(out);
@@ -104,6 +149,8 @@ public class LogEntryServiceImpl implements LogEntryService {
         } catch (Exception e) {
             log.error("导出Excel失败", e);
             throw new RuntimeException("导出Excel失败", e);
+        } finally {
+            workbook.dispose(); // 清理临时磁盘文件
         }
     }
 }

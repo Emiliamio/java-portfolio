@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -18,6 +20,7 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * LLM 服务 — 调用大模型 API 分析日志内容。
@@ -49,6 +52,149 @@ public class LlmService {
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(timeoutSeconds))
                 .build();
+    }
+
+    /**
+     * 流式分析日志，通过 SSE Emitter 逐块推送到客户端（打字机流式响应）。
+     */
+    public void analyzeStream(String logContent, String username, SseEmitter emitter) {
+        CompletableFuture.runAsync(() -> {
+            long startTime = System.currentTimeMillis();
+            String apiKey = System.getenv("AI_API_KEY");
+
+            if (apiKey == null || apiKey.isBlank()) {
+                log.info("AI_API_KEY not set, using simulated typewriter fallback stream.");
+                simulateStreamFallback(logContent, username, startTime, emitter);
+                return;
+            }
+
+            try {
+                String systemPrompt = buildSystemPrompt();
+                JSONObject requestBody = buildRequestBody(systemPrompt, logContent);
+                requestBody.put("stream", true);
+
+                HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+                        .uri(URI.create(apiUrl))
+                        .header("Content-Type", "application/json")
+                        .timeout(Duration.ofSeconds(timeoutSeconds));
+
+                if (isAnthropic()) {
+                    requestBuilder.header("x-api-key", apiKey)
+                            .header("anthropic-version", "2023-06-01");
+                } else {
+                    requestBuilder.header("Authorization", "Bearer " + apiKey);
+                }
+
+                HttpRequest request = requestBuilder
+                        .POST(HttpRequest.BodyPublishers.ofString(requestBody.toJSONString()))
+                        .build();
+
+                StringBuilder fullResponse = new StringBuilder();
+
+                httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofLines())
+                        .thenAccept(response -> {
+                            if (response.statusCode() != 200) {
+                                log.warn("LLM Stream API returned {}, falling back", response.statusCode());
+                                simulateStreamFallback(logContent, username, startTime, emitter);
+                                return;
+                            }
+
+                            response.body().forEach(line -> {
+                                String trimmed = line.trim();
+                                if (trimmed.startsWith("data:")) {
+                                    String data = trimmed.substring(5).trim();
+                                    if (!"[DONE]".equals(data) && !data.isEmpty()) {
+                                        String chunk = extractChunkFromStreamData(data);
+                                        if (chunk != null && !chunk.isEmpty()) {
+                                            fullResponse.append(chunk);
+                                            try {
+                                                emitter.send(SseEmitter.event().name("chunk").data(chunk));
+                                            } catch (Exception ex) {
+                                                log.debug("Client disconnected during SSE stream");
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+
+                            int elapsedMs = (int) (System.currentTimeMillis() - startTime);
+                            AnalysisResult result = parseResponse(fullResponse.toString());
+                            result.setAnalysisTimeMs(elapsedMs);
+                            result.setModelUsed(apiModel);
+                            result.setFallback(false);
+
+                            saveToHistory(logContent, result, username);
+
+                            try {
+                                emitter.send(SseEmitter.event().name("done").data(JSON.toJSONString(result)));
+                                emitter.complete();
+                            } catch (Exception ex) {
+                                emitter.completeWithError(ex);
+                            }
+                        })
+                        .exceptionally(ex -> {
+                            log.error("LLM streaming failed, falling back to simulated stream", ex);
+                            simulateStreamFallback(logContent, username, startTime, emitter);
+                            return null;
+                        });
+
+            } catch (Exception e) {
+                log.error("Stream initialization failed, falling back", e);
+                simulateStreamFallback(logContent, username, startTime, emitter);
+            }
+        });
+    }
+
+    private String extractChunkFromStreamData(String dataJson) {
+        try {
+            JSONObject json = JSON.parseObject(dataJson);
+            if ("content_block_delta".equals(json.getString("type"))) {
+                JSONObject delta = json.getJSONObject("delta");
+                if (delta != null && "text_delta".equals(delta.getString("type"))) {
+                    return delta.getString("text");
+                }
+            }
+            if (json.containsKey("choices")) {
+                JSONArray choices = json.getJSONArray("choices");
+                if (choices != null && !choices.isEmpty()) {
+                    JSONObject first = choices.getJSONObject(0);
+                    JSONObject delta = first.getJSONObject("delta");
+                    if (delta != null && delta.containsKey("content")) {
+                        return delta.getString("content");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // ignore malformed line
+        }
+        return null;
+    }
+
+    private void simulateStreamFallback(String logContent, String username, long startTime, SseEmitter emitter) {
+        AnalysisResult result = fallbackAnalysis(logContent);
+        int elapsedMs = (int) (System.currentTimeMillis() - startTime);
+        result.setAnalysisTimeMs(elapsedMs);
+        result.setModelUsed("rule-engine (stream-fallback)");
+        result.setFallback(true);
+        saveToHistory(logContent, result, username);
+
+        String resultJson = JSON.toJSONString(result);
+        int chunkSize = 4;
+        for (int i = 0; i < resultJson.length(); i += chunkSize) {
+            String chunk = resultJson.substring(i, Math.min(i + chunkSize, resultJson.length()));
+            try {
+                emitter.send(SseEmitter.event().name("chunk").data(chunk));
+                Thread.sleep(15);
+            } catch (Exception ex) {
+                break;
+            }
+        }
+        try {
+            emitter.send(SseEmitter.event().name("done").data(resultJson));
+            emitter.complete();
+        } catch (Exception ex) {
+            emitter.completeWithError(ex);
+        }
     }
 
     /**

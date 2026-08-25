@@ -8,9 +8,11 @@ import com.logai.service.LlmService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.HashMap;
 import java.util.List;
@@ -20,10 +22,11 @@ import java.util.Map;
  * AI 分析 REST API。
  *
  * 接口列表：
- * - POST /api/ai/analyze    提交日志文本，获取 AI 分析结果
- * - GET  /api/ai/history    获取当前用户的分析历史
- * - GET  /api/ai/history/{id}  获取单条分析详情（仅本人）
- * - GET  /api/ai/stats      获取统计信息（当前用户）
+ * - POST /api/ai/analyze         提交日志文本，获取 AI 分析结果 (同步阻塞)
+ * - POST /api/ai/analyze-stream  提交日志文本，获取 AI 分析结果 (SSE 打字机流式)
+ * - GET  /api/ai/history         获取当前用户的分析历史
+ * - GET  /api/ai/history/{id}    获取单条分析详情（仅本人）
+ * - GET  /api/ai/stats           获取统计信息（当前用户）
  */
 @RestController
 @RequestMapping("/api/ai")
@@ -41,6 +44,14 @@ public class AiController {
         log.info("Received analyze request, log length={}", request.getLogContent().length());
         AnalysisResult result = llmService.analyze(request.getLogContent(), currentUser());
         return ApiResponse.success(result);
+    }
+
+    @PostMapping(value = "/analyze-stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter analyzeStream(@Valid @RequestBody AnalyzeRequest request) {
+        log.info("Received SSE analyze stream request, log length={}", request.getLogContent().length());
+        SseEmitter emitter = new SseEmitter(120_000L);
+        llmService.analyzeStream(request.getLogContent(), currentUser(), emitter);
+        return emitter;
     }
 
     @GetMapping("/history")

@@ -32,4 +32,6 @@ public interface LogEntryMapper {
     int batchInsert(@Param("list") List<LogEntry> list);
 
     Map<String, Object> todayStats();
+
+    Map<String, Object> overallStats();
 }

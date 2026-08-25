@@ -70,4 +70,20 @@ public class JwtUtil {
             return null;
         }
     }
+
+    /** 获取令牌剩余有效时间（毫秒）。非法或已过期返回 0。 */
+    public long getRemainingExpirationMs(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+            Date expiration = claims.getExpiration();
+            long remaining = expiration.getTime() - System.currentTimeMillis();
+            return Math.max(0, remaining);
+        } catch (Exception e) {
+            return 0;
+        }
+    }
 }
