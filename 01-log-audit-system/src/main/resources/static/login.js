@@ -7,9 +7,18 @@
   const errorEl = document.getElementById('loginError');
   const btn = document.getElementById('loginBtn');
 
-  // 跳转目标：支持 ?redirect= 参数，默认首页
+  // 跳转目标：支持 ?redirect= 参数，防死循环（不跳回 login.html）
   const params = new URLSearchParams(window.location.search);
-  const redirect = params.get('redirect') || 'index.html';
+  let redirect = params.get('redirect') || 'index.html';
+  if (!redirect || redirect.includes('login.html')) {
+    redirect = 'index.html';
+  }
+
+  // 若已处于登录状态，直接进入目标页面
+  fetch('/api/auth/me', { credentials: 'same-origin' })
+    .then(r => { if (r.ok) window.location.href = redirect; })
+    .catch(() => {});
+
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
