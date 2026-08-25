@@ -117,20 +117,26 @@ Hexo · GitHub Pages · GitHub Actions CI/CD Pipeline
 
 ---
 
-## 部署
+---
 
-详细部署指南见 [docs/DEPLOY.md](docs/DEPLOY.md)。
+## 🖥️ 系统界面预览
 
-常用命令：
+| AuditVault 审计中心 (`:8080`) | Nexus AI 智能排障 (`:8081`) |
+|:---:|:---:|
+| ![AuditVault](docs/images/auditvault-screenshot.png) | ![Nexus AI](docs/images/nexus-ai.png) |
+| *操作审计自闭环 · Webhook 实时采集 · 流式 Excel 导出* | *SSE 流式打字机推理 · 跨服务反向上报 · 智能处置建议* |
 
-```bash
-docker compose ps            # 查看状态
-docker compose logs -f       # 查看日志
-docker compose down -v       # 停止并重置数据库
-```
+---
+
+## 📚 详细技术文档
+
+- 🚀 [大厂高频面试深度架构演进与答辩宝典](docs/INTERVIEW_DEEP_DIVE.md) —— *SXSSFWorkbook 内存防爆、HyperLogLog 伯努利试验原理、JWT 登出黑名单、亿级流量 Kafka+ClickHouse 演进*
+- 📡 [Logback 实时采集 Webhook 接入指南](docs/LOGBACK_INTEGRATION.md) —— *客户端微服务 3 分钟极速接入模版*
+- 🚢 [云服务器生产部署指南](docs/DEPLOY.md) —— *Docker Compose 一键启动与生产安全建议*
 
 ---
 
 ## License
 
 MIT
+
