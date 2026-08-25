@@ -37,10 +37,22 @@ function requireAuth() {
         window.location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname);
         return false;
       }
+      return r.json();
+    })
+    .then(data => {
+      if (data && data.success && $('topUserBadge')) {
+        window.currentUser = { username: data.username, role: data.role };
+        if (data.role === 'ADMIN') {
+          $('topUserBadge').innerHTML = `<span style="color:var(--accent-amber,#caa351);margin-right:8px;">👑 ${data.username} [管理员]</span>`;
+        } else {
+          $('topUserBadge').innerHTML = `<span style="color:var(--accent-blue,#679bc9);margin-right:8px;">👤 ${data.username} [普通用户]</span>`;
+        }
+      }
       return true;
     })
     .catch(() => true);
 }
+
 
 // ── DOM refs ─────────────────────────────────────────────
 const $ = id => document.getElementById(id);

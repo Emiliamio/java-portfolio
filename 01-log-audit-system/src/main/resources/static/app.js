@@ -13,12 +13,43 @@ async function requireAuth() {
       window.location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname + location.search);
       return false;
     }
+    const data = await resp.json();
+    if (data && data.success) {
+      window.currentUser = { username: data.username, role: data.role };
+      renderUserRole(data.username, data.role);
+    }
     return true;
   } catch (e) {
     // 网络异常时先放行，让后续请求自己报错
     return true;
   }
 }
+
+function renderUserRole(username, role) {
+  const pill = document.getElementById('navUserPill');
+  if (pill) {
+    if (role === 'ADMIN') {
+      pill.innerHTML = `<span>👑</span><span>${escHtml(username)}</span><span class="role-badge role-admin">系统管理员</span>`;
+    } else {
+      pill.innerHTML = `<span>👤</span><span>${escHtml(username)}</span><span class="role-badge role-user">普通用户(只读)</span>`;
+    }
+  }
+
+  // 权限受限控制：普通用户只读，置灰导出与测试功能
+  const btnExport = document.getElementById('btnExport');
+  if (btnExport) {
+    if (role !== 'ADMIN') {
+      btnExport.innerHTML = '🔒 导出 Excel';
+      btnExport.classList.add('btn-disabled-perm');
+      btnExport.title = '权限受限：仅系统管理员 (ADMIN) 可导出审计日志';
+    } else {
+      btnExport.innerHTML = '导出 Excel';
+      btnExport.classList.remove('btn-disabled-perm');
+      btnExport.title = '导出当前检索结果为 Excel 文件';
+    }
+  }
+}
+
 
 // ── 退出登录 ────────────────────────────────────────────
 async function logout() {
@@ -173,6 +204,10 @@ function renderPagination(total, current, size) {
 
 // ── Export ──────────────────────────────────────────────
 function exportExcel() {
+  if (window.currentUser && window.currentUser.role !== 'ADMIN') {
+    showToast('⛔ 权限不足：当前账号为普通用户（只读），仅系统管理员 (ADMIN) 可导出审计日志', 'error');
+    return;
+  }
   const params = new URLSearchParams({
     ipAddress: (document.getElementById('ipFilter').value || '').trim(),
     operation: document.getElementById('operationFilter').value,
@@ -180,6 +215,7 @@ function exportExcel() {
   });
   window.open(API + '/export?' + params.toString());
 }
+
 
 // ── Stats ───────────────────────────────────────────────
 function loadStats() {
@@ -312,9 +348,14 @@ function setPreset(key) {
 }
 
 async function sendWebhookPayload() {
+  if (window.currentUser && window.currentUser.role !== 'ADMIN') {
+    showToast('⛔ 权限不足：当前账号为普通用户（只读），仅系统管理员 (ADMIN) 可推送模拟日志', 'error');
+    return;
+  }
   const token = (document.getElementById('webhookToken').value || '').trim();
   const rawPayload = (document.getElementById('webhookPayload').value || '').trim();
   const btn = document.getElementById('btnSendWebhook');
+
 
   if (!rawPayload) {
     showToast('Payload 不能为空', 'error');
