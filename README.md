@@ -13,9 +13,9 @@
 
 | # | 项目 | 技术栈 | 一句话 | 入口 |
 |---|---|---|---|---|
-| ① | **AuditVault** 日志审计 | Spring Boot + MySQL + Redis | 实时 Webhook 采集、查询、导出，操作审计自闭环 | `:8080` |
+| ① | **AuditVault** 日志审计 | Spring Boot + MySQL + Redis | Datadog/SigNoz SOC 遥测大屏、Live Tail 实时流、深度抽屉与 Webhook 采集 | `:8080` |
 | ② | **LogScope** 日志解析器 | Python + Pandas + CLI | CSV/文本日志解析，异常检测，HTML/Excel 可视化报告 | CLI |
-| ③ | **Nexus AI** 智能分析 | Spring Boot + Anthropic / DeepSeek | 粘贴日志 → AI 分析风险 + 处置建议 (SSE 打字机) + 跨服务告警 | `:8081` |
+| ③ | **Nexus AI** 智能分析 | Spring Boot + Anthropic / DeepSeek | Security Copilot 研判工作台、CVSS 3.1 评分、MITRE 战术映射与自动 WAF 规则 | `:8081` |
 | ④ | **技术博客** | Hexo + GitHub Pages | 项目复盘与技术文章 | [emiliamio.github.io](https://emiliamio.github.io) |
 
 ---
