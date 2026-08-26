@@ -3,116 +3,220 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Nexus AI — 日志智能分析</title>
-  <link rel="stylesheet" href="css/style.css">
+  <title>Nexus AI — 企业级日志安全研判智能助手</title>
+  <link rel="stylesheet" href="css/style.css?v=20260826">
 </head>
 <body>
 
-<!-- Top Bar -->
+<!-- ── Top Global Header ── -->
 <header class="topbar">
   <div class="topbar-left">
-    <span class="topbar-dot" id="apiDot"></span>
+    <div class="topbar-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+    </div>
     <span>Nexus AI</span>
-  </div>
-  <div class="topbar-right" id="topbarRight">
-    <span id="topUserBadge"></span>
-    <span id="topTime">—</span>
-    <span id="topCount">0 次分析</span>
-    <a href="/swagger-ui.html" target="_blank" class="logout-link" style="color:var(--accent-blue);margin-right:8px;">API 文档 ↗</a>
-    <a href="#" class="logout-link" id="logoutLink" onclick="logout();return false;">退出</a>
+    <span class="topbar-dot" id="apiDot" title="AI 模型就绪"></span>
   </div>
 
+  <div class="topbar-right">
+    <div class="topbar-pill" id="topUserBadge">
+      <span>👑</span>
+      <span>admin</span>
+    </div>
+    <span id="topTime">--:--</span>
+    <span id="topCount" style="color:var(--accent-cyan);">0 次分析</span>
+    <a href="http://localhost:8080" target="_blank" class="logout-link" style="color:var(--accent-cyan);border-color:rgba(0,242,254,0.3);">
+      返回 AuditVault ↗
+    </a>
+    <a href="/swagger-ui.html" target="_blank" class="logout-link" style="color:var(--accent-purple);border-color:rgba(129,140,248,0.3);">
+      OpenAPI 文档 ↗
+    </a>
+    <a href="#" class="logout-link" onclick="logout();return false;">
+      退出
+    </a>
+  </div>
 </header>
 
-
-<!-- Main Grid -->
+<!-- ── Main Grid Layout ── -->
 <div class="layout">
 
-  <!-- Left: Input + Result -->
+  <!-- ── Left: Security Copilot Workspace ── -->
   <main class="panel-left">
 
-    <h1>日志智能分析<span> — 粘贴一段日志，AI 为你解读</span></h1>
-
-    <!-- Quick chips -->
-    <div class="chips">
-      <button class="chip" data-preset="bruteforce">暴力破解</button>
-      <button class="chip" data-preset="sqli">SQL 注入</button>
-      <button class="chip" data-preset="xss">XSS 攻击</button>
-      <button class="chip" data-preset="traversal">路径遍历</button>
-      <button class="chip" data-preset="normal">正常操作</button>
-      <button class="chip" data-preset="denied">未授权访问</button>
-    </div>
-
-    <!-- Input -->
-    <div class="input-shell">
-      <textarea id="logInput"
-        rows="8"
-        maxlength="5000"
-        placeholder="在此粘贴日志文本&hellip;
-
-2025-01-15 09:20:00 172.31.0.50 User attacker LOGIN FAIL &quot;SQL injection: ' OR '1'='1&quot; CRITICAL auth-service.log"
-      ></textarea>
-      <div class="input-footer">
-        <span class="char-count" id="charCount">0 / 5000</span>
-        <button class="btn btn-primary" id="analyzeBtn" disabled onclick="analyze()">分析</button>
+    <!-- Hero Header -->
+    <div class="hero-banner">
+      <div>
+        <div class="hero-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-purple)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>日志智能研判与应急响应</span>
+        </div>
+        <div class="hero-subtitle">粘贴任意服务器原始日志或异常堆栈，AI 自动提取威胁指标、关联 MITRE ATT&CK 并生成防护规则</div>
+      </div>
+      <div style="font-family:var(--font-mono);font-size:0.72rem;color:var(--accent-cyan);text-align:right;">
+        DeepSeek / Qwen 2.5<br><span style="color:var(--text-tertiary);">SSE 流式实时推理</span>
       </div>
     </div>
 
-    <!-- Loading -->
-    <div class="inline-loading hidden" id="loadingBlock">
-      <span class="progress-dots"><span></span><span></span><span></span></span>
-      正在分析日志…
+    <!-- Scenario Chips -->
+    <div class="chips-bar">
+      <span class="chip-label">攻击场景预置:</span>
+      <button class="chip" data-preset="bruteforce">💥 暴力破解 (BruteForce)</button>
+      <button class="chip" data-preset="sqli">💉 SQL 注入 (SQLi)</button>
+      <button class="chip" data-preset="xss">⚡ XSS 跨站脚本</button>
+      <button class="chip" data-preset="traversal">📁 路径遍历 (Traversal)</button>
+      <button class="chip" data-preset="denied">⛔ 未授权越权访问</button>
+      <button class="chip" data-preset="normal">🟢 正常业务日志</button>
     </div>
 
-    <!-- Error -->
-    <div class="inline-error hidden" id="errorBlock"></div>
-
-    <!-- Result -->
-    <div class="result-card hidden" id="resultCard">
-      <div class="result-header">
-        <h3>分析报告</h3>
-        <span class="time-cost" id="resMeta">—</span>
+    <!-- Monaco Code Editor Shell -->
+    <div class="editor-shell">
+      <div class="editor-header">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>
+          <span>RAW_LOG_PAYLOAD.log</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <input type="file" id="fileInput" accept=".log,.txt,.json" style="display:none;" onchange="handleFileUpload(event)">
+          <button class="btn btn-secondary" style="height:24px;padding:0 8px;font-size:0.68rem;" onclick="document.getElementById('fileInput').click()">
+            📁 导入文件
+          </button>
+          <button class="btn btn-secondary" style="height:24px;padding:0 8px;font-size:0.68rem;" onclick="clearInput()">
+            清空
+          </button>
+        </div>
       </div>
-      <div class="result-body">
-        <div class="result-tags" id="resTags"></div>
-        <div class="result-block">
-          <div class="result-block-label">摘要</div>
-          <div class="result-block-text" id="resSummary">—</div>
+
+      <div class="editor-body-wrapper">
+        <div class="line-gutter" id="lineGutter">1</div>
+        <textarea id="logInput" class="editor-textarea" rows="8" maxlength="5000"
+          placeholder="在此粘贴或拖入多行服务器日志文本 (按 Ctrl + Enter 启动 AI 智能研判)..."
+        ></textarea>
+      </div>
+
+      <div class="editor-footer">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <span class="char-count" id="charCount">0 / 5000 字符</span>
+          <span class="char-count" id="tokenEstimate" style="color:var(--accent-purple);">~ 0 tokens</span>
         </div>
-        <div class="result-block">
-          <div class="result-block-label">处置建议</div>
-          <div class="result-block-text suggestion" id="resSuggestion">—</div>
+        <button class="btn btn-primary" id="analyzeBtn" disabled onclick="analyze()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          开始 AI 研判 (Ctrl+Enter)
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading Box -->
+    <div class="loading-box hidden" id="loadingBlock">
+      <div class="pulse-spinner"></div>
+      <span>大模型正在对日志进行多维特征提取与安全研判…</span>
+    </div>
+
+    <!-- Error Box -->
+    <div class="hidden" id="errorBlock" style="padding:14px;background:var(--accent-rose-dim);border:1px solid var(--accent-rose);border-radius:var(--radius-sm);color:var(--accent-rose);font-size:0.8rem;"></div>
+
+    <!-- Security Triage Report Card -->
+    <div class="report-card hidden" id="resultCard">
+      <div class="report-header">
+        <div class="report-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/></svg>
+          <span>安全研判与应急响应报告</span>
+          <span id="resThreatBadge" class="badge" style="padding:2px 8px;border-radius:4px;font-size:0.72rem;font-weight:700;">—</span>
         </div>
-        <div class="result-actions" style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
-          <button class="btn btn-secondary btn-sm" id="btnReportAudit" onclick="reportToAuditVault()">📡 一键上报告警至 AuditVault (Webhook)</button>
-          <button class="btn btn-secondary btn-sm" id="btnExportMd" onclick="copyMarkdownReport()">📋 复制 Markdown 报告</button>
+        <span style="font-family:var(--font-mono);font-size:0.72rem;color:var(--text-tertiary);" id="resMeta">—</span>
+      </div>
+
+      <div class="report-body">
+
+        <!-- CVSS 3.1 Gauge / Risk Meter -->
+        <div class="cvss-container">
+          <div class="cvss-header">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:0.74rem;font-weight:600;color:var(--text-secondary);">CVSS 3.1 风险量化评估</span>
+              <span id="resCvssRating" style="font-size:0.7rem;font-weight:700;color:var(--accent-rose);">CRITICAL</span>
+            </div>
+            <div class="cvss-score" id="resCvssScore" style="color:var(--accent-rose);">9.8 / 10.0</div>
+          </div>
+          <div class="cvss-track">
+            <div class="cvss-fill crit" id="resCvssBar" style="width: 98%;"></div>
+          </div>
         </div>
+
+        <!-- MITRE ATT&CK Badges -->
+        <div>
+          <div class="narrative-label" style="margin-bottom:6px;">MITRE ATT&CK 战术与技术映射</div>
+          <div class="mitre-tags" id="resMitre">
+            <span class="mitre-badge">T1110.001 暴力破解</span>
+          </div>
+        </div>
+
+        <!-- Executive Threat Summary -->
+        <div class="narrative-block">
+          <div class="narrative-label">事件摘要与威胁研判 (Executive Summary)</div>
+          <div class="narrative-content" id="resSummary">—</div>
+        </div>
+
+        <!-- Remediation Suggestion -->
+        <div class="narrative-block">
+          <div class="narrative-label">应急处置与排查建议 (Remediation Actions)</div>
+          <div class="narrative-content" id="resSuggestion" style="border-left:3px solid var(--accent-emerald);">—</div>
+        </div>
+
+        <!-- Automated WAF / Firewall Defense Code Generator -->
+        <div class="narrative-block" id="wafBlock">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <div class="narrative-label" style="color:var(--accent-cyan);">自动化防御脚本 (WAF / Nginx 快速阻断策略)</div>
+            <button class="btn btn-secondary" style="height:22px;padding:0 6px;font-size:0.65rem;" onclick="copyWafRule()">
+              📋 复制规则
+            </button>
+          </div>
+          <pre class="waf-box" id="resWafCode"># 自动生成 Nginx 阻断指令
+deny 172.16.0.88;</pre>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="report-actions">
+          <button class="btn btn-primary" id="btnReportAudit" onclick="reportToAuditVault()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            一键上报告警至 AuditVault (Webhook)
+          </button>
+          <button class="btn btn-secondary" onclick="copyMarkdownReport()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+            复制 Markdown 报告
+          </button>
+        </div>
+
       </div>
     </div>
 
   </main>
 
-
-  <!-- Right: History -->
+  <!-- ── Right: History Drawer ── -->
   <aside class="panel-right">
     <div class="panel-right-header">
-      <h2>分析历史</h2>
-      <span class="count" id="historyCount">0 条记录</span>
+      <div class="panel-right-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-purple)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span>研判历史记录</span>
+      </div>
+      <span style="font-family:var(--font-mono);font-size:0.72rem;color:var(--text-tertiary);" id="historyCount">0 条记录</span>
     </div>
     <div class="history-list" id="historyList">
-      <div class="history-none">暂无分析记录<br><span style="font-size:0.8rem;">提交一条日志后，这里会出现历史</span></div>
+      <div style="text-align:center;padding:40px 10px;color:var(--text-tertiary);font-size:0.75rem;">
+        暂无研判历史<br><span style="font-size:0.68rem;opacity:0.6;">提交日志后将自动归档</span>
+      </div>
     </div>
   </aside>
 
 </div>
 
-<!-- Detail Overlay -->
+<!-- ── History Detail Modal Overlay ── -->
 <div class="overlay hidden" id="detailOverlay">
-  <div class="overlay-bg"></div>
   <div class="overlay-panel">
     <div class="overlay-panel-header">
-      <h3>分析详情</h3>
-      <button class="overlay-close" id="closeOverlay">&times;</button>
+      <div style="font-weight:700;font-size:0.9rem;display:flex;align-items:center;gap:8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+        <span>历史研判快照详情</span>
+      </div>
+      <button class="overlay-close" onclick="hideDetail()">&times;</button>
     </div>
     <div class="overlay-body" id="overlayBody"></div>
   </div>
@@ -121,7 +225,6 @@
 <!-- ── Toast Notifications ── -->
 <div class="toast-container" id="toastContainer"></div>
 
-<script src="js/app.js"></script>
+<script src="js/app.js?v=20260826"></script>
 </body>
 </html>
-

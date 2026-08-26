@@ -3,76 +3,109 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>统计面板 — AuditVault</title>
-  <link rel="stylesheet" href="style.css">
+  <title>全景大屏 — AuditVault</title>
+  <link rel="stylesheet" href="style.css?v=20260826">
 </head>
 <body>
 
 <nav class="nav">
   <div class="nav-brand">
-    <span class="nav-indicator" id="navIndicator"></span>
+    <div class="nav-brand-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    </div>
     <span>AuditVault</span>
+    <span class="nav-indicator" id="navIndicator" title="服务就绪"></span>
   </div>
+
   <div class="nav-tabs">
-    <a href="index.html" class="nav-tab">日志查询</a>
-    <a href="dashboard.html" class="nav-tab active">统计面板</a>
-    <a href="/swagger-ui.html" target="_blank" class="nav-tab">API 文档 ↗</a>
+    <a href="index.html" class="nav-tab">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+      审计工作台
+    </a>
+    <a href="dashboard.html" class="nav-tab active">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+      全景大屏
+    </a>
+    <a href="/swagger-ui.html" target="_blank" class="nav-tab">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/></svg>
+      API 文档 ↗
+    </a>
   </div>
-  <div class="nav-user-pill" id="navUserPill"></div>
-  <div class="nav-status" id="navStatus">—</div>
-  <a href="#" class="nav-logout" onclick="logout();return false;">退出</a>
+
+  <div class="nav-user-pill" id="navUserPill" style="margin-left:auto;">
+    <span>👑</span>
+    <span>admin</span>
+    <span class="role-badge role-admin">管理员</span>
+  </div>
+
+  <a href="#" class="nav-logout" onclick="logout();return false;">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+    退出
+  </a>
 </nav>
-
-
 
 <main class="main">
 
-  <div class="dash-header">
-    <h2>系统概览</h2>
-    <p>实时监控日志审计系统运行指标</p>
+  <div style="margin-bottom:20px;">
+    <h2 style="font-size:1.2rem;font-weight:700;letter-spacing:-0.4px;">全景安全态势监控大屏</h2>
+    <p style="font-size:0.78rem;color:var(--text-secondary);margin-top:2px;">实时汇聚并统计微服务审计日志、异常分布与 Redis 遥测指标</p>
   </div>
 
   <div class="stat-row">
-    <div class="stat-cell total">
-      <div class="stat-number" id="dTotal">—</div>
-      <div class="stat-label">今日日志总量</div>
-      <div class="stat-sub">事件计数</div>
+    <div class="stat-card c-total">
+      <div class="stat-header">
+        <span class="stat-label">今日日志总量</span>
+        <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>
+      </div>
+      <div class="stat-value" id="dTotal">—</div>
+      <div class="stat-footer"><span>总事件计数</span></div>
     </div>
-    <div class="stat-cell err">
-      <div class="stat-number" id="dAbnormal">—</div>
-      <div class="stat-label">异常日志</div>
-      <div class="stat-sub">ERROR + CRITICAL</div>
+    <div class="stat-card c-error">
+      <div class="stat-header">
+        <span class="stat-label">异常/告警总数</span>
+        <svg class="stat-icon" style="color:var(--accent-rose);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
+      </div>
+      <div class="stat-value" id="dAbnormal" style="color:var(--accent-rose);">—</div>
+      <div class="stat-footer"><span style="color:var(--accent-rose);">ERROR + CRITICAL</span></div>
     </div>
-    <div class="stat-cell ip">
-      <div class="stat-number" id="dRate">—</div>
-      <div class="stat-label">异常率</div>
-      <div class="stat-sub" id="dRateSub">异常 / 总量</div>
+    <div class="stat-card c-ip">
+      <div class="stat-header">
+        <span class="stat-label">综合异常率</span>
+        <svg class="stat-icon" style="color:var(--accent-amber);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+      </div>
+      <div class="stat-value" id="dRate" style="color:var(--accent-amber);">—</div>
+      <div class="stat-footer"><span id="dRateSub">异常 / 总量</span></div>
     </div>
-    <div class="stat-cell status">
-      <div class="stat-number" id="dStatus">运行中</div>
-      <div class="stat-label">服务状态</div>
-      <div class="stat-sub" id="dStatusSub">端口 8080</div>
+    <div class="stat-card c-sys">
+      <div class="stat-header">
+        <span class="stat-label">服务运行状态</span>
+        <svg class="stat-icon" style="color:var(--accent-emerald);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      </div>
+      <div class="stat-value" id="dStatus" style="color:var(--accent-emerald);">ONLINE</div>
+      <div class="stat-footer"><span id="dStatusSub">端口 :8080 · 正常</span></div>
     </div>
   </div>
 
-  <div class="dash-grid">
-    <!-- System Metrics -->
-    <div class="dash-panel">
-      <div class="dash-panel-header">系统指标</div>
-      <div class="dash-metric-list" id="sysMetrics">
-        <div class="dash-metric">
-          <span class="dash-metric-name">加载中…</span>
-        </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:10px;">
+    <!-- System Telemetry Panel -->
+    <div class="stat-card" style="padding:20px;">
+      <div style="font-size:0.85rem;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+        核心指标与存储健康
+      </div>
+      <div id="sysMetrics" style="display:flex;flex-direction:column;gap:10px;font-size:0.78rem;">
+        <div style="color:var(--text-tertiary);">加载中...</div>
       </div>
     </div>
 
-    <!-- Status Overview -->
-    <div class="dash-panel">
-      <div class="dash-panel-header">运行状态</div>
-      <div class="dash-metric-list" id="runStatus">
-        <div class="dash-metric">
-          <span class="dash-metric-name">加载中…</span>
-        </div>
+    <!-- Cluster Node Status Panel -->
+    <div class="stat-card" style="padding:20px;">
+      <div style="font-size:0.85rem;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-emerald)" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        集群拓扑与环境
+      </div>
+      <div id="runStatus" style="display:flex;flex-direction:column;gap:10px;font-size:0.78rem;">
+        <div style="color:var(--text-tertiary);">加载中...</div>
       </div>
     </div>
   </div>
@@ -83,7 +116,6 @@
 (function(){
   const $ = id => document.getElementById(id);
 
-  // 登录守卫 + 退出
   function logout() {
     fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' })
       .finally(() => { window.location.href = '/login.html'; });
@@ -105,7 +137,6 @@
     })
     .catch(() => {});
 
-
   fetch('/api/logs/today-stats')
     .then(r => r.json())
     .then(d => {
@@ -116,74 +147,52 @@
       $('dTotal').textContent    = total.toLocaleString();
       $('dAbnormal').textContent = abnormal.toLocaleString();
       $('dRate').textContent     = rate + '%';
-      $('dRateSub').textContent  = `${abnormal} / ${total}`;
+      $('dRateSub').textContent  = `${abnormal} / ${total} 异常`;
 
-      // Nav indicator
-      $('navIndicator').className = abnormal > 0 ? 'nav-indicator warn' : 'nav-indicator';
-      $('navStatus').textContent = `UTC+8 · ${new Date().toLocaleTimeString('zh-CN', { hour:'2-digit', minute:'2-digit' })}`;
-
-      // System metrics panel
-      const anomalyRate = rate > 10 ? 'danger' : (rate > 3 ? 'warn' : '');
       $('sysMetrics').innerHTML = `
-        <div class="dash-metric">
-          <span class="dash-metric-name">今日事件总量</span>
-          <span class="dash-metric-value">${total.toLocaleString()} 条</span>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border-subtle);">
+          <span style="color:var(--text-secondary);">今日事件总量:</span>
+          <span style="font-family:var(--font-mono);font-weight:600;">${total.toLocaleString()} 条</span>
         </div>
-        <div class="dash-metric">
-          <span class="dash-metric-name">异常事件</span>
-          <span class="dash-metric-value" style="color:var(--accent-red)">${abnormal.toLocaleString()} 条</span>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border-subtle);">
+          <span style="color:var(--text-secondary);">异常告警事件:</span>
+          <span style="font-family:var(--font-mono);color:var(--accent-rose);font-weight:600;">${abnormal.toLocaleString()} 条</span>
         </div>
-        <div class="dash-metric">
-          <span class="dash-metric-name">活跃独立 IP (HyperLogLog)</span>
-          <span class="dash-metric-value" style="color:var(--accent-blue)">${(d.uniqueIps || 0).toLocaleString()} 个</span>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border-subtle);">
+          <span style="color:var(--text-secondary);">活跃独立 IP (HyperLogLog):</span>
+          <span style="font-family:var(--font-mono);color:var(--accent-cyan);font-weight:600;">${(d.uniqueIps || 0).toLocaleString()} UV</span>
         </div>
-        <div class="dash-metric">
-          <span class="dash-metric-name">异常率</span>
-          <span class="dash-metric-value">
-            ${rate}%
-            <div class="dash-bar-wrap">
-              <div class="dash-bar-fill ${anomalyRate}" style="width:${Math.min(rate, 100)}%"></div>
-            </div>
-          </span>
-        </div>
-        <div class="dash-metric">
-          <span class="dash-metric-name">数据库 / Redis</span>
-          <span class="dash-metric-value" style="color:var(--accent-green)">已连接</span>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;">
+          <span style="color:var(--text-secondary);">MySQL + Redis 7:</span>
+          <span style="color:var(--accent-emerald);font-weight:600;">HEALTHY (已连接)</span>
         </div>
       `;
 
-
-      // Run status panel
       $('runStatus').innerHTML = `
-        <div class="dash-metric">
-          <span class="dash-metric-name">API 服务</span>
-          <span class="dash-metric-value" style="color:var(--accent-green)">运行中</span>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border-subtle);">
+          <span style="color:var(--text-secondary);">后端微服务:</span>
+          <span style="color:var(--accent-emerald);font-weight:600;">Spring Boot 3.2.0</span>
         </div>
-        <div class="dash-metric">
-          <span class="dash-metric-name">监听端口</span>
-          <span class="dash-metric-value" style="font-family:var(--font-mono)">:8080</span>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border-subtle);">
+          <span style="color:var(--text-secondary);">服务监听端口:</span>
+          <span style="font-family:var(--font-mono);">:8080 (REST + Webhook)</span>
         </div>
-        <div class="dash-metric">
-          <span class="dash-metric-name">启动时间</span>
-          <span class="dash-metric-value">${new Date().toLocaleDateString('zh-CN')}</span>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border-subtle);">
+          <span style="color:var(--text-secondary);">时区与标准:</span>
+          <span style="font-family:var(--font-mono);">Asia/Shanghai (UTC+8)</span>
         </div>
-        <div class="dash-metric">
-          <span class="dash-metric-name">时区</span>
-          <span class="dash-metric-value">Asia/Shanghai (UTC+8)</span>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;">
+          <span style="color:var(--text-secondary);">OpenAPI 规范:</span>
+          <span style="color:var(--accent-blue);">v3.0 (Swagger UI Ready)</span>
         </div>
       `;
     })
     .catch(() => {
-      $('dTotal').textContent    = '—';
+      $('dTotal').textContent = '—';
       $('dAbnormal').textContent = '—';
-      $('dRate').textContent     = '—';
-      $('dStatus').textContent   = '离线';
-      $('dStatusSub').textContent = '无法连接后端';
-      $('dStatus').style.color = 'var(--accent-red)';
-      $('navIndicator').className = 'nav-indicator off';
-      $('navStatus').textContent = '未连接';
-      $('sysMetrics').innerHTML = '<div class="dash-metric"><span class="dash-metric-name">无法获取系统指标</span></div>';
-      $('runStatus').innerHTML = '<div class="dash-metric"><span class="dash-metric-name">无法获取运行状态</span></div>';
+      $('dRate').textContent = '—';
+      $('dStatus').textContent = 'OFFLINE';
+      $('dStatus').style.color = 'var(--accent-rose)';
     });
 })();
 </script>
