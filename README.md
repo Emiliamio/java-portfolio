@@ -121,18 +121,18 @@ Hexo · GitHub Pages · GitHub Actions CI/CD Pipeline
 
 ## 🖥️ 系统界面预览
 
-| AuditVault 审计中心 (`:8080`) | Nexus AI 智能排障 (`:8081`) |
+| AuditVault 工业级日志分析 Studio (`:8080`) | Nexus AI 安全研判 Copilot Studio (`:8081`) |
 |:---:|:---:|
 | ![AuditVault](docs/images/auditvault-screenshot.png) | ![Nexus AI](docs/images/nexus-ai.png) |
-| *操作审计自闭环 · Webhook 实时采集 · 流式 Excel 导出* | *SSE 流式打字机推理 · 跨服务反向上报 · 智能处置建议* |
+| *100vw 全视口 · 多维 Facets 动态聚类 · 时序直方图 · 上下文溯源* | *CVSS 3.1 评分 · MITRE ATT&CK 链路推演 · 自动化防御剧本 · 研判报告* |
 
 ---
 
-## 📚 详细技术文档
+## 📚 详细技术架构文档
 
-- 🚀 [大厂高频面试深度架构演进与答辩宝典](docs/INTERVIEW_DEEP_DIVE.md) —— *SXSSFWorkbook 内存防爆、HyperLogLog 伯努利试验原理、JWT 登出黑名单、亿级流量 Kafka+ClickHouse 演进*
+- 🏛️ [企业级高并发日志架构设计与系统深度剖析](docs/ARCHITECTURE.md) —— *SXSSFWorkbook 内存防爆机制、HyperLogLog 伯努利试验基数估算、JWT 登出黑名单、亿级流量 Kafka+ClickHouse 架构演进*
 - 📡 [Logback 实时采集 Webhook 接入指南](docs/LOGBACK_INTEGRATION.md) —— *客户端微服务 3 分钟极速接入模版*
-- 🚢 [云服务器生产部署指南](docs/DEPLOY.md) —— *Docker Compose 一键启动与生产安全建议*
+- 🚢 [云服务器生产部署指南](docs/DEPLOY.md) —— *Docker Compose 一键启动与生产安全最佳实践*
 
 ---
 
