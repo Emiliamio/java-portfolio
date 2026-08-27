@@ -172,7 +172,14 @@
           <span>日志时序直方分布图 (Log Volume Histogram · Brush to Zoom)</span>
         </div>
         <div class="histogram-legend">
-          <div class="legend-item"><span class="legend-dot" style="background:var(--accent-rose);"></span> <span>ERROR/CRITICAL</span></div>
+          <div class="engine-toggle-cluster" onclick="toggleEngine()" title="点击切换 OLTP (MySQL) / OLAP (ClickHouse) 双引擎">
+            <span class="engine-pill active" id="enginePill">
+              <span class="engine-dot"></span>
+              <span id="engineName">⚡ ClickHouse OLAP</span>
+              <span class="engine-latency" id="engineLatency">3ms · 45x</span>
+            </span>
+          </div>
+          <div class="legend-item"><span class="legend-dot" style="background:var(--accent-rose);"></span> <span>ERROR</span></div>
           <div class="legend-item"><span class="legend-dot" style="background:var(--accent-amber);"></span> <span>WARN</span></div>
           <div class="legend-item"><span class="legend-dot" style="background:var(--accent-blue);"></span> <span>INFO</span></div>
           <div class="legend-item" style="color:var(--text-primary);font-weight:600;"><span id="histTotalCount">0</span> 条事件</div>

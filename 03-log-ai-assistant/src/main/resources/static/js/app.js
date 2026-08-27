@@ -29,7 +29,8 @@ const state = {
   currentResult: null,
   activePlaybookTab: 'waf',
   historyItems: [],
-  currentUser: null
+  currentUser: null,
+  selectedProvider: 'auto'
 };
 
 const $ = id => document.getElementById(id);
@@ -117,7 +118,7 @@ async function startAnalysis() {
     const resp = await fetch(`${API}/analyze`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ logContent: content })
+      body: JSON.stringify({ logContent: content, provider: state.selectedProvider })
     });
 
     const res = await resp.json();
@@ -135,6 +136,53 @@ async function startAnalysis() {
   } finally {
     btn.disabled = false;
     btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg> 启动 AI 智能安全研判 (SSE 流式)`;
+  }
+}
+
+// ── Multi-Model Hybrid Router & Air-Gapped Privacy Shield ───
+async function initProviders() {
+  try {
+    const resp = await fetch(`${API}/providers`);
+    const res = await resp.json();
+    if (res && res.data) {
+      const { cloud, ollama, rule, activeDefault } = res.data;
+      const select = $('modelProviderSelect');
+      if (select) {
+        select.innerHTML = `
+          <option value="auto">⚡ 自动热备路由 (当前策略: ${activeDefault.toUpperCase()})</option>
+          <option value="cloud">🌐 云端大模型 (${cloud.available ? '● 在线 ' + cloud.model : '○ 未配置API Key'})</option>
+          <option value="ollama">🏠 本地私有化大模型 (${ollama.available ? '● 在线 ' + ollama.model : '○ 离线待启动'})</option>
+          <option value="rule">🛡️ 内核安全规则引擎 (● 100% 极速可用)</option>
+        `;
+      }
+    }
+  } catch (e) {
+    console.debug('Providers fetch skipped:', e);
+  }
+}
+
+function onModelProviderChange() {
+  const select = $('modelProviderSelect');
+  state.selectedProvider = select ? select.value : 'auto';
+  const pill = $('privacyShieldPill');
+  const text = $('privacyShieldText');
+
+  if (state.selectedProvider === 'ollama') {
+    if (pill) pill.className = 'privacy-shield-pill offline-mode';
+    if (text) text.innerText = '100% 本地离线私有化';
+    showToast('已锁定本地 Ollama 私有化引擎，数据绝不上云', 'info');
+  } else if (state.selectedProvider === 'rule') {
+    if (pill) pill.className = 'privacy-shield-pill offline-mode';
+    if (text) text.innerText = '本地内核规则模式';
+    showToast('已切换至内核规则引擎 (0延时·100%确定性)', 'info');
+  } else if (state.selectedProvider === 'cloud') {
+    if (pill) pill.className = 'privacy-shield-pill';
+    if (text) text.innerText = '云端推理增强';
+    showToast('已切换至云端大模型推理', 'info');
+  } else {
+    if (pill) pill.className = 'privacy-shield-pill';
+    if (text) text.innerText = '智能热备中';
+    showToast('已开启三级智能热备 (云端 -> 本地Ollama -> 规则引擎)', 'info');
   }
 }
 
@@ -402,6 +450,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (authed) {
     $('logInput').addEventListener('input', updateEditorGutters);
     updateEditorGutters();
+    initProviders();
     loadPreset('bruteforce');
     loadHistory();
 

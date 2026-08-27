@@ -116,11 +116,63 @@ services:
     networks:
       - audit-net
 
+  # ─── Kafka (KRaft 分布式流式摄取与削峰集群) ───
+  kafka:
+    image: bitnami/kafka:3.7
+    container_name: audit-kafka
+    restart: unless-stopped
+    ports:
+      - "9092:9092"
+    environment:
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+    profiles:
+      - enterprise
+    networks:
+      - audit-net
+
+  # ─── ClickHouse (OLAP 高性能列式 MergeTree 分析引擎) ───
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.3-alpine
+    container_name: audit-clickhouse
+    restart: unless-stopped
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+    profiles:
+      - enterprise
+    networks:
+      - audit-net
+
+  # ─── Ollama (本地私有化大模型与数据离线安全推理) ───
+  ollama:
+    image: ollama/ollama:latest
+    container_name: audit-ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+    profiles:
+      - enterprise
+    networks:
+      - audit-net
+
 volumes:
   mysql_data:
     name: audit_mysql_data
   redis_data:
     name: audit_redis_data
+  clickhouse_data:
+    name: audit_clickhouse_data
+  ollama_models:
+    name: audit_ollama_models
 
 networks:
   audit-net:

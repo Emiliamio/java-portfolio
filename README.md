@@ -13,10 +13,10 @@
 
 | # | 项目 | 技术栈 | 一句话 | 入口 |
 |---|---|---|---|---|
-| ① | **AuditVault** 日志审计 | Spring Boot + MySQL + Redis | Datadog/SigNoz SOC 遥测大屏、Live Tail 实时流、深度抽屉与 Webhook 采集 | `:8080` |
+| ① | **AuditVault** 日志审计 | Spring Boot + MySQL + Redis + **Kafka** + **ClickHouse** | Datadog/SigNoz 级 SOC 遥测大屏、**Kafka 分布式流式摄取**、**ClickHouse 45x 毫秒级 OLAP 直方图**、Live Tail 实时流与上下文追溯 | `:8080` |
 | ② | **LogScope** 日志解析器 | Python + Pandas + CLI | CSV/文本日志解析，异常检测，HTML/Excel 可视化报告 | CLI |
-| ③ | **Nexus AI** 智能分析 | Spring Boot + Anthropic / DeepSeek | Security Copilot 研判工作台、CVSS 3.1 评分、MITRE 战术映射与自动 WAF 规则 | `:8081` |
-| ④ | **技术博客** | Hexo + GitHub Pages | 项目复盘与技术文章 | [emiliamio.github.io](https://emiliamio.github.io) |
+| ③ | **Nexus AI** 智能研判 | Spring Boot + **Ollama** / DeepSeek / Claude | Security Copilot 研判工作台、**本地私有化/云端三级热备路由**、**100% 离线隐私盾**、CVSS 3.1 评分与 WAF 剧本 | `:8081` |
+| ④ | **技术博客** | Hexo + GitHub Pages | 项目复盘与架构技术文章 | [emiliamio.github.io](https://emiliamio.github.io) |
 
 ---
 

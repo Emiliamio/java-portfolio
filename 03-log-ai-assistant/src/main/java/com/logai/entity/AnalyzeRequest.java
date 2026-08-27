@@ -13,4 +13,14 @@ public class AnalyzeRequest {
     @NotBlank(message = "日志内容不能为空")
     @Size(min = 5, max = 5000, message = "日志内容长度需在 5-5000 字符之间")
     private String logContent;
+
+    /**
+     * 模型提供商: 'auto' | 'cloud' | 'ollama' | 'rule'
+     */
+    private String provider = "auto";
+
+    /**
+     * 自定义模型名 (可选)
+     */
+    private String model;
 }

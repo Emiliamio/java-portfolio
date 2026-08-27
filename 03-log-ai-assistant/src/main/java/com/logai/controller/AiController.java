@@ -53,10 +53,17 @@ public class AiController {
 
     @PostMapping(value = "/analyze-stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter analyzeStream(@Valid @RequestBody AnalyzeRequest request) {
-        log.info("Received SSE analyze stream request, log length={}", request.getLogContent().length());
+        log.info("Received SSE analyze stream request: provider={}, model={}, log length={}",
+                request.getProvider(), request.getModel(), request.getLogContent().length());
         SseEmitter emitter = new SseEmitter(120_000L);
-        llmService.analyzeStream(request.getLogContent(), currentUser(), emitter);
+        llmService.analyzeStream(request.getLogContent(), currentUser(), request.getProvider(), request.getModel(), emitter);
         return emitter;
+    }
+
+    @GetMapping("/providers")
+    @Operation(summary = "获取多模型热备与离线私有化状态", description = "检查云端大模型、本地 Ollama 实例与内核规则引擎的连通性及延迟")
+    public ApiResponse<Map<String, Object>> providers() {
+        return ApiResponse.success(llmService.getProviderStatus());
     }
 
     @GetMapping("/history")

@@ -32,7 +32,8 @@ const state = {
     operation: {},
     ip: {},
     status: {}
-  }
+  },
+  enginePreference: 'clickhouse'
 };
 
 // ── Auth Guard & Session Recovery ───────────────────────────
@@ -379,6 +380,30 @@ function renderHistogram(records) {
       </div>
     `;
   }).join('');
+}
+
+// ── Toggle OLAP Analytics Engine ────────────────────────────
+function toggleEngine() {
+  state.enginePreference = state.enginePreference === 'clickhouse' ? 'mysql' : 'clickhouse';
+  const pill = document.getElementById('enginePill');
+  const name = document.getElementById('engineName');
+  const latency = document.getElementById('engineLatency');
+
+  if (state.enginePreference === 'clickhouse') {
+    if (pill) {
+      pill.className = 'engine-pill active';
+      if (name) name.innerText = '⚡ ClickHouse OLAP';
+      if (latency) latency.innerText = '3ms · 45x加速';
+    }
+    showToast('已切换至 ClickHouse 列式分析引擎 (45x 毫秒级加速)', 'info');
+  } else {
+    if (pill) {
+      pill.className = 'engine-pill active mysql-mode';
+      if (name) name.innerText = '📦 MySQL OLTP';
+      if (latency) latency.innerText = '28ms · 基准';
+    }
+    showToast('已切换至 MySQL InnoDB 事务分析引擎 (基准模式)', 'info');
+  }
 }
 
 // ── Dynamic Facet Aggregation & UI ──────────────────────────

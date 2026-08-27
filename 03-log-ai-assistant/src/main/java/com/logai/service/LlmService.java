@@ -19,7 +19,9 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -38,29 +40,111 @@ public class LlmService {
     private final String apiUrl;
     private final String apiModel;
     private final int timeoutSeconds;
+    private final String ollamaApiUrl;
+    private final String ollamaApiModel;
+    private final int ollamaTimeoutSeconds;
 
     public LlmService(
             AiAnalysisMapper analysisMapper,
             @Value("${ai.api.url}") String apiUrl,
             @Value("${ai.api.model}") String apiModel,
-            @Value("${ai.api.timeout-seconds:60}") int timeoutSeconds
+            @Value("${ai.api.timeout-seconds:60}") int timeoutSeconds,
+            @Value("${ollama.api.url:http://localhost:11434}") String ollamaApiUrl,
+            @Value("${ollama.api.model:deepseek-r1:7b}") String ollamaApiModel,
+            @Value("${ollama.timeout-seconds:60}") int ollamaTimeoutSeconds
     ) {
         this.analysisMapper = analysisMapper;
         this.apiUrl = apiUrl;
         this.apiModel = apiModel;
         this.timeoutSeconds = timeoutSeconds;
+        this.ollamaApiUrl = ollamaApiUrl;
+        this.ollamaApiModel = ollamaApiModel;
+        this.ollamaTimeoutSeconds = ollamaTimeoutSeconds;
         this.httpClient = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(timeoutSeconds))
+                .connectTimeout(Duration.ofSeconds(Math.min(timeoutSeconds, 5)))
                 .build();
+    }
+
+    public boolean checkOllamaUp() {
+        try {
+            HttpRequest req = HttpRequest.newBuilder()
+                    .uri(URI.create(ollamaApiUrl + "/api/tags"))
+                    .timeout(Duration.ofSeconds(1))
+                    .GET()
+                    .build();
+            HttpResponse<String> resp = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+            return resp.statusCode() == 200;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public Map<String, Object> getProviderStatus() {
+        Map<String, Object> status = new HashMap<>();
+        String apiKey = System.getenv("AI_API_KEY");
+        boolean cloudAvailable = apiKey != null && !apiKey.isBlank();
+        boolean ollamaUp = checkOllamaUp();
+
+        Map<String, Object> cloudInfo = new HashMap<>();
+        cloudInfo.put("provider", "cloud");
+        cloudInfo.put("name", "云端商业大模型 (" + apiModel + ")");
+        cloudInfo.put("available", cloudAvailable);
+        cloudInfo.put("model", apiModel);
+        cloudInfo.put("endpoint", apiUrl);
+        status.put("cloud", cloudInfo);
+
+        Map<String, Object> ollamaInfo = new HashMap<>();
+        ollamaInfo.put("provider", "ollama");
+        ollamaInfo.put("name", "本地私有化大模型 (Ollama · " + ollamaApiModel + ")");
+        ollamaInfo.put("available", ollamaUp);
+        ollamaInfo.put("model", ollamaApiModel);
+        ollamaInfo.put("endpoint", ollamaApiUrl);
+        ollamaInfo.put("privacyMode", "Air-Gapped (100% 离线私有化)");
+        status.put("ollama", ollamaInfo);
+
+        Map<String, Object> ruleInfo = new HashMap<>();
+        ruleInfo.put("provider", "rule");
+        ruleInfo.put("name", "内核专家规则引擎 (Zero-Config)");
+        ruleInfo.put("available", true);
+        ruleInfo.put("model", "Builtin Security Rules");
+        ruleInfo.put("latencyMs", 1);
+        status.put("rule", ruleInfo);
+
+        status.put("activeDefault", cloudAvailable ? "cloud" : (ollamaUp ? "ollama" : "rule"));
+        return status;
     }
 
     /**
      * 流式分析日志，通过 SSE Emitter 逐块推送到客户端（打字机流式响应）。
      */
     public void analyzeStream(String logContent, String username, SseEmitter emitter) {
+        analyzeStream(logContent, username, "auto", null, emitter);
+    }
+
+    /**
+     * 流式分析日志 (支持指定 Provider: 'auto' | 'cloud' | 'ollama' | 'rule')
+     */
+    public void analyzeStream(String logContent, String username, String provider, String customModel, SseEmitter emitter) {
         CompletableFuture.runAsync(() -> {
             long startTime = System.currentTimeMillis();
+            String reqProvider = provider != null ? provider.toLowerCase() : "auto";
             String apiKey = System.getenv("AI_API_KEY");
+
+            if ("rule".equals(reqProvider)) {
+                log.info("Explicit rule provider requested, using simulated typewriter stream.");
+                simulateStreamFallback(logContent, username, startTime, emitter);
+                return;
+            }
+
+            if ("ollama".equals(reqProvider) || ("auto".equals(reqProvider) && (apiKey == null || apiKey.isBlank()) && checkOllamaUp())) {
+                boolean ollamaSuccess = streamOllama(logContent, username, customModel != null ? customModel : ollamaApiModel, startTime, emitter);
+                if (ollamaSuccess) {
+                    return;
+                }
+                log.info("Ollama stream failed or offline, falling back to rule engine.");
+                simulateStreamFallback(logContent, username, startTime, emitter);
+                return;
+            }
 
             if (apiKey == null || apiKey.isBlank()) {
                 log.info("AI_API_KEY not set, using simulated typewriter fallback stream.");
@@ -71,6 +155,9 @@ public class LlmService {
             try {
                 String systemPrompt = buildSystemPrompt();
                 JSONObject requestBody = buildRequestBody(systemPrompt, logContent);
+                if (customModel != null && !customModel.isBlank()) {
+                    requestBody.put("model", customModel);
+                }
                 requestBody.put("stream", true);
 
                 HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
@@ -120,7 +207,7 @@ public class LlmService {
                             int elapsedMs = (int) (System.currentTimeMillis() - startTime);
                             AnalysisResult result = parseResponse(fullResponse.toString());
                             result.setAnalysisTimeMs(elapsedMs);
-                            result.setModelUsed(apiModel);
+                            result.setModelUsed(customModel != null ? customModel : apiModel);
                             result.setFallback(false);
 
                             saveToHistory(logContent, result, username);
@@ -143,6 +230,79 @@ public class LlmService {
                 simulateStreamFallback(logContent, username, startTime, emitter);
             }
         });
+    }
+
+    private boolean streamOllama(String logContent, String username, String model, long startTime, SseEmitter emitter) {
+        try {
+            String systemPrompt = buildSystemPrompt();
+            JSONObject requestBody = new JSONObject();
+            requestBody.put("model", model);
+            requestBody.put("stream", true);
+
+            JSONArray messages = new JSONArray();
+            JSONObject sysMsg = new JSONObject();
+            sysMsg.put("role", "system");
+            sysMsg.put("content", systemPrompt);
+            messages.add(sysMsg);
+
+            JSONObject userMsg = new JSONObject();
+            userMsg.put("role", "user");
+            userMsg.put("content", logContent);
+            messages.add(userMsg);
+
+            requestBody.put("messages", messages);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(ollamaApiUrl + "/v1/chat/completions"))
+                    .header("Content-Type", "application/json")
+                    .timeout(Duration.ofSeconds(ollamaTimeoutSeconds))
+                    .POST(HttpRequest.BodyPublishers.ofString(requestBody.toJSONString()))
+                    .build();
+
+            StringBuilder fullResponse = new StringBuilder();
+            HttpResponse<java.util.stream.Stream<String>> response = httpClient.send(request, HttpResponse.BodyHandlers.ofLines());
+
+            if (response.statusCode() != 200) {
+                return false;
+            }
+
+            response.body().forEach(line -> {
+                String trimmed = line.trim();
+                if (trimmed.startsWith("data:")) {
+                    String data = trimmed.substring(5).trim();
+                    if (!"[DONE]".equals(data) && !data.isEmpty()) {
+                        String chunk = extractChunkFromStreamData(data);
+                        if (chunk != null && !chunk.isEmpty()) {
+                            fullResponse.append(chunk);
+                            try {
+                                emitter.send(SseEmitter.event().name("chunk").data(chunk));
+                            } catch (Exception ex) {
+                                log.debug("Client disconnected during Ollama SSE stream");
+                            }
+                        }
+                    }
+                }
+            });
+
+            int elapsedMs = (int) (System.currentTimeMillis() - startTime);
+            AnalysisResult result = parseResponse(fullResponse.toString());
+            result.setAnalysisTimeMs(elapsedMs);
+            result.setModelUsed("ollama:" + model);
+            result.setFallback(false);
+
+            saveToHistory(logContent, result, username);
+
+            try {
+                emitter.send(SseEmitter.event().name("done").data(JSON.toJSONString(result)));
+                emitter.complete();
+            } catch (Exception ex) {
+                emitter.completeWithError(ex);
+            }
+            return true;
+        } catch (Exception e) {
+            log.warn("Ollama local stream exception: {}", e.getMessage());
+            return false;
+        }
     }
 
     private String extractChunkFromStreamData(String dataJson) {

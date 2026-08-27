@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.logaudit.dto.WebhookLogDto;
 import com.logaudit.entity.LogEntry;
 import com.logaudit.service.AuditLogService;
+import com.logaudit.service.KafkaLogProducer;
 import com.logaudit.service.LogEntryService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +41,7 @@ public class WebhookController {
     private final LogEntryService logEntryService;
     private final AuditLogService auditLogService;
     private final ObjectMapper objectMapper;
+    private final KafkaLogProducer kafkaLogProducer;
 
     @Value("${app.webhook.secret-key:auditvault-webhook-default-secret-token-2026}")
     private String webhookSecretKey;
@@ -101,24 +103,32 @@ public class WebhookController {
             ));
         }
 
-        // 4. 批量映射为实体
-        List<LogEntry> entries = dtoList.stream()
-                .map(dto -> dto.toLogEntry(clientIp))
-                .toList();
+        // 4. 优先推入 Kafka 分布式削峰队列，若未启用或异常则自动降级为本地线程池
+        boolean kafkaQueued = false;
+        if (kafkaLogProducer != null && kafkaLogProducer.isAvailable()) {
+            kafkaQueued = kafkaLogProducer.sendLogs(dtoList);
+        }
 
-        // 5. 异步提交落库与 Redis HyperLogLog 极速更新
-        logEntryService.asyncBatchImport(entries);
+        if (!kafkaQueued) {
+            // 5. 本地线程池异步提交落库与 Redis HyperLogLog 极速更新
+            List<LogEntry> entries = dtoList.stream()
+                    .map(dto -> dto.toLogEntry(clientIp))
+                    .toList();
+            logEntryService.asyncBatchImport(entries);
+        }
 
         // 6. 记录审计轨迹
         auditLogService.recordSuccess("WEBHOOK", "INGEST_LOGS",
-                "count=" + entries.size() + ", sourceIp=" + clientIp, clientIp);
+                "count=" + dtoList.size() + ", buffer=" + (kafkaQueued ? "KAFKA" : "THREAD_POOL") + ", sourceIp=" + clientIp, clientIp);
 
-        log.info("Webhook successfully accepted {} log entries from {}", entries.size(), clientIp);
+        log.info("Webhook accepted {} log entries from {} (Buffer Engine: {})",
+                dtoList.size(), clientIp, kafkaQueued ? "Kafka Topic" : "Async ThreadPool");
 
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(Map.of(
                 "success", true,
                 "message", "日志已接收并在后台异步处理",
-                "accepted", entries.size()
+                "accepted", dtoList.size(),
+                "bufferEngine", kafkaQueued ? "Apache Kafka (Stream Ingestion)" : "ThreadPoolTaskExecutor (Async Fallback)"
         ));
     }
 

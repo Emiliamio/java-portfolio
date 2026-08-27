@@ -53,10 +53,17 @@ class WebhookControllerTest {
     @MockBean
     private TokenBlacklistService tokenBlacklistService;
 
+    @MockBean
+    private com.logaudit.service.KafkaLogProducer kafkaLogProducer;
+
+    @MockBean
+    private com.logaudit.service.ClickHouseAnalyticsService clickHouseAnalyticsService;
+
     @BeforeEach
     void setUp() {
         when(tokenBlacklistService.isBlacklisted(anyString())).thenReturn(false);
         doNothing().when(logEntryService).asyncBatchImport(anyList());
+        when(kafkaLogProducer.isAvailable()).thenReturn(false);
     }
 
     @Test
@@ -179,5 +186,29 @@ class WebhookControllerTest {
         assertTrue(entry.getDetail().contains("DeepSeek API 500 internal error"));
         assertTrue(entry.getDetail().contains("[http-nio-8081-exec-2]"));
         assertTrue(entry.getDetail().contains("SocketTimeoutException"));
+    }
+
+    @Test
+    void testIngestLogsViaKafkaStreaming() throws Exception {
+        when(kafkaLogProducer.isAvailable()).thenReturn(true);
+        when(kafkaLogProducer.sendLogs(anyList())).thenReturn(true);
+
+        Map<String, Object> logPayload = Map.of(
+                "level", "WARN",
+                "logger", "com.example.OrderService",
+                "message", "High volume order spike detected",
+                "user", "buyer888"
+        );
+
+        mockMvc.perform(post("/api/logs/webhook")
+                        .header("X-Audit-Token", DEFAULT_TOKEN)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(logPayload)))
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.bufferEngine").value("Apache Kafka (Stream Ingestion)"));
+
+        verify(kafkaLogProducer, times(1)).sendLogs(anyList());
+        verify(logEntryService, never()).asyncBatchImport(anyList());
     }
 }

@@ -24,9 +24,21 @@
       <span>admin</span>
     </div>
     <span id="topCount" style="color:var(--accent-purple);font-family:var(--font-mono);font-weight:600;">0 次分析</span>
-    <a href="http://localhost:8080" target="_blank" class="nav-link-btn" style="color:var(--accent-cyan);border-color:rgba(0,242,254,0.3);">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-      返回 AuditVault ↗
+    <div class="model-selector-wrapper">
+      <select id="modelProviderSelect" class="model-select" onchange="onModelProviderChange()">
+        <option value="auto">⚡ 自动智能热备 (Auto Failover)</option>
+        <option value="cloud">🌐 云端大模型 (DeepSeek-V3 / Claude)</option>
+        <option value="ollama">🏠 本地私有化大模型 (Ollama · DeepSeek-R1)</option>
+        <option value="rule">🛡️ 内核安全规则引擎 (Zero-Config)</option>
+      </select>
+      <span class="privacy-shield-pill" id="privacyShieldPill" title="数据绝不上云 · 100% 离线隐私防护">
+        <span class="privacy-dot"></span>
+        <span id="privacyShieldText">隐私盾就绪</span>
+      </span>
+    </div>
+    <a href="http://localhost:8080" class="nav-link-btn" title="跳转至 AuditVault 日志审计中心">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><line x1="3" x2="21" y1="9" y2="9"/><line x1="9" x2="9" y1="21" y2="9"/></svg>
+      AuditVault :8080
     </a>
     <a href="/swagger-ui/index.html" target="_blank" class="nav-link-btn">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/></svg>
