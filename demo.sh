@@ -229,6 +229,14 @@ main() {
       start_services
       open_browser
       ;;
+    enterprise|full)
+      banner
+      check_deps
+      check_api_key
+      echo -e "${CYAN}▶ 正在启动企业级全套分布式流式集群 (Kafka + ClickHouse + Ollama)...${NC}"
+      docker compose --profile enterprise up -d --build
+      open_browser
+      ;;
     stop|down)
       stop_services
       ;;
@@ -239,12 +247,13 @@ main() {
       docker compose ps
       ;;
     *)
-      echo "用法: bash demo.sh [start|stop|reset|status]"
+      echo "用法: bash demo.sh [start|enterprise|stop|reset|status]"
       echo ""
-      echo "  start    启动所有服务并打开浏览器 (默认)"
-      echo "  stop     停止所有服务"
-      echo "  reset    停止并删除数据库（重置环境）"
-      echo "  status   查看服务状态"
+      echo "  start       启动标准微服务并打开浏览器 (默认)"
+      echo "  enterprise  一键启动企业级全套集群 (Kafka + ClickHouse + Ollama)"
+      echo "  stop        停止所有服务"
+      echo "  reset       停止并删除数据库（重置环境）"
+      echo "  status      查看服务状态"
       exit 1
       ;;
   esac

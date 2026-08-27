@@ -73,7 +73,7 @@ docker compose version
 ### 2.3 安装 Git + 克隆项目
 
 ```bash
-git clone https://github.com/你的用户名/java-portfolio.git
+git clone https://github.com/Emiliamio/java-portfolio.git
 cd java-portfolio
 ```
 
@@ -85,7 +85,7 @@ cd java-portfolio
 # 复制模板
 cp .env.example .env
 
-# 编辑 .env，填入真实的 API Key
+# 编辑 .env，填入真实的 API Key（可选）
 vim .env
 ```
 
@@ -102,7 +102,11 @@ AI_MODEL=claude-sonnet-5
 ## 第四步：一键启动所有服务
 
 ```bash
+# 模式 A: 启动标准生产服务（MySQL + Redis + AuditVault + Nexus AI）
 docker compose up -d
+
+# 模式 B: 启动企业级全套分布式流式集群（+ Kafka 3.7 + ClickHouse OLAP + Ollama 私有化大模型）
+docker compose --profile enterprise up -d
 ```
 
 **第一次启动** Docker 需要下载基础镜像（约 5-10 分钟），后续启动只需要几十秒。
