@@ -3,25 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>AuditVault — 企业级安全审计与遥测大屏</title>
-  <link rel="stylesheet" href="style.css?v=20260826">
+  <title>AuditVault — 企业级安全审计与遥测 Studio</title>
+  <link rel="stylesheet" href="style.css?v=20260827">
 </head>
 <body>
 
-<!-- ── Top Global Navigation ── -->
-<nav class="nav">
-  <div class="nav-brand">
+<!-- ── Top Global Navigation Bar ── -->
+<header class="nav">
+  <a href="index.html" class="nav-brand">
     <div class="nav-brand-logo">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
     </div>
     <span>AuditVault</span>
-    <span class="nav-indicator" id="navIndicator" title="服务就绪"></span>
-  </div>
+    <span class="nav-indicator" id="navIndicator" title="服务就绪 (Healthy)"></span>
+  </a>
 
   <div class="nav-tabs">
     <a href="index.html" class="nav-tab active">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-      审计工作台
+      审计 Studio
     </a>
     <a href="dashboard.html" class="nav-tab">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
@@ -31,179 +31,256 @@
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
       Webhook 采集器
     </a>
-    <a href="/swagger-ui.html" target="_blank" class="nav-tab">
+    <a href="http://localhost:8081" target="_blank" class="nav-tab" style="color:var(--accent-purple);">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+      Nexus AI 研判 ↗
+    </a>
+    <a href="/swagger-ui/index.html" target="_blank" class="nav-tab">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/></svg>
-      API 文档 ↗
+      OpenAPI 3.0 ↗
     </a>
   </div>
 
-  <div class="nav-live-box">
-    <span class="live-badge off" id="liveBadge">
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
-      <span id="liveStatusText">PAUSED</span>
-    </span>
-    <span style="color:var(--text-tertiary);">流速:</span>
-    <span id="liveRateVal" style="color:var(--accent-cyan);font-weight:600;">0 msg/s</span>
+  <div class="nav-right-cluster">
+    <div class="nav-live-box">
+      <span class="live-badge off" id="liveBadge">
+        <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+        <span id="liveStatusText">PAUSED</span>
+      </span>
+      <span style="color:var(--text-tertiary);">速率:</span>
+      <span id="liveRateVal" style="color:var(--accent-cyan);font-weight:600;">0 msg/s</span>
+    </div>
+
+    <div class="nav-user-pill" id="navUserPill">
+      <span>👑</span>
+      <span>admin</span>
+      <span class="role-badge role-admin">系统管理员</span>
+    </div>
+
+    <a href="#" class="nav-logout" id="navLogout" onclick="logout();return false;">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+      退出
+    </a>
   </div>
+</header>
 
-  <div class="nav-user-pill" id="navUserPill">
-    <span>👑</span>
-    <span>admin</span>
-    <span class="role-badge role-admin">管理员</span>
-  </div>
+<!-- ── Full-Viewport Studio Main ── -->
+<div class="studio-layout">
 
-  <a href="#" class="nav-logout" id="navLogout" onclick="logout();return false;">
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
-    退出
-  </a>
-</nav>
-
-<!-- ── Main Workspace ── -->
-<main class="main">
-
-  <!-- ── Telemetry Stat Cards ── -->
-  <div class="stat-row">
-    <div class="stat-card c-total">
-      <div class="stat-header">
-        <span class="stat-label">今日日志总量</span>
-        <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>
+  <!-- ── Left Pane: Facet Filtering Sidebar ── -->
+  <aside class="facet-sidebar" id="facetSidebar">
+    <div class="facet-header">
+      <div class="facet-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        <span>多维 FACETS 筛选</span>
       </div>
-      <div class="stat-value" id="statTotal">—</div>
-      <div class="stat-footer">
-        <span id="statDate">UTC+8</span>
-        <span style="margin-left:auto;color:var(--accent-blue);">已持久化</span>
+      <button class="facet-clear-btn" onclick="clearAllFacets()">清空过滤</button>
+    </div>
+
+    <div class="facet-scroll-area">
+      <!-- Facet Group 1: 严重级别 (Severity) -->
+      <div class="facet-group">
+        <div class="facet-group-title">
+          <span>严重级别 (Severity)</span>
+          <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);" id="facetSevTotal">—</span>
+        </div>
+        <ul class="facet-list" id="facetListSeverity">
+          <li class="facet-item" data-facet="severity" data-val="CRITICAL" onclick="toggleFacet('severity', 'CRITICAL', this)">
+            <div class="facet-item-left">
+              <span class="facet-checkbox"></span>
+              <span class="badge b-crit">CRITICAL</span>
+            </div>
+            <span class="facet-item-count" id="countSevCrit">0</span>
+          </li>
+          <li class="facet-item" data-facet="severity" data-val="ERROR" onclick="toggleFacet('severity', 'ERROR', this)">
+            <div class="facet-item-left">
+              <span class="facet-checkbox"></span>
+              <span class="badge b-err">ERROR</span>
+            </div>
+            <span class="facet-item-count" id="countSevErr">0</span>
+          </li>
+          <li class="facet-item" data-facet="severity" data-val="WARN" onclick="toggleFacet('severity', 'WARN', this)">
+            <div class="facet-item-left">
+              <span class="facet-checkbox"></span>
+              <span class="badge b-warn">WARN</span>
+            </div>
+            <span class="facet-item-count" id="countSevWarn">0</span>
+          </li>
+          <li class="facet-item" data-facet="severity" data-val="INFO" onclick="toggleFacet('severity', 'INFO', this)">
+            <div class="facet-item-left">
+              <span class="facet-checkbox"></span>
+              <span class="badge b-info">INFO</span>
+            </div>
+            <span class="facet-item-count" id="countSevInfo">0</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Facet Group 2: 操作类型 (Operation) -->
+      <div class="facet-group">
+        <div class="facet-group-title">
+          <span>操作类型 (Operation)</span>
+        </div>
+        <ul class="facet-list" id="facetListOperation">
+          <!-- Dynamic generated by app.js -->
+        </ul>
+      </div>
+
+      <!-- Facet Group 3: 活跃 IP (Top Source IPs) -->
+      <div class="facet-group">
+        <div class="facet-group-title">
+          <span>源 IP (Top Client IPs)</span>
+        </div>
+        <ul class="facet-list" id="facetListIps">
+          <!-- Dynamic generated by app.js -->
+        </ul>
+      </div>
+
+      <!-- Facet Group 4: 执行结果 (Result Status) -->
+      <div class="facet-group">
+        <div class="facet-group-title">
+          <span>执行状态 (Status)</span>
+        </div>
+        <ul class="facet-list">
+          <li class="facet-item" data-facet="status" data-val="SUCCESS" onclick="toggleFacet('status', 'SUCCESS', this)">
+            <div class="facet-item-left">
+              <span class="facet-checkbox"></span>
+              <span class="badge b-success">SUCCESS</span>
+            </div>
+            <span class="facet-item-count" id="countStatSuccess">0</span>
+          </li>
+          <li class="facet-item" data-facet="status" data-val="FAIL" onclick="toggleFacet('status', 'FAIL', this)">
+            <div class="facet-item-left">
+              <span class="facet-checkbox"></span>
+              <span class="badge b-fail">FAIL</span>
+            </div>
+            <span class="facet-item-count" id="countStatFail">0</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Center Pane: Studio Main Workspace ── -->
+  <main class="studio-main">
+
+    <!-- ── Top Histogram Panel ── -->
+    <div class="histogram-panel">
+      <div class="histogram-header">
+        <div class="histogram-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><line x1="3" x2="21" y1="9" y2="9"/><line x1="9" x2="9" y1="21" y2="9"/></svg>
+          <span>日志时序直方分布图 (Log Volume Histogram · Brush to Zoom)</span>
+        </div>
+        <div class="histogram-legend">
+          <div class="legend-item"><span class="legend-dot" style="background:var(--accent-rose);"></span> <span>ERROR/CRITICAL</span></div>
+          <div class="legend-item"><span class="legend-dot" style="background:var(--accent-amber);"></span> <span>WARN</span></div>
+          <div class="legend-item"><span class="legend-dot" style="background:var(--accent-blue);"></span> <span>INFO</span></div>
+          <div class="legend-item" style="color:var(--text-primary);font-weight:600;"><span id="histTotalCount">0</span> 条事件</div>
+        </div>
+      </div>
+
+      <div class="histogram-chart-wrapper" id="histogramChart">
+        <!-- Rendered dynamically by app.js -->
       </div>
     </div>
 
-    <div class="stat-card c-error">
-      <div class="stat-header">
-        <span class="stat-label">异常/告警事件</span>
-        <svg class="stat-icon" style="color:var(--accent-rose);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
-      </div>
-      <div class="stat-value" id="statAbnormal" style="color:var(--accent-rose);">—</div>
-      <div class="stat-footer">
-        <span id="statRate" style="color:var(--accent-rose);">异常率 0%</span>
-        <span style="margin-left:auto;color:var(--text-tertiary);">阈值 5%</span>
-      </div>
-    </div>
+    <!-- ── Interactive Toolbar ── -->
+    <div class="studio-toolbar">
+      <button class="sidebar-toggle-btn" onclick="toggleFacetSidebar()" title="展开/收起 Facet 侧边栏">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>
+      </button>
 
-    <div class="stat-card c-ip">
-      <div class="stat-header">
-        <span class="stat-label">活跃独立 IP (UV)</span>
-        <svg class="stat-icon" style="color:var(--accent-cyan);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" x2="22" y1="12" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      <!-- View Switcher -->
+      <div class="view-switcher">
+        <button class="view-tab-btn active" id="viewBtnTable" onclick="switchView('table')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/></svg>
+          表格模式
+        </button>
+        <button class="view-tab-btn" id="viewBtnStream" onclick="switchView('stream')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>
+          控制台流
+        </button>
+        <button class="view-tab-btn" id="viewBtnPatterns" onclick="switchView('patterns')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+          模式聚类
+        </button>
       </div>
-      <div class="stat-value" id="statIps">—</div>
-      <div class="stat-footer">
-        <span>Redis HyperLogLog</span>
-        <span style="margin-left:auto;color:var(--accent-cyan);">误差 ≤0.81%</span>
-      </div>
-    </div>
 
-    <div class="stat-card c-sys">
-      <div class="stat-header">
-        <span class="stat-label">系统健康与节点</span>
-        <svg class="stat-icon" style="color:var(--accent-emerald);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      <!-- Search Input -->
+      <div class="search-input-wrapper">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input class="search-input" type="text" id="globalSearchInput" placeholder="输入关键字、IP 或查询表达式 (如: 192.168.1.100 OR LOGIN FAIL)..." autocomplete="off">
+        <span class="search-shortcut-hint">Ctrl + K</span>
       </div>
-      <div class="stat-value" id="statStatus" style="color:var(--accent-emerald);font-size:1.4rem;">ONLINE</div>
-      <div class="stat-footer">
-        <span id="statSysTime">UTC+8 · --:--</span>
-        <span style="margin-left:auto;color:var(--accent-emerald);">Port 8080</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── Interactive Control Toolbar ── -->
-  <div class="control-bar">
-    <div class="control-row-top">
 
       <!-- Time Pills -->
       <div class="time-pills">
-        <button class="time-pill" onclick="setTimeRange('15m', this)">15分钟</button>
-        <button class="time-pill" onclick="setTimeRange('1h', this)">1小时</button>
-        <button class="time-pill" onclick="setTimeRange('24h', this)">24小时</button>
-        <button class="time-pill active" onclick="setTimeRange('all', this)">全部时间</button>
+        <button class="time-pill" onclick="setTimeRange('15m', this)">15m</button>
+        <button class="time-pill" onclick="setTimeRange('1h', this)">1h</button>
+        <button class="time-pill" onclick="setTimeRange('24h', this)">24h</button>
+        <button class="time-pill active" onclick="setTimeRange('all', this)">全部</button>
       </div>
 
-      <!-- IP / Detail Search -->
-      <div class="filter-input-group">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-        <input class="filter-input" type="text" id="ipFilter" placeholder="输入 IP 地址或搜索关键字 (按 Enter 查询)..." autocomplete="off">
-      </div>
-
-      <!-- Operation Select -->
-      <select class="filter-select" id="operationFilter" onchange="search(1)">
-        <option value="">全部操作 (All Ops)</option>
-        <option value="LOGIN">LOGIN (登录)</option>
-        <option value="LOGOUT">LOGOUT (登出)</option>
-        <option value="QUERY">QUERY (检索)</option>
-        <option value="DELETE">DELETE (删除)</option>
-        <option value="EXPORT">EXPORT (导出)</option>
-        <option value="UPLOAD">UPLOAD (上传)</option>
-        <option value="UPDATE">UPDATE (更新)</option>
-        <option value="EXECUTE">EXECUTE (执行)</option>
-        <option value="ACCESS">ACCESS (访问)</option>
-      </select>
-
-      <!-- Action Buttons -->
-      <button class="btn btn-primary" id="btnSearch" onclick="search(1)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-        检索
-      </button>
-
+      <!-- Live Stream -->
       <button class="btn btn-live" id="btnLiveTail" onclick="toggleLiveTail()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-        实时流监听
+        Live Tail
       </button>
 
+      <!-- Export Excel -->
       <button class="btn btn-export" id="btnExport" onclick="exportExcel()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
         导出 Excel
       </button>
 
+      <button class="btn btn-secondary" onclick="refreshCurrentView()" title="刷新">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+      </button>
     </div>
 
-    <!-- Second row: Severity multi-chips & meta -->
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-      <div class="severity-chips">
-        <span style="font-size:0.72rem;color:var(--text-tertiary);margin-right:4px;">严重级别:</span>
-        <button class="sev-chip active" id="sevAll" onclick="filterSeverity('', this)">全部</button>
-        <button class="sev-chip c-crit" onclick="filterSeverity('CRITICAL', this)">CRITICAL</button>
-        <button class="sev-chip c-err" onclick="filterSeverity('ERROR', this)">ERROR</button>
-        <button class="sev-chip c-warn" onclick="filterSeverity('WARN', this)">WARN</button>
-        <button class="sev-chip c-info" onclick="filterSeverity('INFO', this)">INFO</button>
+    <!-- ── Content View Modes ── -->
+    <div class="studio-content-view">
+
+      <!-- View 1: Data Table -->
+      <div class="table-view-container" id="tableViewContainer">
+        <table class="studio-table">
+          <thead>
+            <tr>
+              <th style="width:70px;">ID</th>
+              <th style="width:160px;">时间戳 (Timestamp)</th>
+              <th style="width:130px;">源 IP (Client)</th>
+              <th style="width:110px;">主体用户</th>
+              <th style="width:100px;">操作类型</th>
+              <th style="width:85px;">执行状态</th>
+              <th style="width:95px;">严重级别</th>
+              <th>业务日志详情 (Log Payload Detail)</th>
+              <th style="width:80px;text-align:right;">操作</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
       </div>
 
-      <div style="display:flex;align-items:center;gap:12px;">
-        <span style="font-family:var(--font-mono);font-size:0.72rem;color:var(--text-tertiary);" id="resultMeta">就绪</span>
-        <button class="btn btn-secondary" style="height:26px;padding:0 8px;font-size:0.7rem;" onclick="resetFilters()">重置条件</button>
+      <!-- View 2: Console Log Stream -->
+      <div class="stream-view-container" id="streamViewContainer">
+        <!-- Injected dynamically -->
       </div>
+
+      <!-- View 3: Log Pattern Clusters -->
+      <div class="patterns-view-container" id="patternsViewContainer">
+        <!-- Injected dynamically -->
+      </div>
+
     </div>
-  </div>
 
-  <!-- ── Main Table Shell ── -->
-  <div class="table-shell">
-    <table>
-      <thead>
-        <tr>
-          <th style="width:70px;">ID</th>
-          <th style="width:160px;">时间戳</th>
-          <th style="width:130px;">源 IP</th>
-          <th style="width:100px;">主体用户</th>
-          <th style="width:90px;">操作类型</th>
-          <th style="width:80px;">状态</th>
-          <th style="width:90px;">级别</th>
-          <th>业务日志详情</th>
-          <th style="width:60px;text-align:right;">动作</th>
-        </tr>
-      </thead>
-      <tbody id="tableBody"></tbody>
-    </table>
-  </div>
+    <!-- ── Bottom Pagination Bar ── -->
+    <div class="studio-pagination">
+      <div class="pgn-info" id="pgnInfo">加载中...</div>
+      <div class="pgn-buttons" id="pgnButtons"></div>
+    </div>
 
-  <!-- ── Pagination ── -->
-  <div class="pgn" id="pagination"></div>
-
-</main>
+  </main>
+</div>
 
 <!-- ── Slide-Over Detail Drawer ── -->
 <div class="drawer-backdrop" id="drawerBackdrop" onclick="closeDetailDrawer()"></div>
@@ -215,18 +292,18 @@
       <span id="drawerIdBadge" class="badge b-info">#--</span>
     </div>
     <button class="drawer-close" onclick="closeDetailDrawer()">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </button>
   </div>
 
   <div class="drawer-tabs">
     <button class="drawer-tab-btn active" id="tabBtnKv" onclick="switchDrawerTab('kv')">属性概览</button>
-    <button class="drawer-tab-btn" id="tabBtnJson" onclick="switchDrawerTab('json')">格式化 JSON</button>
-    <button class="drawer-tab-btn" id="tabBtnStack" onclick="switchDrawerTab('stack')">堆栈追踪</button>
+    <button class="drawer-tab-btn" id="tabBtnJson" onclick="switchDrawerTab('json')">结构化 JSON</button>
+    <button class="drawer-tab-btn" id="tabBtnContext" onclick="switchDrawerTab('context')">上下文追溯 (±10条)</button>
   </div>
 
   <div class="drawer-body" id="drawerBody">
-    <!-- Dynamic drawer tab content injected by app.js -->
+    <!-- Dynamic content -->
   </div>
 
   <div class="drawer-footer">
@@ -256,23 +333,21 @@
         模拟微服务节点通过 HTTP / Logback Appender 实时异步推送日志至 AuditVault (<code>POST /api/logs/webhook</code>)。
       </div>
 
-      <div class="preset-label">选择预置工业场景一键载入：</div>
       <div class="preset-chips">
         <button class="btn-chip" onclick="setPreset('payment_error')">🔴 500 订单支付超时 (含堆栈)</button>
         <button class="btn-chip" onclick="setPreset('rate_limit')">🟠 429 防爆破频控拦截</button>
         <button class="btn-chip" onclick="setPreset('sqli_probe')">🚨 SQL 注入探针告警</button>
         <button class="btn-chip" onclick="setPreset('sso_login')">🟢 SSO 用户单点登录</button>
-        <button class="btn-chip" onclick="setPreset('batch_logs')">📦 批量 JSON 数组</button>
       </div>
 
-      <div class="form-group" style="margin-top:10px;">
+      <div class="form-group">
         <label class="form-label">X-Audit-Token 接入令牌</label>
         <input type="text" id="webhookToken" class="form-input" value="auditvault-webhook-default-secret-token-2026">
       </div>
 
       <div class="form-group">
         <label class="form-label">日志 Payload (JSON 格式)</label>
-        <textarea id="webhookPayload" class="form-textarea" rows="7"></textarea>
+        <textarea id="webhookPayload" class="form-textarea" rows="6"></textarea>
       </div>
     </div>
     <div class="modal-footer">
@@ -288,6 +363,6 @@
 <!-- ── Toast Notifications ── -->
 <div class="toast-container" id="toastContainer"></div>
 
-<script src="app.js?v=20260826"></script>
+<script src="app.js?v=20260827"></script>
 </body>
 </html>
