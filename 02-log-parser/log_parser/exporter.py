@@ -6,7 +6,7 @@ SQL 导出器 — 将解析后的结构化日志生成 SQL INSERT 语句。
 - 字段: timestamp, ip_address, username, operation,
          operation_result, detail, severity, source_file
 
-面试亮点：这个模块体现了跨项目的整体设计思维——
+设计考量：这个模块体现了跨项目的整体架构流转思维——
 Python 解析工具产出的结构化数据可以直接导入 Java 后端的 MySQL 数据库。
 """
 

@@ -193,7 +193,7 @@ open_browser() {
   sleep 0.5
   $OPEN "$BLOG_URL" 2>/dev/null || true
 
-  echo -e "${GREEN}✓ 所有演示页面已打开。祝面试顺利！🚀${NC}"
+  echo -e "${GREEN}✓ AuditVault & Nexus AI 演示环境就绪！🚀${NC}"
   echo ""
 }
 

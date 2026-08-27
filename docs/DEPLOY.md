@@ -21,7 +21,7 @@
 | 阿里云 | [ecs.console.aliyun.com](https://ecs.console.aliyun.com) | 共享型 1vCPU 2GB，CentOS/Ubuntu |
 | 腾讯云 | [console.cloud.tencent.com/cvm](https://console.cloud.tencent.com/cvm) | 轻量应用服务器 2 核 2G |
 
-**面试要点**：学生机 / 轻量应用服务器每月 30-60 元，足够跑这三个项目。
+**配置建议**：轻量应用服务器或标准云服务器每月 30-60 元，足够平稳运行本系统。
 
 ### 1.2 配置安全组（防火墙）
 
@@ -201,15 +201,15 @@ jobs:
 
 ---
 
-## 面试怎么聊这套部署
+## 生产级容器化部署的核心设计考量
 
-| 面试官问 | 你怎么答 |
+| 场景与考量 | 架构设计与实现方案 |
 |----------|----------|
-| "你的项目怎么部署的？" | 我用 Docker Compose 把 MySQL、Redis、两个 Spring Boot 应用编排在一起，一条 `docker compose up -d` 全部启动。配置文件用 `.env` 管理敏感信息，不提交到 Git。 |
-| "Dockerfile 怎么写？" | 多阶段构建：`maven:3.9` 镜像编译 → `jre-alpine` 镜像运行，最终镜像只有 200MB 左右。用非 root 用户启动，加了 HEALTHCHECK 探针。 |
-| "安全组怎么配的？" | MySQL 端口只对内网开放，8080/8081 对外开放。SSH 用密钥登录，禁用密码。 |
-| "数据持久化怎么做的？" | MySQL 和 Redis 数据都挂载了 Docker Volume，容器删了数据还在。建表 SQL 通过 `docker-entrypoint-initdb.d` 在 MySQL 容器首次启动时自动执行。 |
-| "怎么更新代码？" | `git pull` → `docker compose up -d --build`，自动重新编译和重启，整个过程不停机。 |
+| 容器编排与服务拓扑 | 使用 Docker Compose 将 MySQL 8、Redis 7、AuditVault 与 Nexus AI 微服务编排在统一隔离网络中，一条 `docker compose up -d` 即可拉起完整拓扑。敏感配置通过 `.env` 注入，严格不纳入版本控制。 |
+| Dockerfile 瘦身与安全 | 基于 Amazon Corretto Alpine 镜像构建，使用非 root 用户运行，内嵌 HEALTHCHECK 容器探针，镜像体积保持极致轻量。 |
+| 网络隔离与安全组 | 数据库与缓存端口严格限制在 Docker 内网中，外部仅暴露业务入口端口与反向代理端口，SSH 强制使用 ED25519/RSA 密钥认证并禁用密码。 |
+| 数据高可用与持久化 | MySQL 与 Redis 均挂载命名 Docker Volume，确保容器生命周期与数据解耦。初始建表脚本通过 `docker-entrypoint-initdb.d` 在首次启动时自动执行。 |
+| 持续交付与滚动更新 | 支持 CI/CD 自动化流水线，通过 `docker compose up -d --build` 实现无缝容器重构与更新。 |
 
 ---
 
