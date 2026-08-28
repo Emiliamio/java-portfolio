@@ -92,9 +92,9 @@ vim .env
 `.env` 文件内容：
 ```ini
 MYSQL_ROOT_PASSWORD=替换成安全密码
-AI_API_KEY=sk-ant-你的真实Key
-AI_API_URL=https://api.anthropic.com/v1/messages
-AI_MODEL=claude-sonnet-5
+AI_API_KEY=sk-你的真实Key
+AI_API_URL=https://api.deepseek.com/v1/chat/completions
+AI_MODEL=deepseek-chat
 ```
 
 ---

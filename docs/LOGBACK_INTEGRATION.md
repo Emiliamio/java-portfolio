@@ -103,7 +103,7 @@ curl -X POST http://localhost:8080/api/logs/webhook \
   -d '{
     "level": "ERROR",
     "logger": "com.logai.service.LlmService",
-    "message": "Anthropic API rate limit exceeded",
+    "message": "Security API rate limit exceeded",
     "clientIp": "192.168.1.50",
     "user": "system"
   }'

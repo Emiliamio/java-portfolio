@@ -165,10 +165,7 @@ public class LlmService {
                         .header("Content-Type", "application/json")
                         .timeout(Duration.ofSeconds(timeoutSeconds));
 
-                if (isAnthropic()) {
-                    requestBuilder.header("x-api-key", apiKey)
-                            .header("anthropic-version", "2023-06-01");
-                } else {
+                if (apiKey != null && !apiKey.isBlank()) {
                     requestBuilder.header("Authorization", "Bearer " + apiKey);
                 }
 
@@ -490,10 +487,7 @@ public class LlmService {
     }
 
     /**
-     * 调用大模型 HTTP API。
-     *
-     * 支持的 API 格式：Anthropic Messages API / OpenAI Chat Completions API
-     * 根据 apiUrl 的 host 自动适配请求体格式。
+     * 调用大模型 HTTP API (OpenAI / DeepSeek 标准协议)。
      */
     private String callLlmApi(String apiKey, String systemPrompt, String userContent) {
         try {
@@ -504,13 +498,7 @@ public class LlmService {
                     .header("Content-Type", "application/json")
                     .timeout(Duration.ofSeconds(timeoutSeconds));
 
-            // 根据 API 类型设置认证头：
-            // - Anthropic: x-api-key + anthropic-version
-            // - OpenAI 兼容 (含 DeepSeek): Authorization: Bearer
-            if (isAnthropic()) {
-                requestBuilder.header("x-api-key", apiKey)
-                              .header("anthropic-version", "2023-06-01");
-            } else {
+            if (apiKey != null && !apiKey.isBlank()) {
                 requestBuilder.header("Authorization", "Bearer " + apiKey);
             }
 
@@ -549,80 +537,46 @@ public class LlmService {
         }
     }
 
-    /**
-     * 根据 API URL 自动选择请求体格式。
-     * 通过判断 URL 中是否含 "anthropic" 来选择 Anthropic / OpenAI 格式。
-     */
-    private boolean isAnthropic() {
-        return apiUrl != null && apiUrl.contains("anthropic");
-    }
-
     private JSONObject buildRequestBody(String systemPrompt, String userContent) {
-        if (isAnthropic()) {
-            // Anthropic Messages API 格式
-            JSONObject body = new JSONObject();
-            body.put("model", apiModel);
-            body.put("max_tokens", 1024);
-            body.put("system", systemPrompt);
+        // OpenAI / DeepSeek 标准格式 (Chat Completions API)
+        JSONObject body = new JSONObject();
+        body.put("model", apiModel);
+        body.put("max_tokens", 1024);
+        body.put("temperature", 0.3);
 
-            JSONArray messages = new JSONArray();
-            JSONObject userMsg = new JSONObject();
-            userMsg.put("role", "user");
+        JSONArray messages = new JSONArray();
 
-            JSONArray content = new JSONArray();
-            JSONObject textBlock = new JSONObject();
-            textBlock.put("type", "text");
-            textBlock.put("text", userContent);
-            content.add(textBlock);
+        JSONObject sysMsg = new JSONObject();
+        sysMsg.put("role", "system");
+        sysMsg.put("content", systemPrompt);
+        messages.add(sysMsg);
 
-            userMsg.put("content", content);
-            messages.add(userMsg);
-            body.put("messages", messages);
+        JSONObject userMsg = new JSONObject();
+        userMsg.put("role", "user");
+        userMsg.put("content", userContent);
+        messages.add(userMsg);
 
-            return body;
-        } else {
-            // OpenAI / 兼容格式 (Chat Completions API)
-            JSONObject body = new JSONObject();
-            body.put("model", apiModel);
-            body.put("max_tokens", 1024);
-            body.put("temperature", 0.3);
-
-            JSONArray messages = new JSONArray();
-
-            JSONObject sysMsg = new JSONObject();
-            sysMsg.put("role", "system");
-            sysMsg.put("content", systemPrompt);
-            messages.add(sysMsg);
-
-            JSONObject userMsg = new JSONObject();
-            userMsg.put("role", "user");
-            userMsg.put("content", userContent);
-            messages.add(userMsg);
-
-            body.put("messages", messages);
-            return body;
-        }
+        body.put("messages", messages);
+        return body;
     }
 
     /**
      * 从 API 响应中提取文本内容。
-     * 兼容 Anthropic 和 OpenAI 两种响应格式。
      */
     private String extractTextFromResponse(String responseBody) {
         JSONObject json = JSON.parseObject(responseBody);
 
-        // Anthropic 格式: content[0].text
-        if (json.containsKey("content")) {
-            Object contentObj = json.get("content");
-            if (contentObj instanceof JSONArray arr && !arr.isEmpty()) {
-                JSONObject firstBlock = arr.getJSONObject(0);
-                if (firstBlock.containsKey("text")) {
-                    return firstBlock.getString("text");
+        // OpenAI / DeepSeek 格式: choices[0].message.content
+        if (json.containsKey("choices")) {
+            JSONArray choices = json.getJSONArray("choices");
+            if (choices != null && !choices.isEmpty()) {
+                JSONObject firstChoice = choices.getJSONObject(0);
+                JSONObject message = firstChoice.getJSONObject("message");
+                if (message != null && message.containsKey("content")) {
+                    return message.getString("content");
                 }
             }
         }
-
-        // OpenAI 格式: choices[0].message.content
         if (json.containsKey("choices")) {
             JSONArray choices = json.getJSONArray("choices");
             if (choices != null && !choices.isEmpty()) {

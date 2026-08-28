@@ -13,7 +13,7 @@ class LlmServiceTest {
 
     // 用 null mapper 创建 service（测试解析逻辑不需要数据库）
     private final LlmService service = new LlmService(
-            null, "https://api.anthropic.com/v1/messages", "claude-sonnet-5-20251001", 60,
+            null, "https://api.deepseek.com/v1/chat/completions", "deepseek-chat", 60,
             "http://localhost:11434", "deepseek-r1:7b", 60
     );
 

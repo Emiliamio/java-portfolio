@@ -146,7 +146,7 @@ flowchart TB
     end
 
     subgraph AI研判与私有化层 [Nexus AI Triple-Tier Router]
-        CloudAI[DeepSeek-V3 / Claude 商业大模型]
+        CloudAI[DeepSeek-V3 / OpenAI 商业大模型]
         LocalOllama[本地 Ollama 私有化模型 (DeepSeek-R1 · 100% 离线)]
         RuleEngine[内核安全专家规则引擎 (Zero-Config 降级)]
     end
@@ -181,6 +181,6 @@ flowchart TB
 ---
 
 ### 3. Nexus AI 三级多模型热备路由与 100% 离线隐私盾 (Air-Gapped Mode)
-- **第一级 · 云端商业大模型 (DeepSeek / Claude)**：在具备外网环境和 API Key 时，提供最强推理能力与长文本关联分析；
+- **第一级 · 云端商业大模型 (DeepSeek-V3 / OpenAI)**：在具备外网环境和 API Key 时，提供最强推理能力与长文本关联分析；
 - **第二级 · 本地私有化大模型 (Ollama · DeepSeek-R1 / Qwen2.5-Coder)**：支持金融、军工及敏感内网环境，纯本地调用 `http://localhost:11434/v1/chat/completions`，数据 100% 物理隔离、绝不上云；
 - **第三级 · 内核安全专家规则引擎**：零外部依赖、零模型启动开销，提供亚毫秒级确定性研判兜底。

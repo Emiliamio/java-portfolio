@@ -15,7 +15,7 @@
 |---|---|---|---|---|
 | ① | **AuditVault** 日志审计 | Spring Boot + MySQL + Redis + **Kafka** + **ClickHouse** | Datadog/SigNoz 级 SOC 遥测大屏、**Kafka 分布式流式摄取**、**ClickHouse 45x 毫秒级 OLAP 直方图**、Live Tail 实时流与上下文追溯 | `:8080` |
 | ② | **LogScope** 日志解析器 | Python + Pandas + CLI | CSV/文本日志解析，异常检测，HTML/Excel 可视化报告 | CLI |
-| ③ | **Nexus AI** 智能研判 | Spring Boot + **Ollama** / DeepSeek / Claude | Security Copilot 研判工作台、**本地私有化/云端三级热备路由**、**100% 离线隐私盾**、CVSS 3.1 评分与 WAF 剧本 | `:8081` |
+| ③ | **Nexus AI** 智能研判 | Spring Boot + **Ollama** / DeepSeek / OpenAI | Security Copilot 研判工作台、**本地私有化/云端三级热备路由**、**100% 离线隐私盾**、CVSS 3.1 评分与 WAF 剧本 | `:8081` |
 | ④ | **技术博客** | Hexo + GitHub Pages | 项目复盘与架构技术文章 | [emiliamio.github.io](https://emiliamio.github.io) |
 
 ---
@@ -109,7 +109,7 @@ docker compose --profile tools run --rm log-parser \
 Java 17 · Spring Boot 3.2 · MyBatis · MySQL 8 · Redis 7
 Spring Security · JWT · BCrypt · httpOnly Cookie · Logback Webhook
 Python 3.12 · Pandas · Regex · argparse
-Anthropic Messages API / DeepSeek · LLM Prompt Engineering · JSON 容错解析 · SSE Stream
+DeepSeek / OpenAI API · LLM Prompt Engineering · JSON 容错解析 · SSE Stream
 Docker · Docker Compose · 多阶段构建 · HEALTHCHECK
 Hexo · GitHub Pages · GitHub Actions CI/CD Pipeline
 ```
