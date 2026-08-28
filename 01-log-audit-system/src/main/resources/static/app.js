@@ -117,11 +117,11 @@ function buildQueryParams(page = 1) {
   // IP from Facet or search
   if (state.selectedFacets.ip.size === 1) {
     params.set('ipAddress', Array.from(state.selectedFacets.ip)[0]);
-  } else if (state.searchQuery.trim()) {
-    // If search looks like an IP
-    if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(state.searchQuery.trim())) {
-      params.set('ipAddress', state.searchQuery.trim());
-    }
+  }
+
+  // Global Keyword Search (across detail, username, ip, operation, sourceFile, traceId)
+  if (state.searchQuery.trim()) {
+    params.set('keyword', state.searchQuery.trim());
   }
 
   return params;
@@ -590,6 +590,11 @@ function switchDrawerTab(tab) {
       <div class="kv-grid">
         <div class="kv-key">事件 ID:</div>
         <div class="kv-val">#${log.id}</div>
+
+        <div class="kv-key">链路 TraceId:</div>
+        <div class="kv-val" style="font-family:var(--font-mono);font-size:12px;color:var(--accent-purple);word-break:break-all;">
+          ${escHtml(log.traceId || 'tr-local-default')}
+        </div>
 
         <div class="kv-key">发生时间:</div>
         <div class="kv-val">${formatTimestamp(log.timestamp)}</div>

@@ -71,6 +71,10 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123456}
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
+      KAFKA_ENABLED: ${KAFKA_ENABLED:-false}
+      CLICKHOUSE_URL: ${CLICKHOUSE_URL:-jdbc:ch://clickhouse:8123/default}
+      CLICKHOUSE_ENABLED: ${CLICKHOUSE_ENABLED:-false}
     depends_on:
       mysql:
         condition: service_healthy
@@ -95,6 +99,8 @@ services:
       AI_API_KEY: ${AI_API_KEY}
       AI_API_URL: ${AI_API_URL:-https://api.deepseek.com/v1/chat/completions}
       AI_MODEL: ${AI_MODEL:-deepseek-chat}
+      OLLAMA_API_URL: ${OLLAMA_API_URL:-http://ollama:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-deepseek-r1:7b}
     depends_on:
       mysql:
         condition: service_healthy
@@ -145,6 +151,7 @@ services:
       - "9000:9000"
     volumes:
       - clickhouse_data:/var/lib/clickhouse
+      - ./01-log-audit-system/src/main/resources/sql/clickhouse-schema.sql:/docker-entrypoint-initdb.d/clickhouse-schema.sql
     profiles:
       - enterprise
     networks:

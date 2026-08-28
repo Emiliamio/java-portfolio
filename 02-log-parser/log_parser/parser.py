@@ -12,6 +12,7 @@
 """
 
 import re
+import gzip
 import logging
 from typing import Optional
 
@@ -20,6 +21,11 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 # ── 正则模式库 ──────────────────────────────────────────────
+
+# Nginx / Apache Combined Log Format: 192.168.1.1 - admin [15/Jan/2025:08:23:45 +0800] "GET /api/users HTTP/1.1" 200 4523 "-" "Mozilla/5.0"
+NGINX_COMBINED_PATTERN = re.compile(
+    r'^(?P<ip>\S+)\s+\S+\s+(?P<user>\S+)\s+\[(?P<ts>[^\]]+)\]\s+"(?P<method>\S+)(?:\s+(?P<uri>\S+))?(?:\s+(?P<proto>\S+))?"\s+(?P<status>\d{3}|-)\s+(?P<size>\d+|-)(?:\s+"(?P<referrer>[^"]*)"\s+"(?P<ua>[^"]*)")?'
+)
 
 # 日志行中常见的日期时间格式
 TIMESTAMP_PATTERNS = [
@@ -137,6 +143,7 @@ def extract_source_file(line: str) -> Optional[str]:
 def parse_line(line: str) -> dict:
     """
     解析单行非结构化日志，返回结构化的字段字典。
+    自动适配 Nginx/Apache Combined Log 格式与通用应用日志。
 
     Args:
         line: 一行原始日志文本
@@ -144,6 +151,38 @@ def parse_line(line: str) -> dict:
     Returns:
         dict: 包含所有提取字段的字典
     """
+    stripped = line.strip()
+    # 1. 尝试 Nginx / Apache Combined 日志格式快速解析
+    nginx_match = NGINX_COMBINED_PATTERN.match(stripped)
+    if nginx_match:
+        status = nginx_match.group("status")
+        status_num = int(status) if status and status.isdigit() else 200
+        severity = "ERROR" if status_num >= 500 else ("WARN" if status_num >= 400 else "INFO")
+        op_result = "FAIL" if status_num >= 400 else "SUCCESS"
+        method = nginx_match.group("method") or "HTTP"
+        uri = nginx_match.group("uri") or "/"
+        user = nginx_match.group("user")
+        username = user if user and user != "-" else "anonymous"
+
+        detail_parts = [f"{method} {uri} -> {status}"]
+        if nginx_match.group("referrer") and nginx_match.group("referrer") != "-":
+            detail_parts.append(f"ref: {nginx_match.group('referrer')}")
+        if nginx_match.group("ua") and nginx_match.group("ua") != "-":
+            detail_parts.append(f"ua: {nginx_match.group('ua')}")
+
+        return {
+            "timestamp": nginx_match.group("ts"),
+            "ip_address": nginx_match.group("ip"),
+            "username": username,
+            "operation": method.upper(),
+            "operation_result": op_result,
+            "detail": " | ".join(detail_parts),
+            "severity": severity,
+            "source_file": "nginx-access.log",
+            "raw_line": stripped,
+        }
+
+    # 2. 标准通用日志回退提取
     return {
         "timestamp": extract_timestamp(line),
         "ip_address": extract_ip(line),
@@ -153,13 +192,13 @@ def parse_line(line: str) -> dict:
         "detail": extract_detail(line),
         "severity": extract_severity(line),
         "source_file": extract_source_file(line),
-        "raw_line": line.strip(),
+        "raw_line": stripped,
     }
 
 
 def parse_csv(filepath: str) -> pd.DataFrame:
     """
-    解析 CSV 格式的结构化日志文件。
+    解析 CSV 格式的结构化日志文件（支持 .csv 与 .csv.gz 压缩流）。
 
     CSV 期望列：timestamp, ip_address, username, operation,
                 operation_result, detail, severity, source_file
@@ -191,7 +230,8 @@ def parse_csv(filepath: str) -> pd.DataFrame:
         "file": "source_file",
     }
 
-    df = pd.read_csv(filepath)
+    compression = "gzip" if filepath.lower().endswith((".gz", ".gzip")) else None
+    df = pd.read_csv(filepath, compression=compression)
 
     # 重命名列为标准名
     df.rename(columns=column_mapping, inplace=True)
@@ -226,14 +266,21 @@ def is_continuation_line(line: str) -> bool:
     return False
 
 
+def open_log_file(filepath: str):
+    """透明支持普通文本与 .gz 压缩日志流。"""
+    if filepath.lower().endswith((".gz", ".gzip")):
+        return gzip.open(filepath, "rt", encoding="utf-8", errors="replace")
+    return open(filepath, "r", encoding="utf-8", errors="replace")
+
+
 def parse_text(filepath: str, merge_multiline: bool = True) -> pd.DataFrame:
     """
-    解析纯文本格式的非结构化日志文件，支持多行堆栈（StackTrace）自动聚合。
+    解析纯文本格式的非结构化日志文件，支持多行堆栈（StackTrace）自动聚合与 .gz 流式解压。
 
     逐行用正则提取字段，遇到异常堆栈行自动追加到上一条记录的 detail 中。
 
     Args:
-        filepath: 文本日志文件路径
+        filepath: 文本日志文件路径（支持 .log, .txt, .log.gz 等）
         merge_multiline: 是否开启多行日志/堆栈合并
 
     Returns:
@@ -259,7 +306,7 @@ def parse_text(filepath: str, merge_multiline: bool = True) -> pd.DataFrame:
             current_record = None
             multiline_buffer = []
 
-    with open(filepath, "r", encoding="utf-8", errors="replace") as f:
+    with open_log_file(filepath) as f:
         for line_num, raw_line in enumerate(f, 1):
             line = raw_line.rstrip("\r\n")
             if not line.strip():
@@ -288,18 +335,22 @@ def parse_text(filepath: str, merge_multiline: bool = True) -> pd.DataFrame:
 
 def parse_file(filepath: str, merge_multiline: bool = True) -> pd.DataFrame:
     """
-    自动检测文件类型并解析日志文件。
+    自动检测文件类型并解析日志文件（透明支持普通文件与 .gz 压缩归档）。
 
     根据扩展名选择 CSV 解析器或文本解析器。
 
     Args:
-        filepath: 日志文件路径 (.csv 或 .log / .txt)
+        filepath: 日志文件路径 (.csv, .log, .csv.gz, .log.gz)
         merge_multiline: 是否开启多行日志/堆栈合并 (默认开启)
 
     Returns:
         pd.DataFrame: 结构化日志数据
     """
-    if filepath.lower().endswith(".csv"):
+    clean_path = filepath.lower()
+    if clean_path.endswith((".gz", ".gzip")):
+        clean_path = clean_path.rsplit(".", 1)[0]
+
+    if clean_path.endswith(".csv"):
         return parse_csv(filepath)
     else:
         return parse_text(filepath, merge_multiline=merge_multiline)

@@ -29,24 +29,24 @@ public class LogEntryController {
     private final AuditLogService auditLogService;
 
     @GetMapping
-    @Operation(summary = "多条件分页查询日志", description = "支持时间范围、IP、操作类型、严重程度等多维度筛选，并自动留存查询操作审计")
+    @Operation(summary = "多条件分页查询日志", description = "支持时间范围、IP、操作类型、严重程度、关键字全局模糊等多维度筛选，并自动留存查询操作审计")
     public ResponseEntity<Map<String, Object>> searchLogs(
-
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime startTime,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime endTime,
             @RequestParam(required = false) String ipAddress,
             @RequestParam(required = false) String operation,
             @RequestParam(required = false) String severity,
+            @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int pageSize,
             HttpServletRequest request) {
 
         Map<String, Object> result = logEntryService.searchLogs(
-                startTime, endTime, ipAddress, operation, severity, page, pageSize);
+                startTime, endTime, ipAddress, operation, severity, keyword, page, pageSize);
 
         // 审计记录：谁查了日志（真实登录用户 + 真实 IP）
         auditLogService.recordSuccess(currentUser(), "VIEW_LOGS",
-                "ip=" + ipAddress + ", operation=" + operation, clientIp(request));
+                "ip=" + ipAddress + ", op=" + operation + ", kw=" + keyword, clientIp(request));
 
         return ResponseEntity.ok(result);
     }
@@ -83,12 +83,13 @@ public class LogEntryController {
             @RequestParam(required = false) String ipAddress,
             @RequestParam(required = false) String operation,
             @RequestParam(required = false) String severity,
+            @RequestParam(required = false) String keyword,
             HttpServletRequest request) {
 
-        byte[] excelData = logEntryService.exportLogs(startTime, endTime, ipAddress, operation, severity);
+        byte[] excelData = logEntryService.exportLogs(startTime, endTime, ipAddress, operation, severity, keyword);
 
         auditLogService.recordSuccess(currentUser(), "EXPORT_LOGS",
-                "ip=" + ipAddress + ", operation=" + operation, clientIp(request));
+                "ip=" + ipAddress + ", op=" + operation + ", kw=" + keyword, clientIp(request));
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=logs.xlsx")

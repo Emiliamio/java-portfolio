@@ -48,6 +48,9 @@ public class WebhookLogDto {
     @JsonAlias({"logger", "loggerName", "service", "serviceName", "app", "source"})
     private String sourceFile;
 
+    @JsonAlias({"traceId", "trace_id", "traceID", "spanId", "trace"})
+    private String traceId;
+
     private String thread;
 
     @JsonAlias({"exception", "stack_trace", "throwable", "error"})
@@ -97,7 +100,14 @@ public class WebhookLogDto {
         // 7. 来源标记
         entry.setSourceFile((this.sourceFile != null && !this.sourceFile.isBlank()) ? this.sourceFile.trim() : "webhook");
 
-        // 8. 详情与堆栈拼接
+        // 8. 分布式链路追踪 ID
+        if (this.traceId != null && !this.traceId.isBlank()) {
+            entry.setTraceId(this.traceId.trim());
+        } else {
+            entry.setTraceId("tr-" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 16));
+        }
+
+        // 9. 详情与堆栈拼接
         StringBuilder sb = new StringBuilder();
         if (this.detail != null && !this.detail.isBlank()) {
             sb.append(this.detail.trim());

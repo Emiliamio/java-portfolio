@@ -33,11 +33,11 @@ public class LogEntryServiceImpl implements LogEntryService {
     @Override
     public Map<String, Object> searchLogs(LocalDateTime startTime, LocalDateTime endTime,
                                           String ipAddress, String operation, String severity,
-                                          int page, int pageSize) {
+                                          String keyword, int page, int pageSize) {
         int offset = (page - 1) * pageSize;
 
-        long total = logEntryMapper.countByConditions(startTime, endTime, ipAddress, operation, severity);
-        List<LogEntry> records = logEntryMapper.findByConditions(startTime, endTime, ipAddress, operation, severity, offset, pageSize);
+        long total = logEntryMapper.countByConditions(startTime, endTime, ipAddress, operation, severity, keyword);
+        List<LogEntry> records = logEntryMapper.findByConditions(startTime, endTime, ipAddress, operation, severity, keyword, offset, pageSize);
 
         Map<String, Object> result = new HashMap<>();
         result.put("total", total);
@@ -109,12 +109,12 @@ public class LogEntryServiceImpl implements LogEntryService {
 
     @Override
     public byte[] exportLogs(LocalDateTime startTime, LocalDateTime endTime,
-                             String ipAddress, String operation, String severity) {
-        long total = logEntryMapper.countByConditions(startTime, endTime, ipAddress, operation, severity);
+                             String ipAddress, String operation, String severity, String keyword) {
+        long total = logEntryMapper.countByConditions(startTime, endTime, ipAddress, operation, severity, keyword);
         int fetchSize = (int) Math.min(total, MAX_EXPORT_LIMIT);
 
         List<LogEntry> records = logEntryMapper.findByConditions(
-                startTime, endTime, ipAddress, operation, severity, 0, fetchSize);
+                startTime, endTime, ipAddress, operation, severity, keyword, 0, fetchSize);
 
         // 使用 SXSSFWorkbook 流式写入（内存保留 100 行窗口，其余溢出到临时文件），彻底防止 OOM
         SXSSFWorkbook workbook = new SXSSFWorkbook(100);
@@ -124,7 +124,7 @@ public class LogEntryServiceImpl implements LogEntryService {
 
             // 表头
             Row header = sheet.createRow(0);
-            String[] columns = {"ID", "时间", "IP地址", "用户名", "操作类型", "操作结果", "详情", "严重程度", "来源文件"};
+            String[] columns = {"ID", "TraceId", "时间", "IP地址", "用户名", "操作类型", "操作结果", "详情", "严重程度", "来源文件"};
             for (int i = 0; i < columns.length; i++) {
                 header.createCell(i).setCellValue(columns[i]);
             }
@@ -134,14 +134,15 @@ public class LogEntryServiceImpl implements LogEntryService {
             for (LogEntry logEntry : records) {
                 Row row = sheet.createRow(rowNum++);
                 row.createCell(0).setCellValue(logEntry.getId() != null ? logEntry.getId() : 0);
-                row.createCell(1).setCellValue(logEntry.getTimestamp() != null ? logEntry.getTimestamp().toString() : "");
-                row.createCell(2).setCellValue(logEntry.getIpAddress() != null ? logEntry.getIpAddress() : "");
-                row.createCell(3).setCellValue(logEntry.getUsername() != null ? logEntry.getUsername() : "");
-                row.createCell(4).setCellValue(logEntry.getOperation() != null ? logEntry.getOperation() : "");
-                row.createCell(5).setCellValue(logEntry.getOperationResult() != null ? logEntry.getOperationResult() : "");
-                row.createCell(6).setCellValue(logEntry.getDetail() != null ? logEntry.getDetail() : "");
-                row.createCell(7).setCellValue(logEntry.getSeverity() != null ? logEntry.getSeverity() : "");
-                row.createCell(8).setCellValue(logEntry.getSourceFile() != null ? logEntry.getSourceFile() : "");
+                row.createCell(1).setCellValue(logEntry.getTraceId() != null ? logEntry.getTraceId() : "");
+                row.createCell(2).setCellValue(logEntry.getTimestamp() != null ? logEntry.getTimestamp().toString() : "");
+                row.createCell(3).setCellValue(logEntry.getIpAddress() != null ? logEntry.getIpAddress() : "");
+                row.createCell(4).setCellValue(logEntry.getUsername() != null ? logEntry.getUsername() : "");
+                row.createCell(5).setCellValue(logEntry.getOperation() != null ? logEntry.getOperation() : "");
+                row.createCell(6).setCellValue(logEntry.getOperationResult() != null ? logEntry.getOperationResult() : "");
+                row.createCell(7).setCellValue(logEntry.getDetail() != null ? logEntry.getDetail() : "");
+                row.createCell(8).setCellValue(logEntry.getSeverity() != null ? logEntry.getSeverity() : "");
+                row.createCell(9).setCellValue(logEntry.getSourceFile() != null ? logEntry.getSourceFile() : "");
             }
 
             workbook.write(out);

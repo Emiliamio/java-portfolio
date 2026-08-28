@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS log_entry (
     detail          TEXT          COMMENT '操作详情',
     severity        VARCHAR(20)   NOT NULL DEFAULT 'INFO' COMMENT '严重程度',
     source_file     VARCHAR(255)  COMMENT '来源文件',
+    trace_id        VARCHAR(64)   COMMENT '分布式链路追踪ID',
     created_at      DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     INDEX idx_timestamp (timestamp),
@@ -38,7 +39,8 @@ CREATE TABLE IF NOT EXISTS log_entry (
     INDEX idx_operation (operation),
     INDEX idx_severity (severity),
     INDEX idx_timestamp_ip (timestamp, ip_address),
-    INDEX idx_username (username)
+    INDEX idx_username (username),
+    INDEX idx_trace_id (trace_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='日志记录表';
 
 -- ----------------------------

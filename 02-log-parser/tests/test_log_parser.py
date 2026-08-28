@@ -309,3 +309,56 @@ class TestMultiLineParser:
         assert "Caused by" in df.iloc[0]["detail"]
         assert df.iloc[1]["operation_result"] == "SUCCESS"
 
+
+class TestGzipParser:
+    def test_parse_gzip_text_log(self, tmp_path):
+        import gzip
+        content = (
+            '2025-01-15 08:00:00 10.0.0.1 User zhangsan LOGIN SUCCESS "Auth passed"\n'
+            '2025-01-15 08:01:00 10.0.0.2 User lisi LOGIN FAIL "Invalid password"\n'
+        )
+        gz_path = tmp_path / "compressed.log.gz"
+        with gzip.open(gz_path, "wt", encoding="utf-8") as f:
+            f.write(content)
+
+        df = parse_file(str(gz_path))
+        assert len(df) == 2
+        assert df.iloc[0]["username"] == "zhangsan"
+        assert df.iloc[1]["operation_result"] == "FAIL"
+
+    def test_parse_gzip_csv_log(self, tmp_path):
+        import gzip
+        csv_content = (
+            "timestamp,ip_address,username,operation,operation_result,detail,severity,source_file\n"
+            "2025-01-15 08:00:00,192.168.1.1,admin,LOGIN,SUCCESS,ok,INFO,app.log\n"
+        )
+        gz_csv_path = tmp_path / "test.csv.gz"
+        with gzip.open(gz_csv_path, "wt", encoding="utf-8") as f:
+            f.write(csv_content)
+
+        df = parse_file(str(gz_csv_path))
+        assert len(df) == 1
+        assert df.iloc[0]["username"] == "admin"
+
+
+class TestNginxCombinedLog:
+    def test_nginx_200_access(self):
+        line = '192.168.1.100 - zhangsan [15/Jan/2025:08:23:45 +0800] "GET /api/v1/users HTTP/1.1" 200 4523 "https://google.com" "Mozilla/5.0"'
+        record = parse_line(line)
+        assert record["ip_address"] == "192.168.1.100"
+        assert record["username"] == "zhangsan"
+        assert record["operation"] == "GET"
+        assert record["operation_result"] == "SUCCESS"
+        assert record["severity"] == "INFO"
+        assert "GET /api/v1/users" in record["detail"]
+
+    def test_nginx_500_error(self):
+        line = '10.0.0.99 - - [15/Jan/2025:08:24:00 +0800] "POST /api/pay HTTP/1.1" 500 120 "-" "curl/7.68.0"'
+        record = parse_line(line)
+        assert record["ip_address"] == "10.0.0.99"
+        assert record["username"] == "anonymous"
+        assert record["operation"] == "POST"
+        assert record["operation_result"] == "FAIL"
+        assert record["severity"] == "ERROR"
+
+

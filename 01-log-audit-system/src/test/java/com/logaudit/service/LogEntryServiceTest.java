@@ -56,13 +56,13 @@ class LogEntryServiceTest {
 
     @Test
     void testSearchLogsPagination() {
-        when(logEntryMapper.countByConditions(any(), any(), any(), any(), any()))
+        when(logEntryMapper.countByConditions(any(), any(), any(), any(), any(), any()))
                 .thenReturn(45L);
-        when(logEntryMapper.findByConditions(any(), any(), any(), any(), any(), eq(20), eq(20)))
+        when(logEntryMapper.findByConditions(any(), any(), any(), any(), any(), any(), eq(20), eq(20)))
                 .thenReturn(List.of(sampleEntry));
 
         Map<String, Object> result = logEntryService.searchLogs(
-                null, null, "192.168.1.10", "LOGIN", "INFO", 2, 20
+                null, null, "192.168.1.10", "LOGIN", "INFO", "admin", 2, 20
         );
 
         assertNotNull(result);
@@ -120,12 +120,12 @@ class LogEntryServiceTest {
 
     @Test
     void testExportLogsGeneratesExcelBytes() {
-        when(logEntryMapper.countByConditions(any(), any(), any(), any(), any()))
+        when(logEntryMapper.countByConditions(any(), any(), any(), any(), any(), any()))
                 .thenReturn(1L);
-        when(logEntryMapper.findByConditions(any(), any(), any(), any(), any(), eq(0), anyInt()))
+        when(logEntryMapper.findByConditions(any(), any(), any(), any(), any(), any(), eq(0), anyInt()))
                 .thenReturn(List.of(sampleEntry));
 
-        byte[] excelBytes = logEntryService.exportLogs(null, null, null, null, null);
+        byte[] excelBytes = logEntryService.exportLogs(null, null, null, null, null, "admin");
 
         assertNotNull(excelBytes);
         assertTrue(excelBytes.length > 0, "Excel output byte array should not be empty");

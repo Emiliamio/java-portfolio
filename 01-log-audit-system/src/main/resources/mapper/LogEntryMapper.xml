@@ -14,10 +14,11 @@
         <result column="detail" property="detail"/>
         <result column="severity" property="severity"/>
         <result column="source_file" property="sourceFile"/>
+        <result column="trace_id" property="traceId"/>
         <result column="created_at" property="createdAt"/>
     </resultMap>
 
-    <!-- 分页查询日志（多条件筛选） -->
+    <!-- 分页查询日志（多条件筛选 + 全局多字段模糊匹配） -->
     <select id="findByConditions" resultMap="logEntryMap">
         SELECT * FROM log_entry
         <where>
@@ -35,6 +36,16 @@
             </if>
             <if test="severity != null and severity != ''">
                 AND severity = #{severity}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    detail LIKE CONCAT('%', #{keyword}, '%')
+                    OR username LIKE CONCAT('%', #{keyword}, '%')
+                    OR ip_address LIKE CONCAT('%', #{keyword}, '%')
+                    OR operation LIKE CONCAT('%', #{keyword}, '%')
+                    OR source_file LIKE CONCAT('%', #{keyword}, '%')
+                    OR trace_id LIKE CONCAT('%', #{keyword}, '%')
+                )
             </if>
         </where>
         ORDER BY timestamp DESC
@@ -60,6 +71,16 @@
             <if test="severity != null and severity != ''">
                 AND severity = #{severity}
             </if>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    detail LIKE CONCAT('%', #{keyword}, '%')
+                    OR username LIKE CONCAT('%', #{keyword}, '%')
+                    OR ip_address LIKE CONCAT('%', #{keyword}, '%')
+                    OR operation LIKE CONCAT('%', #{keyword}, '%')
+                    OR source_file LIKE CONCAT('%', #{keyword}, '%')
+                    OR trace_id LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
         </where>
     </select>
 
@@ -70,12 +91,12 @@
 
     <!-- 批量插入（异步导入用） -->
     <insert id="batchInsert" parameterType="list">
-        INSERT INTO log_entry (timestamp, ip_address, username, operation, operation_result, detail, severity, source_file)
+        INSERT INTO log_entry (timestamp, ip_address, username, operation, operation_result, detail, severity, source_file, trace_id)
         VALUES
         <foreach collection="list" item="item" separator=",">
             (#{item.timestamp}, #{item.ipAddress}, #{item.username},
             #{item.operation}, #{item.operationResult}, #{item.detail},
-            #{item.severity}, #{item.sourceFile})
+            #{item.severity}, #{item.sourceFile}, #{item.traceId})
         </foreach>
     </insert>
 

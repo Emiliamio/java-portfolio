@@ -82,10 +82,10 @@ class LogEntryControllerTest {
     @Test
     @WithMockUser(username = "user", roles = {"USER"})
     void testUserCanSearchLogs() throws Exception {
-        when(logEntryService.searchLogs(any(), any(), any(), any(), any(), anyInt(), anyInt()))
+        when(logEntryService.searchLogs(any(), any(), any(), any(), any(), any(), anyInt(), anyInt()))
                 .thenReturn(Map.of("total", 1, "page", 1, "pageSize", 20, "records", List.of(sampleEntry)));
 
-        mockMvc.perform(get("/api/logs?page=1&pageSize=20"))
+        mockMvc.perform(get("/api/logs?page=1&pageSize=20&keyword=admin"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.total").value(1))
                 .andExpect(jsonPath("$.records[0].username").value("admin"));
@@ -135,7 +135,7 @@ class LogEntryControllerTest {
     @WithMockUser(username = "admin", roles = {"ADMIN"})
     void testAdminCanExportLogs() throws Exception {
         byte[] dummyExcel = new byte[]{1, 2, 3, 4};
-        when(logEntryService.exportLogs(any(), any(), any(), any(), any())).thenReturn(dummyExcel);
+        when(logEntryService.exportLogs(any(), any(), any(), any(), any(), any())).thenReturn(dummyExcel);
 
         mockMvc.perform(get("/api/logs/export"))
                 .andExpect(status().isOk())

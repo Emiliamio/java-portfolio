@@ -15,6 +15,7 @@ public interface LogEntryMapper {
             @Param("ipAddress") String ipAddress,
             @Param("operation") String operation,
             @Param("severity") String severity,
+            @Param("keyword") String keyword,
             @Param("offset") int offset,
             @Param("pageSize") int pageSize
     );
@@ -24,7 +25,8 @@ public interface LogEntryMapper {
             @Param("endTime") LocalDateTime endTime,
             @Param("ipAddress") String ipAddress,
             @Param("operation") String operation,
-            @Param("severity") String severity
+            @Param("severity") String severity,
+            @Param("keyword") String keyword
     );
 
     LogEntry findById(@Param("id") Long id);

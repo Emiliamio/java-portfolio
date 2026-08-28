@@ -62,4 +62,19 @@ app:
     enabled: ${CLICKHOUSE_ENABLED:false}
     url: ${CLICKHOUSE_URL:jdbc:ch://localhost:8123/default}
     user: ${CLICKHOUSE_USER:default}
-    password: ${CLICKHOUSE_PASSWORD:}
+    password: ${CLICKHOUSE_PASSWORD:}
+
+# Spring Boot Actuator & Prometheus 监控度量暴露
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: auditvault-backend
