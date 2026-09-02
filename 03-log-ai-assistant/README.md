@@ -12,6 +12,7 @@
 |:---|:---|
 | **全视口 Copilot Studio** | 2-Pane 工业级暗色控制台，内置 Monaco 级行号高亮编辑器与 Token 预估器 |
 | **云端/本地三级热备路由** | 优先调用 DeepSeek/OpenAI；异常时自动秒级切换至本地私有化 Ollama (Qwen/DeepSeek) 或内置规则引擎 |
+| **PII 隐私脱敏装甲** | 密码凭据、手机号（138****1234）、身份证与敏感系统路径在云端大模型请求前自动执行金融级规则脱敏 |
 | **100% 离线隐私盾 (Air-Gapped)** | 支持完全脱网物理隔离环境，敏感日志数据不出本地局域网，满足金融级安全合规 |
 | **CVSS 3.1 威胁评分** | 自动输出专业级严重程度评级与矢量字符串（如 `CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H (9.8)`） |
 | **MITRE ATT&CK 攻击链路推演** | 5 阶段 Kill Chain（初始访问 $\rightarrow$ 命令执行 $\rightarrow$ 权限持久化 $\rightarrow$ 防御规避 $\rightarrow$ 敏感外发）动态点亮 |
@@ -23,10 +24,11 @@
 ## 🛠️ 技术栈
 
 - **后端核心**：Spring Boot 3.2.0 + Java 17 / 21 LTS
+- **敏感信息脱敏**：`PiiSanitizer` 金融级凭据、手机号与系统路径正则脱敏装甲
 - **模型路由**：云端 API (DeepSeek/OpenAI) + 本地私有化 Ollama + 离线规则引擎三级容灾
 - **流式通信**：JDK 原生 `HttpClient` + SSE (Server-Sent Events) 打字机流式长连接
 - **认证与权限**：Spring Security RBAC + JWT 跨站安全认证
-- **单元测试**：JUnit 5 (9/9 自动化测试用例通过)
+- **单元测试**：JUnit 5 (14/14 自动化测试用例 100% 绿灯通过)
 
 ---
 

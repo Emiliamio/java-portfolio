@@ -3,6 +3,7 @@ package com.logaudit.dto;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.logaudit.entity.LogEntry;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,37 +23,49 @@ import java.time.format.DateTimeParseException;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Schema(description = "Webhook 日志摄入请求体 (支持单对象或数组)")
 public class WebhookLogDto {
 
+    @Schema(description = "事件时间戳", example = "2026-09-02 14:30:00")
     @JsonAlias({"time", "logTime", "@timestamp"})
     private String timestamp;
 
+    @Schema(description = "日志严重级别 (INFO/WARN/ERROR/CRITICAL)", example = "WARN")
     @JsonAlias({"level", "logLevel"})
     private String severity;
 
+    @Schema(description = "客户端或来源 IP 地址", example = "192.168.1.108")
     @JsonAlias({"clientIp", "ip", "host"})
     private String ipAddress;
 
+    @Schema(description = "操作用户名 / 认证主体", example = "admin")
     @JsonAlias({"user", "operator", "principal"})
     private String username;
 
+    @Schema(description = "操作类型或事件名称", example = "LOGIN_ATTEMPT")
     @JsonAlias({"action", "event"})
     private String operation;
 
+    @Schema(description = "操作执行结果 (SUCCESS/FAIL)", example = "FAIL")
     @JsonAlias({"result", "status"})
     private String operationResult;
 
+    @Schema(description = "日志详细消息或错误内容", example = "User admin login failed: invalid password credentials")
     @JsonAlias({"message", "content", "msg", "formattedMessage"})
     private String detail;
 
+    @Schema(description = "微服务来源或日志记录器", example = "order-payment-service.log")
     @JsonAlias({"logger", "loggerName", "service", "serviceName", "app", "source"})
     private String sourceFile;
 
+    @Schema(description = "全链路分布式追踪 ID", example = "tr-8f4b1c2e9a0d3f7b")
     @JsonAlias({"traceId", "trace_id", "traceID", "spanId", "trace"})
     private String traceId;
 
+    @Schema(description = "执行线程名", example = "http-nio-8080-exec-1")
     private String thread;
 
+    @Schema(description = "异常堆栈详情 (可选)", example = "java.lang.SecurityException: Invalid token")
     @JsonAlias({"exception", "stack_trace", "throwable", "error"})
     private String stackTrace;
 

@@ -50,7 +50,7 @@ public class SecurityConfig {
                                 "/style.css", "/app.js", "/login.html", "/login.js",
                                 "/favicon.ico", "/error",
                                 "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html",
-                                "/actuator/**").permitAll()
+                                "/actuator/**", "/ws/**").permitAll()
                         // 认证接口与 Webhook 采集接口放行（Webhook 内部做 X-Audit-Token 专用令牌鉴权）
                         .requestMatchers("/api/auth/login", "/api/auth/logout").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/logs/webhook").permitAll()

@@ -43,6 +43,7 @@ public class WebhookController {
     private final ObjectMapper objectMapper;
     private final KafkaLogProducer kafkaLogProducer;
     private final com.logaudit.service.AuditMetricsService auditMetricsService;
+    private final com.logaudit.service.ThreatAlertNotifier threatAlertNotifier;
 
     @Value("${app.webhook.secret-key:auditvault-webhook-default-secret-token-2026}")
     private String webhookSecretKey;
@@ -118,7 +119,14 @@ public class WebhookController {
             logEntryService.asyncBatchImport(entries);
         }
 
-        // 6. 记录审计轨迹与可观测性度量指标
+        // 6. 实时威胁侦测与 WebSocket 广播
+        if (threatAlertNotifier != null) {
+            for (WebhookLogDto dto : dtoList) {
+                threatAlertNotifier.notifyIfThreat(dto);
+            }
+        }
+
+        // 7. 记录审计轨迹与可观测性度量指标
         if (auditMetricsService != null) {
             auditMetricsService.recordWebhookIngest(dtoList.size());
         }

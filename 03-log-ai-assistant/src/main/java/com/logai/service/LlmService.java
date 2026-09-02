@@ -36,6 +36,7 @@ public class LlmService {
     private static final Logger log = LoggerFactory.getLogger(LlmService.class);
 
     private final AiAnalysisMapper analysisMapper;
+    private final com.logai.security.PiiSanitizer piiSanitizer;
     private final HttpClient httpClient;
     private final String apiUrl;
     private final String apiModel;
@@ -46,6 +47,7 @@ public class LlmService {
 
     public LlmService(
             AiAnalysisMapper analysisMapper,
+            com.logai.security.PiiSanitizer piiSanitizer,
             @Value("${ai.api.url}") String apiUrl,
             @Value("${ai.api.model}") String apiModel,
             @Value("${ai.api.timeout-seconds:60}") int timeoutSeconds,
@@ -54,6 +56,7 @@ public class LlmService {
             @Value("${ollama.timeout-seconds:60}") int ollamaTimeoutSeconds
     ) {
         this.analysisMapper = analysisMapper;
+        this.piiSanitizer = piiSanitizer != null ? piiSanitizer : new com.logai.security.PiiSanitizer();
         this.apiUrl = apiUrl;
         this.apiModel = apiModel;
         this.timeoutSeconds = timeoutSeconds;
@@ -63,6 +66,18 @@ public class LlmService {
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(Math.min(timeoutSeconds, 5)))
                 .build();
+    }
+
+    public LlmService(
+            AiAnalysisMapper analysisMapper,
+            String apiUrl,
+            String apiModel,
+            int timeoutSeconds,
+            String ollamaApiUrl,
+            String ollamaApiModel,
+            int ollamaTimeoutSeconds
+    ) {
+        this(analysisMapper, new com.logai.security.PiiSanitizer(), apiUrl, apiModel, timeoutSeconds, ollamaApiUrl, ollamaApiModel, ollamaTimeoutSeconds);
     }
 
     public boolean checkOllamaUp() {
@@ -244,7 +259,8 @@ public class LlmService {
 
             JSONObject userMsg = new JSONObject();
             userMsg.put("role", "user");
-            userMsg.put("content", logContent);
+            String sanitized = piiSanitizer != null ? piiSanitizer.sanitize(logContent) : logContent;
+            userMsg.put("content", "<security_telemetry_payload>\n" + sanitized + "\n</security_telemetry_payload>");
             messages.add(userMsg);
 
             requestBody.put("messages", messages);
@@ -554,7 +570,8 @@ public class LlmService {
 
         JSONObject userMsg = new JSONObject();
         userMsg.put("role", "user");
-        userMsg.put("content", "<security_telemetry_payload>\n" + userContent + "\n</security_telemetry_payload>");
+        String sanitized = piiSanitizer != null ? piiSanitizer.sanitize(userContent) : userContent;
+        userMsg.put("content", "<security_telemetry_payload>\n" + sanitized + "\n</security_telemetry_payload>");
         messages.add(userMsg);
 
         body.put("messages", messages);

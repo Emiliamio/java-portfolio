@@ -3,7 +3,7 @@
 > 涵盖企业级 AI Agent & 混合 RAG 中台、高并发分布式日志审计、Python 状态机探针与智能研判 Studio 全链路
 
 [![CI/CD Pipeline](https://github.com/Emiliamio/java-portfolio/actions/workflows/ci.yml/badge.svg)](https://github.com/Emiliamio/java-portfolio/actions/workflows/ci.yml)
-![Tests](https://img.shields.io/badge/Tests-108%20passed%20(100%25)-brightgreen)
+![Tests](https://img.shields.io/badge/Tests-116%20passed%20(100%25)-brightgreen)
 ![Coverage](https://img.shields.io/badge/Coverage-100%25-brightgreen)
 ![Java 21](https://img.shields.io/badge/Java-21%20LTS-orange)
 ![Spring Boot 3](https://img.shields.io/badge/Spring%20Boot-3.2-blue)
@@ -19,10 +19,10 @@
 | # | 旗舰项目 | 核心技术栈 | 一句话核心亮点 | 入口 / 源码 |
 |---|---|---|---|---|
 | 👑 | **AgentForge (灵眸智枢)** · 企业级 AI 中台 | **Java 21 (虚拟线程)** + Spring Boot 3.2 + **PostgreSQL 16 (pgvector)** + **Redis 7** + Vue 3.4 | 纯血 Java 21 三路混合 RAG (Dense+Sparse+RRF)、**JsqlParser AST 租户强隔离 (0%越权)**、**Kahn 拓扑 DAG 响应式引擎**、**Redis 向量语义降本 60%**、800MB 装甲流式解析器 (35项单测全通) | [私有商业底座](https://emiliamio.github.io/projects/) / `:80` |
-| ① | **AuditVault** · 日志审计中台 | Spring Boot 3 + MySQL 8 + Redis 7 + **Kafka KRaft** + **ClickHouse 24.3** | Datadog/SigNoz 级 SOC 遥测大屏、**Kafka 分布式流式削峰摄取**、**ClickHouse 45x 毫秒级 OLAP 直方图**、**SXSSF 磁盘滑动窗口防 OOM**、分布式 MDC TraceId 全链路追踪、MyBatis 慢 SQL 自动预警 (49项单测全通) | `:8080` |
-| ② | **LogScope** · 日志解析探针 | Python 3.11 + Pandas + 有限状态机 (FSM) | 多行 Java 异常堆栈 FSM 状态机精准还原、**实测 34,000+ QPS 高吞吐**、时序滚动窗口异常检测、HTML/Excel/SQL 多管道输出 (50项测试全通) | CLI |
-| ③ | **Nexus AI** · 安全研判 Copilot | Spring Boot 3 + **Ollama** / DeepSeek / OpenAI + SSE | Security Copilot 研判工作台、**云端/本地私有化三级热备路由**、**100% 离线隐私盾**、CVSS 3.1 评分与 WAF 剧本生成 (9项单测全通) | `:8081` |
-| ④ | **技术博客** | Hexo + GitHub Pages | 10 篇架构深度复盘、避坑指南与全景演进文章 | [emiliamio.github.io](https://emiliamio.github.io) |
+| ① | **AuditVault** · 日志审计中台 | Spring Boot 3 + MySQL 8 + Redis 7 + **Kafka KRaft** + **ClickHouse 24.3** + **WebSocket** | Datadog/SigNoz 级 SOC 遥测大屏、**Kafka 分布式削峰**、**ClickHouse 45x 毫秒直方图**、**SXSSF 磁盘防 OOM**、分布式 MDC TraceId 追踪、MyBatis 慢 SQL 监控、**WebSocket 实时高危威胁推流**、Grafana 预置大盘 (52项单测全通) | `:8080` |
+| ② | **LogScope** · 日志解析探针 | Python 3.11 + Pandas + 有限状态机 (FSM) | 多行 Java 异常堆栈 FSM 状态机精准还原、**实测 34,317 QPS 高吞吐**、时序滚动窗口异常检测、HTML/Excel/SQL 多管道输出 (50项测试全通) | CLI |
+| ③ | **Nexus AI** · 安全研判 Copilot | Spring Boot 3 + **Ollama** / DeepSeek / OpenAI + SSE | Security Copilot 研判工作台、**云端/本地私有化三级热备路由**、**PII 敏感信息脱敏装甲**、**100% 离线隐私盾**、CVSS 3.1 评分与 WAF 剧本生成 (14项单测全通) | `:8081` |
+| ④ | **技术博客** | Hexo + GitHub Pages | 11 篇架构深度复盘、避坑指南与四大阶梯演进路线图 | [emiliamio.github.io](https://emiliamio.github.io) |
 
 ---
 

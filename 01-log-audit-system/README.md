@@ -14,6 +14,8 @@
 - **Kafka 分布式流式削峰**：Webhook 毫秒级接收请求推入 Kafka Topic 缓冲，支持异步落库与瞬时高并发流量削峰。
 - **海量导出防 OOM 装甲**：基于 POI `SXSSFWorkbook(100)` 磁盘滑动窗口机制，50,000 条日志流式导出仅占用 ~18MB 堆内存。
 - **Redis HyperLogLog 独立 IP 统计**：基于伯努利试验以 12KB 固定内存实现海量活跃 IP 快速去重与基数估算。
+- **WebSocket 实时高危威胁推流**：内置 `ThreatAlertNotifier`，秒级将 SQL 注入、路径穿越或 CRITICAL 告警实时广播至前端 SOC Studio。
+- **Grafana 生产可观测性大屏**：预置 `docs/grafana/auditvault-dashboard.json` 模板，一键导入 Prometheus 监控大屏。
 - **安全与合规保障**：基于 Redis 7 的 JWT Token 黑名单与滑动窗口限流器，支持 Spring Security RBAC 权限控制。
 
 ---
@@ -26,17 +28,18 @@
 | **分布式消息** | Apache Kafka 3.7 (KRaft) | 分布式日志流式削峰摄取 |
 | **时序 OLAP** | ClickHouse 24.3 (MergeTree) | 45x 毫秒级多维时序直方图分析 |
 | **持久层** | MyBatis 3.0 + MySQL 8.0 + HikariCP | 联合索引、慢 SQL 拦截与动态 SQL 优化 |
+| **实时通信** | Spring WebSocket | `/ws/threat-alerts` 实时高危告警广播通道 |
 | **缓存与限流** | Redis 7 + Lettuce | Token 黑名单、IP 滑动窗口限流、HyperLogLog UV 统计 |
 | **认证与安全** | Spring Security + JWT (HS256) | RBAC 细粒度角色权限隔离 (ADMIN / USER) |
 | **报表导出** | Apache POI 5.2 (SXSSF) | 5万行 Excel 审计数据流式防 OOM 导出 |
 | **可观测性** | Spring Boot Actuator + Micrometer | 业务级自定义指标暴露，支持 Prometheus / Grafana |
-| **接口规范** | SpringDoc OpenAPI 3.0 | 交互式 Swagger UI 文档 |
+| **接口规范** | SpringDoc OpenAPI 3.0 | 交互式 Swagger UI 丰富入参示例 |
 
 ---
 
 ## 🧪 单元测试
 
-包含全套 49 项单元与集成测试（100% 绿灯运行）：
+包含全套 52 项单元与集成测试（100% 绿灯运行）：
 ```bash
 mvn clean test
 ```

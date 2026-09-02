@@ -121,6 +121,12 @@
             <version>2.3.0</version>
         </dependency>
 
+        <!-- WebSocket 实时威胁广播通道 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+
         <!-- Spring Boot Actuator & Prometheus 生产可观测性度量 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
