@@ -1,4 +1,4 @@
-name: CI/CD Multi-Matrix Automated Pipeline
+﻿name: CI/CD Multi-Matrix Automated Pipeline
 
 on:
   push:
@@ -58,7 +58,7 @@ jobs:
         working-directory: 02-log-parser
         run: python -m pytest -v
 
-  # ── 3. Nexus AI (Spring Boot 3 + Semantic Cache + Sigma AST) ──
+  # ── 3. Nexus AI Security Copilot (JDK 17 & JDK 21) ──
   nexus-ai-test:
     name: Nexus AI (JDK ${{ matrix.java-version }})
     runs-on: ubuntu-latest
@@ -81,8 +81,8 @@ jobs:
         working-directory: 03-log-ai-assistant
         run: mvn clean test --batch-mode
 
-  # ── 4. Sample Order Service (Microservice 10s Ingestion Demo) ──
-  sample-order-service-test:
+  # ── 4. Sample Order Microservice (JDK 17) ──
+  sample-order-test:
     name: Sample Order Service (JDK 17)
     runs-on: ubuntu-latest
 
@@ -128,12 +128,7 @@ jobs:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      - name: Run Trivy Vulnerability Scanner (Repository & Dependencies)
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          ignore-unfixed: true
-          format: 'table'
-          severity: 'CRITICAL,HIGH'
-          exit-code: '0'
+      - name: Install and Run Trivy Security Audit
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+          trivy fs --severity CRITICAL,HIGH --exit-code 0 .
