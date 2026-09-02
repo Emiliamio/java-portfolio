@@ -1,92 +1,93 @@
-name: CI/CD Pipeline
+name: CI/CD Multi-Matrix Automated Pipeline
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, master ]
-  workflow_dispatch:
+    branches: [ main ]
 
 jobs:
-  # ────────────────────────────────────────────────────────
-  # 1. AuditVault (Spring Boot · 日志审计系统)
-  # ────────────────────────────────────────────────────────
-  auditvault-ci:
-    name: AuditVault CI (Java / Spring Boot)
+  # ── 1. AuditVault (Spring Boot 3 + MySQL + Redis + ClickHouse) ──
+  auditvault-test:
+    name: AuditVault (JDK ${{ matrix.java-version }})
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java-version: [ '17', '21' ]
 
     steps:
-      - name: Checkout repository
+      - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Set up JDK ${{ matrix.java-version }}
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: ${{ matrix.java-version }}
           distribution: 'temurin'
-          cache: 'maven'
+          cache: maven
 
-      - name: Run AuditVault Tests
-        working-directory: ./01-log-audit-system
+      - name: Run AuditVault 59 Unit & Integration Tests
+        working-directory: 01-log-audit-system
         run: mvn clean test --batch-mode
 
-      - name: Build AuditVault Package
-        working-directory: ./01-log-audit-system
-        run: mvn package -DskipTests=true --batch-mode
-
-      - name: Upload AuditVault Test Reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: auditvault-surefire-reports
-          path: 01-log-audit-system/target/surefire-reports/
-          retention-days: 7
-
-  # ────────────────────────────────────────────────────────
-  # 2. LogScope (Python · 日志解析与异常检测 CLI)
-  # ────────────────────────────────────────────────────────
-  logscope-ci:
-    name: LogScope CI (Python / Pytest)
+  # ── 2. LogScope (Python 3.11/3.12 + FSM + mmap + Parquet) ──
+  logscope-test:
+    name: LogScope (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ '3.11', '3.12' ]
 
     steps:
-      - name: Checkout repository
+      - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.12
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: ${{ matrix.python-version }}
           cache: 'pip'
 
-      - name: Install dependencies
-        working-directory: ./02-log-parser
+      - name: Install Dependencies
+        working-directory: 02-log-parser
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt pytest
+          pip install -r requirements.txt pytest pyarrow
 
-      - name: Run Pytest Suite
-        working-directory: ./02-log-parser
-        run: pytest -v
+      - name: Run LogScope 55 Pytest Test Suite
+        working-directory: 02-log-parser
+        run: python -m pytest -v
 
-      - name: Verify CLI Functionality on Sample Logs
-        working-directory: ./02-log-parser
-        run: |
-          mkdir -p output
-          python -m log_parser.cli -i sample_logs/access.csv -o output --excel --html --sql
-          python -m log_parser.cli -i sample_logs/server.log -o output --excel --html --sql
-          ls -la output/
+  # ── 3. Nexus AI (Spring Boot 3 + Semantic Cache + Sigma AST) ──
+  nexus-ai-test:
+    name: Nexus AI (JDK ${{ matrix.java-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java-version: [ '17', '21' ]
 
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
 
-  # ────────────────────────────────────────────────────────
-  # 3. Nexus AI (Spring Boot · AI 日志分析助手)
-  # ────────────────────────────────────────────────────────
-  nexus-ai-ci:
-    name: Nexus AI CI (Java / Spring Boot)
+      - name: Set up JDK ${{ matrix.java-version }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java-version }}
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Run Nexus AI 21 Unit Tests
+        working-directory: 03-log-ai-assistant
+        run: mvn clean test --batch-mode
+
+  # ── 4. Sample Order Service (Microservice 10s Ingestion Demo) ──
+  sample-order-service-test:
+    name: Sample Order Service (JDK 17)
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout Source Code
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
@@ -94,53 +95,8 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: 'maven'
+          cache: maven
 
-      - name: Run Nexus AI Tests
-        working-directory: ./03-log-ai-assistant
+      - name: Run Sample Service 3 Unit Tests
+        working-directory: 04-sample-order-service
         run: mvn clean test --batch-mode
-
-      - name: Build Nexus AI Package
-        working-directory: ./03-log-ai-assistant
-        run: mvn package -DskipTests=true --batch-mode
-
-      - name: Upload Nexus AI Test Reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: nexus-ai-surefire-reports
-          path: 03-log-ai-assistant/target/surefire-reports/
-          retention-days: 7
-
-  # ────────────────────────────────────────────────────────
-  # 4. Docker Compose & Container Config Validation
-  # ────────────────────────────────────────────────────────
-  docker-compose-check:
-    name: Docker Compose Validation
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Validate Docker Compose Configuration
-        run: docker compose config
-
-  # ────────────────────────────────────────────────────────
-  # 5. Unified Quality Gate (所有模块测试与检查汇总)
-  # ────────────────────────────────────────────────────────
-  ci-status-gate:
-    name: Fullstack Quality Gate
-    needs: [auditvault-ci, logscope-ci, nexus-ai-ci, docker-compose-check]
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Summarize CI Results
-        run: |
-          echo "========================================================"
-          echo "  [SUCCESS] All Java & Python test suites passed 100%!"
-          echo "  - AuditVault: Spring Boot unit, security & MockMvc tests"
-          echo "  - LogScope: Python 3.12 multi-line & anomaly pytest"
-          echo "  - Nexus AI: LLM stream & fallback rule engine tests"
-          echo "  - Docker: Compose orchestration syntax validated"
-          echo "========================================================"

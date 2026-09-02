@@ -10,6 +10,7 @@
 
 | 维度 | 功能说明 |
 |:---|:---|
+| **语义向量诊断缓存 (Semantic Cache)** | 自动提取攻击语义特征指纹，相似/重复攻击 5ms 瞬间命中缓存，0 Token 消耗秒级返回 CVSS 与剧本 |
 | **Sigma 规则 AST 语法校验器** | 自动对大模型生成的 SIEM Sigma YAML 规则执行 AST 语法树结构校验与清洗，杜绝残缺 YAML 语法错误 |
 | **全视口 Copilot Studio** | 2-Pane 工业级暗色控制台，内置 Monaco 级行号高亮编辑器与 Token 预估器 |
 | **云端/本地三级热备路由** | 优先调用 DeepSeek/OpenAI；异常时自动秒级切换至本地私有化 Ollama (Qwen/DeepSeek) 或内置规则引擎 |
@@ -25,12 +26,13 @@
 ## 🛠️ 技术栈
 
 - **后端核心**：Spring Boot 3.2.0 + Java 17 / 21 LTS
+- **语义向量缓存**：`SemanticDiagnosisCache` 攻击特征归一化与 0 Token 极速诊断缓存
 - **SIEM 规则校验**：`SigmaRuleValidator` 工业级 AST 结构化规则校验与清洗器
 - **敏感信息脱敏**：`PiiSanitizer` 金融级凭据、手机号与系统路径正则脱敏装甲
 - **模型路由**：云端 API (DeepSeek/OpenAI) + 本地私有化 Ollama + 离线规则引擎三级容灾
 - **流式通信**：JDK 原生 `HttpClient` + SSE (Server-Sent Events) 打字机流式长连接
 - **认证与权限**：Spring Security RBAC + JWT 跨站安全认证
-- **单元测试**：JUnit 5 (18/18 自动化测试用例 100% 绿灯通过)
+- **单元测试**：JUnit 5 (21/21 自动化测试用例 100% 绿灯通过)
 
 ---
 

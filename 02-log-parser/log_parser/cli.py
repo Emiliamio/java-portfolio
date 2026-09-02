@@ -102,6 +102,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="导出 MySQL INSERT SQL 文件 (可导入项目一的 log_entry 表)",
     )
+    parser.add_argument(
+        "--parquet",
+        action="store_true",
+        help="导出高性能 Apache Parquet 列式存储文件 (支持 DuckDB / ClickHouse 极速分析)",
+    )
 
     parser.add_argument(
         "--csv-output",
@@ -170,33 +175,36 @@ def main(argv: list = None) -> int:
 
     logger.info("=" * 60)
     logger.info("Log Parser v1.0.0 — 日志解析与异常检测工具")
-    logger.info("=" * 60)
-    logger.info("Input file:  %s", args.input)
-    logger.info("Output dir: %s", args.output_dir)
-    logger.info("Threshold:  %d", args.threshold)
+    from log_parser.reporter_html import export_to_html
+    from log_parser.exporter import export_to_sql_file, export_to_parquet
+
+
+    # ── 1. 检查输入文件 ──
+    if not os.path.exists(args.input):
+        logger.error("Input file not found: %s", args.input)
+        return 1
 
     # ── 2. 解析日志 ──
-    logger.info("Step 1/3: Parsing log file...")
+    logger.info("Parsing log file: %s (mode: %s)", args.input, args.type)
     try:
         df = parse_file(args.input)
     except Exception as e:
         logger.error("Failed to parse log file: %s", e)
-        return 2
+        if args.verbose:
+            logger.exception("Traceback:")
+        return 1
 
     if df.empty:
-        logger.warning("Parsed 0 records — nothing to analyze. Exiting.")
+        logger.warning("No log entries parsed from file.")
         return 0
 
-    logger.info("Parsed %d log records.", len(df))
+    logger.info("Parsed %d log entries successfully.", len(df))
 
     # ── 3. 异常检测 ──
-    logger.info("Step 2/3: Running anomaly detection...")
+    logger.info("Running anomaly detection (threshold: %d)...", args.threshold)
     report = detect_anomalies(df, threshold=args.threshold)
 
     # ── 4. 输出报告 ──
-    logger.info("Step 3/3: Generating output...")
-
-    # 控制台打印
     print_summary(report)
 
     # 创建输出目录
@@ -222,6 +230,11 @@ def main(argv: list = None) -> int:
         sql_path = os.path.join(args.output_dir, f"{base_name}_data.sql")
         export_to_sql_file(df, sql_path)
 
+    # 导出 Parquet（可选）
+    if args.parquet:
+        parquet_path = os.path.join(args.output_dir, f"{base_name}_data.parquet")
+        export_to_parquet(df, parquet_path)
+
     # 汇总输出文件
     logger.info("")
     logger.info("Output files:")
@@ -233,7 +246,8 @@ def main(argv: list = None) -> int:
         logger.info("  ✓ HTML report:     %s", html_path)
     if args.sql:
         logger.info("  ✓ SQL dump:        %s", sql_path)
-
+    if args.parquet:
+        logger.info("  ✓ Parquet dump:    %s", parquet_path)
 
     logger.info("Done.")
     return 0

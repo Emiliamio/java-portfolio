@@ -45,6 +45,12 @@
             <artifactId>flyway-mysql</artifactId>
         </dependency>
 
+        <!-- Caffeine L1 高性能本地内存缓存 -->
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
+
         <!-- Security -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
