@@ -60,4 +60,20 @@ class TraceIdFilterTest {
         assertEquals(existingTraceId, response.getHeader(TraceIdFilter.TRACE_ID_HEADER));
         assertNull(MDC.get(TraceIdFilter.MDC_TRACE_ID_KEY));
     }
+
+    @Test
+    void testW3cTraceparentExtraction() throws ServletException, IOException {
+        String w3cHeader = "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01";
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader(TraceIdFilter.W3C_TRACEPARENT_HEADER, w3cHeader);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        FilterChain filterChain = mock(FilterChain.class);
+
+        traceIdFilter.doFilterInternal(request, response, filterChain);
+
+        verify(filterChain, times(1)).doFilter(request, response);
+        assertEquals("4bf92f3577b34da6a3ce929d0e0e4736", response.getHeader(TraceIdFilter.TRACE_ID_HEADER));
+        assertNotNull(response.getHeader(TraceIdFilter.W3C_TRACEPARENT_HEADER));
+        assertNull(MDC.get(TraceIdFilter.MDC_TRACE_ID_KEY));
+    }
 }

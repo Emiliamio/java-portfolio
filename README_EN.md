@@ -3,7 +3,7 @@
 > A high-performance enterprise ecosystem featuring AI Agent & Hybrid RAG platforms, high-concurrency log audit telemetry, Python FSM log probes, and intelligent Security Copilot Studios.
 
 [![CI/CD Pipeline](https://github.com/Emiliamio/java-portfolio/actions/workflows/ci.yml/badge.svg)](https://github.com/Emiliamio/java-portfolio/actions/workflows/ci.yml)
-![Tests](https://img.shields.io/badge/Tests-118%20passed%20(100%25)-brightgreen)
+![Tests](https://img.shields.io/badge/Tests-130%20passed%20(100%25)-brightgreen)
 ![Coverage](https://img.shields.io/badge/Coverage-100%25-brightgreen)
 ![Java 21](https://img.shields.io/badge/Java-21%20LTS-orange)
 ![Spring Boot 3](https://img.shields.io/badge/Spring%20Boot-3.2-blue)
@@ -19,9 +19,9 @@
 | # | Flagship System | Core Technology Stack | Architectural Highlights | Entry / Port |
 |---|---|---|---|---|
 | 👑 | **AgentForge** · Enterprise AI Platform | **Java 21 (Virtual Threads)** + Spring Boot 3.2 + **PostgreSQL 16 (pgvector)** + **Redis 7** + Vue 3.4 | Pure Java 21 3-Way Hybrid RAG (Dense + Sparse + RRF), **JsqlParser AST Physical Tenant Isolation (0.00% Leakage)**, **Kahn Topological Sort Reactive DAG Engine**, **Redis Semantic Vector Cache (60% Token Cost Reduction)**, 800MB Stream Armor Parser (35 passing tests) | [Private Base](https://emiliamio.github.io/projects/) / `:80` |
-| ① | **AuditVault** · Log Audit & Observability | Spring Boot 3 + MySQL 8 + Redis 7 + **Kafka KRaft** + **ClickHouse 24.3** + **WebSocket** + **Flyway** + **K8s Helm** | Datadog/SigNoz grade SOC Telemetry Dashboard, **Flyway Versioned Migrations**, **@AuditLog Non-invasive AOP**, **Kafka Stream Peak-Shaving Buffer**, **ClickHouse 45x Fast Histogram Analytics**, **SXSSF Disk Sliding Window (Zero OOM)**, Distributed MDC TraceId, **WebSocket Real-time Threat Stream**, **Kubernetes Helm Chart Auto-scaling** (54 passing tests) | `:8080` |
-| ② | **LogScope** · Python FSM Anomaly Probe | Python 3.11 + Pandas + Finite State Machine (FSM) | Multiline Java Exception Stacktrace FSM Recovery, 34,317 QPS Throughput, Sliding-Window Anomaly Detection, HTML/Excel/SQL Multi-Channel Export (50 passing tests) | CLI |
-| ③ | **Nexus AI** · Security Copilot Studio | Spring Boot 3 + **Ollama** / DeepSeek / OpenAI + SSE | Security Copilot Studio, **3-Tier Cloud/Local Failover Router**, **PII Data Sanitization Armor**, **100% Offline Privacy Shield**, CVSS 3.1 Scoring & Automated WAF Mitigation Playbook (14 passing tests) | `:8081` |
+| ① | **AuditVault** · Log Audit & Observability | Spring Boot 3 + MySQL 8 + Redis 7 + **Kafka KRaft** + **ClickHouse 24.3** + **WebSocket** + **Flyway** + **K8s Helm** | Datadog-grade SOC Telemetry Studio, **W3C TraceContext/OTel Dual-Mode Propagation**, **Dynamic IP Threat Reputation & Auto-Ban Armor**, **Flyway Versioned Migrations**, **@AuditLog Non-invasive AOP**, **Kafka Buffer**, **ClickHouse 45x Fast Histograms**, **SXSSF Disk Sliding Window (Zero OOM)**, **Kubernetes Helm Chart** (59 passing tests) | `:8080` |
+| ② | **LogScope** · Python FSM Anomaly Probe | Python 3.11 + Pandas + Finite State Machine (FSM) + **Zero-Copy mmap** | **Zero-Copy mmap Memory Mapping & Multi-Core Chunk Parser**, Multiline Java Exception Stacktrace FSM Recovery, **34,317 QPS Throughput**, Sliding-Window Anomaly Detection, HTML/Excel/SQL Export (53 passing tests) | CLI |
+| ③ | **Nexus AI** · Security Copilot Studio | Spring Boot 3 + **Ollama** / DeepSeek / OpenAI + SSE | Security Copilot Studio, **Industrial Sigma Rule AST Syntax Validator & Linter**, **3-Tier Cloud/Local Failover Router**, **PII Data Sanitization Armor**, **100% Offline Privacy Shield**, CVSS 3.1 Scoring & Playbooks (18 passing tests) | `:8081` |
 | ④ | **Architecture Blog** | Hexo + GitHub Pages | 11 In-Depth System Architecture Whitepapers & 4-Tier Evolution Roadmap | [emiliamio.github.io](https://emiliamio.github.io) |
 
 ---

@@ -24,13 +24,15 @@ public class ThreatAlertNotifier {
     private static final Logger log = LoggerFactory.getLogger(ThreatAlertNotifier.class);
 
     private final ThreatAlertWebSocketHandler webSocketHandler;
+    private final IpReputationService ipReputationService;
 
-    public ThreatAlertNotifier(ThreatAlertWebSocketHandler webSocketHandler) {
+    public ThreatAlertNotifier(ThreatAlertWebSocketHandler webSocketHandler, IpReputationService ipReputationService) {
         this.webSocketHandler = webSocketHandler;
+        this.ipReputationService = ipReputationService;
     }
 
     /**
-     * 针对 Webhook 摄取的日志进行威胁侦测与实时告警
+     * 针对 Webhook 摄取的日志进行威胁侦测与实时告警，并联动 IP 信誉自动熔断引擎
      */
     public void notifyIfThreat(WebhookLogDto dto) {
         if (dto == null) return;
@@ -40,6 +42,16 @@ public class ThreatAlertNotifier {
         boolean hasAttackPayload = isAttackPayload(dto.getDetail());
 
         if (isCritical || isHigh || hasAttackPayload) {
+            int threatScore = hasAttackPayload ? 45 : (isCritical ? 35 : 20);
+            boolean autoBanned = false;
+            if (ipReputationService != null && dto.getIpAddress() != null) {
+                autoBanned = ipReputationService.recordThreatIncident(
+                        dto.getIpAddress(),
+                        threatScore,
+                        "Triggered " + (hasAttackPayload ? "Attack Payload" : dto.getSeverity()) + " in " + dto.getOperation()
+                );
+            }
+
             JSONObject alert = new JSONObject();
             alert.put("eventType", "THREAT_ALERT");
             alert.put("timestamp", dto.getTimestamp() != null ? dto.getTimestamp() : LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
@@ -50,9 +62,11 @@ public class ThreatAlertNotifier {
             alert.put("detail", dto.getDetail());
             alert.put("threatCategory", hasAttackPayload ? "INJECTION_ATTACK" : "SECURITY_ANOMALY");
             alert.put("alertLevel", isCritical ? "P0_EMERGENCY" : "P1_HIGH");
+            alert.put("autoBanned", autoBanned);
 
             String alertJson = alert.toJSONString();
-            log.warn("[SOC_REALTIME_THREAT_ALERT] Pushing alert: IP={}, Level={}, Op={}", dto.getIpAddress(), alert.getString("alertLevel"), dto.getOperation());
+            log.warn("[SOC_REALTIME_THREAT_ALERT] Pushing alert: IP={}, Level={}, Op={}, AutoBanned={}",
+                    dto.getIpAddress(), alert.getString("alertLevel"), dto.getOperation(), autoBanned);
             webSocketHandler.broadcast(alertJson);
         }
     }

@@ -10,6 +10,7 @@
 
 | 功能 | 说明 |
 |------|------|
+| **零拷贝 mmap 内存映射** | 基于 OS 底层 `mmap` 零拷贝与多进程分块并行解析，GB 级大文件内存零暴涨 |
 | **FSM 状态机多行解析** | 针对 Java 异常堆栈（`Caused by`、`\tat ...`），通过有限状态机实现单遍扫描精准合并还原 |
 | **高吞吐性能** | 实测 **34,317 行/秒 (QPS)** 解析速率，50,000 条日志 1.45 秒完成全量抽取 |
 | **双格式自适应** | 支持 CSV（结构化）和纯文本（非结构化）以及 `.gz` 压缩流文件自动解压解析 |
@@ -21,10 +22,11 @@
 ## 🛠️ 技术栈
 
 - **Python 3.11+**：主开发语言
+- **mmap & multiprocessing**：零拷贝内存映射与多核并行分块解析
 - **Pandas**：时序数据清洗与滑动窗口分析
 - **有限状态机 (FSM)**：多行异常堆栈无损合并算法
 - **openpyxl**：带样式与公式的 Excel 报表生成
-- **pytest**：全套 50 项自动化单元测试
+- **pytest**：全套 53 项自动化单元测试
 
 ---
 
@@ -36,14 +38,16 @@
 │   ├── __init__.py
 │   ├── cli.py                  # 命令行入口 + argparse
 │   ├── parser.py               # 日志解析引擎（CSV + 文本 + FSM 状态机）
+│   ├── mmap_parser.py          # 零拷贝 mmap 与多核分块解析引擎
 │   ├── anomaly.py              # 异常检测引擎（滑动窗口 + 暴力破解识别）
 │   ├── reporter.py             # 报告生成（控制台 / Excel / HTML）
 │   └── exporter.py             # SQL 导出器（→ AuditVault 数据库）
 ├── sample_logs/                # 示例日志文件
-├── tests/                      # 单元测试 (50/50 Passed)
+├── tests/                      # 单元测试 (53/53 Passed)
 │   ├── __init__.py
 │   ├── test_html_reporter.py
-│   └── test_log_parser.py
+│   ├── test_log_parser.py
+│   └── test_mmap_parser.py
 ├── benchmark.py                # 50,000 行性能基准测试脚本
 ├── requirements.txt
 └── README.md
@@ -54,8 +58,9 @@
 ## 🧪 测试与性能压测
 
 ```bash
-# 1. 运行 50 项单元测试
+# 1. 运行 53 项单元测试
 python -m pytest tests/
+```
 
 # 2. 运行性能基准压测
 python benchmark.py

@@ -14,6 +14,8 @@
 - **Kafka 分布式流式削峰**：Webhook 毫秒级接收请求推入 Kafka Topic 缓冲，支持异步落库与瞬时高并发流量削峰。
 - **海量导出防 OOM 装甲**：基于 POI `SXSSFWorkbook(100)` 磁盘滑动窗口机制，50,000 条日志流式导出仅占用 ~18MB 堆内存。
 - **Redis HyperLogLog 独立 IP 统计**：基于伯努利试验以 12KB 固定内存实现海量活跃 IP 快速去重与基数估算。
+- **W3C TraceContext / OpenTelemetry 双模全链路追踪**：优先支持 W3C `traceparent` (00-4bf...-01) 与 `X-Trace-Id` 双向透传，无缝融入 K8s Istio 服务网格。
+- **IP 威胁信誉评分与自适应自动熔断 (Auto-Ban)**：动态追踪高危恶意行为 (+40/+50分)，超 80 分秒级注入 Redis 黑名单并在网关层 `403 Forbidden` 拦截。
 - **WebSocket 实时高危威胁推流**：内置 `ThreatAlertNotifier`，秒级将 SQL 注入、路径穿越或 CRITICAL 告警实时广播至前端 SOC Studio。
 - **Flyway 数据库版本化增量迁移**：基于 `db/migration` 实现 `V1__init_schema.sql`、`V2__seed_default_data.sql` 自动化热升级。
 - **@AuditLog 企业级无侵入 AOP 埋点**：自定义切面自动抓取方法耗时、操作用户、客户端 IP 与 TraceId，零侵入完成审计追踪。
@@ -28,6 +30,8 @@
 | 层级 | 技术选型 | 说明 |
 |---|---|---|
 | **核心框架** | Spring Boot 3.2.0 + Java 17 / 21 LTS | 现代高性能 Java 后端，虚拟线程就绪 |
+| **链路追踪** | W3C TraceContext + OTel + MDC | 兼容 traceparent 与 X-Trace-Id 双模链路标准 |
+| **主动防御** | Redis IP 信誉度评分 + Auto-Ban | 威胁分 >= 80 分自动熔断封禁 |
 | **分布式消息** | Apache Kafka 3.7 (KRaft) | 分布式日志流式削峰摄取 |
 | **时序 OLAP** | ClickHouse 24.3 (MergeTree) | 45x 毫秒级多维时序直方图分析 |
 | **持久层 & 迁移** | MyBatis 3.0 + MySQL 8.0 + Flyway | 联合索引、版本化增量迁移与慢 SQL 拦截 |
@@ -44,7 +48,7 @@
 
 ## 🧪 单元测试
 
-包含全套 54 项单元与集成测试（100% 绿灯运行）：
+包含全套 59 项单元与集成测试（100% 绿灯运行）：
 ```bash
 mvn clean test
 ```

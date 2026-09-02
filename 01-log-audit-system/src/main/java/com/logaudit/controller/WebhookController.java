@@ -44,6 +44,7 @@ public class WebhookController {
     private final KafkaLogProducer kafkaLogProducer;
     private final com.logaudit.service.AuditMetricsService auditMetricsService;
     private final com.logaudit.service.ThreatAlertNotifier threatAlertNotifier;
+    private final com.logaudit.service.IpReputationService ipReputationService;
 
     @Value("${app.webhook.secret-key:auditvault-webhook-default-secret-token-2026}")
     private String webhookSecretKey;
@@ -58,6 +59,15 @@ public class WebhookController {
             HttpServletRequest request
     ) {
         String clientIp = resolveClientIp(request);
+
+        // 0. 校验是否被 IP 威胁信誉引擎自动熔断封禁
+        if (ipReputationService != null && ipReputationService.isIpBanned(clientIp)) {
+            log.warn("[SOC_AUTO_BAN_BLOCKED] Rejected request from banned IP {}", clientIp);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "success", false,
+                    "message", "拒绝访问：该 IP 因累积高危攻击已被系统自动熔断封禁"
+            ));
+        }
 
         // 1. 验证 Webhook 接入 Token
         if (!validateToken(auditTokenHeader, authHeader)) {
