@@ -839,6 +839,58 @@ document.addEventListener('keydown', e => {
   }
 });
 
+// ── WebSocket Realtime Threat Stream ────────────────────────
+function initWebSocketThreatAlerts() {
+  try {
+    const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${location.host}/ws/threat-alerts`;
+    const socket = new WebSocket(wsUrl);
+
+    socket.onopen = () => {
+      console.log('[SOC Studio] WebSocket threat channel connected to /ws/threat-alerts');
+    };
+
+    socket.onmessage = (event) => {
+      try {
+        const alert = JSON.parse(event.data);
+        if (alert && alert.eventType === 'THREAT_ALERT') {
+          showThreatModal(alert);
+          loadData(state.currentPage); // 实时触发当前表格数据自动拉取
+        }
+      } catch (err) {
+        console.error('Failed to parse threat alert JSON:', err);
+      }
+    };
+
+    socket.onclose = () => {
+      // 断线 5 秒后自愈重连
+      setTimeout(initWebSocketThreatAlerts, 5000);
+    };
+
+    socket.onerror = (err) => {
+      console.debug('WebSocket threat channel error:', err);
+    };
+  } catch (e) {
+    console.debug('WebSocket init failed:', e);
+  }
+}
+
+function showThreatModal(alert) {
+  const toastContainer = document.getElementById('toastContainer');
+  if (toastContainer) {
+    const toast = document.createElement('div');
+    toast.className = 'toast error';
+    toast.style.cssText = 'border-left: 4px solid #ef4444; background: rgba(30, 20, 40, 0.95); box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4); padding: 12px 16px; min-width: 280px;';
+    toast.innerHTML = `
+      <div style="font-weight:bold; color:#ef4444; margin-bottom:4px;"><i class="fas fa-triangle-exclamation"></i> [实时威胁告警] ${escHtml(alert.alertLevel || 'P0')}</div>
+      <div style="font-size:12px; color:#e2e8f0;">来源IP: <b>${escHtml(alert.ipAddress)}</b> | 操作: <b>${escHtml(alert.operation)}</b></div>
+      <div style="font-size:11px; color:#94a3b8; margin-top:2px;">${escHtml(alert.detail)}</div>
+    `;
+    toastContainer.appendChild(toast);
+    setTimeout(() => toast.remove(), 6000);
+  }
+}
+
 // ── DOM Ready Initialization ────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   const authed = await requireAuth();
@@ -851,5 +903,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     }
     loadData(1);
+    initWebSocketThreatAlerts(); // 启动 SOC 实时威胁推流监听
   }
 });
