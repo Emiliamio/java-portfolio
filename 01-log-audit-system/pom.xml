@@ -51,6 +51,13 @@
             <artifactId>caffeine</artifactId>
         </dependency>
 
+        <!-- Resilience4j 生产级熔断器与降级装甲 -->
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-spring-boot3</artifactId>
+            <version>2.2.0</version>
+        </dependency>
+
         <!-- Security -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

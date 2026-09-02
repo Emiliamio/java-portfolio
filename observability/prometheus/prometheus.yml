@@ -1,0 +1,20 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  - job_name: "auditvault-soc"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["auditvault:8080"]
+        labels:
+          application: "AuditVault-SOC"
+          env: "production"
+
+  - job_name: "sample-order-service"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["sample-order-service:8085"]
+        labels:
+          application: "Sample-Order-Service"
+          env: "production"

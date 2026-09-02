@@ -1,0 +1,165 @@
+version: '3.8'
+
+networks:
+  audit-net:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  redis_data:
+  clickhouse_data:
+  grafana_data:
+
+services:
+  # ── 1. MySQL 8 核心业务与元数据库 ──
+  mysql:
+    image: mysql:8.0
+    container_name: auditvault-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: log_audit
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - audit-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── 2. Redis 7 分布式缓存与 IP 黑名单装甲 ──
+  redis:
+    image: redis:7.2-alpine
+    container_name: auditvault-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - audit-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ── 3. ClickHouse 24.3 高并发海量列式分析引擎 ──
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.3-alpine
+    container_name: auditvault-clickhouse
+    restart: unless-stopped
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+    networks:
+      - audit-net
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8123/ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ── 4. Kafka KRaft 削峰填谷消息总线 ──
+  kafka:
+    image: bashj79/kafka-kraft:latest
+    container_name: auditvault-kafka
+    restart: unless-stopped
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+    networks:
+      - audit-net
+
+  # ── 5. Prometheus 生产度量指标采集器 ──
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: auditvault-prometheus
+    restart: unless-stopped
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    networks:
+      - audit-net
+
+  # ── 6. Grafana 10.x 工业级 SOC 遥测大屏 ──
+  grafana:
+    image: grafana/grafana:10.2.0
+    container_name: auditvault-grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./observability/grafana:/var/lib/grafana/dashboards:ro
+    networks:
+      - audit-net
+    depends_on:
+      - prometheus
+
+  # ── 7. AuditVault 日志审计与 SOC 控制台 ──
+  auditvault:
+    build:
+      context: ./01-log-audit-system
+      dockerfile: Dockerfile
+    container_name: auditvault-app
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/log_audit?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATA_REDIS_HOST: redis
+      CLICKHOUSE_URL: jdbc:ch://clickhouse:8123/default
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    ports:
+      - "8080:8080"
+    networks:
+      - audit-net
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+
+  # ── 8. Nexus AI 安全研判与响应 Copilot ──
+  nexus-ai:
+    build:
+      context: ./03-log-ai-assistant
+      dockerfile: Dockerfile
+    container_name: nexus-ai-app
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    networks:
+      - audit-net
+
+  # ── 9. Sample Order Service 微服务示范接入工程 ──
+  sample-order-service:
+    build:
+      context: ./04-sample-order-service
+      dockerfile: Dockerfile
+    container_name: sample-order-service-app
+    restart: unless-stopped
+    environment:
+      AUDITVAULT_WEBHOOK_URL: http://auditvault:8080/api/logs/webhook
+    ports:
+      - "8085:8085"
+    networks:
+      - audit-net
+    depends_on:
+      - auditvault

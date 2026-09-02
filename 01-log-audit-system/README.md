@@ -6,6 +6,8 @@
 
 ## 🌟 核心功能矩阵
 
+- **Resilience4j 动态熔断与降级装甲**：底层数据库或 ClickHouse 抖动时自动触发熔断，降级写入本地 WAL 预写缓冲，阻断雪崩。
+- **Caffeine L1 + Redis L2 双级缓存**：IP 黑名单与热点配置 50ns 本地内存极速命中，削减 90% Redis 访问开销。
 - **100vw × 100vh 全视口 Studio 布局**：自适应大屏控制台，无冗余留白，沉浸式分析体验。
 - **分布式链路追踪 (TraceId / MDC)**：内置 `TraceIdFilter` 与 `MdcTaskDecorator`，主线程与异步线程池全程透传 `X-Trace-Id`。
 - **数据库慢 SQL 监控与告警**：MyBatis 原生 `SlowSqlInterceptor` 插件自动捕获执行耗时超 200ms 的 SQL 并在日志与指标中打标。
@@ -20,7 +22,7 @@
 - **Flyway 数据库版本化增量迁移**：基于 `db/migration` 实现 `V1__init_schema.sql`、`V2__seed_default_data.sql` 自动化热升级。
 - **@AuditLog 企业级无侵入 AOP 埋点**：自定义切面自动抓取方法耗时、操作用户、客户端 IP 与 TraceId，零侵入完成审计追踪。
 - **Kubernetes 云原生 Helm Chart 编排**：内置 `helm/auditvault`，支持 HPA 自动水平弹性伸缩 (2~10 副本) 与 Ingress 负载均衡。
-- **Grafana 生产可观测性大屏**：预置 `docs/grafana/auditvault-dashboard.json` 模板，一键导入 Prometheus 监控大屏。
+- **Grafana 生产可观测性大屏**：预置 `observability/grafana/auditvault-soc-telemetry.json` 模板，一键导入 Prometheus 监控大屏。
 - **安全与合规保障**：基于 Redis 7 的 JWT Token 黑名单与滑动窗口限流器，支持 Spring Security RBAC 权限控制。
 
 ---
@@ -30,6 +32,8 @@
 | 层级 | 技术选型 | 说明 |
 |---|---|---|
 | **核心框架** | Spring Boot 3.2.0 + Java 17 / 21 LTS | 现代高性能 Java 后端，虚拟线程就绪 |
+| **高可用容灾** | Resilience4j CircuitBreaker + WAL | 动态滑动窗口熔断与本地缓冲降级 |
+| **本地近源缓存** | Caffeine Cache | 50ns 纳秒级极速本地 L1 缓存 |
 | **链路追踪** | W3C TraceContext + OTel + MDC | 兼容 traceparent 与 X-Trace-Id 双模链路标准 |
 | **主动防御** | Redis IP 信誉度评分 + Auto-Ban | 威胁分 >= 80 分自动熔断封禁 |
 | **分布式消息** | Apache Kafka 3.7 (KRaft) | 分布式日志流式削峰摄取 |
@@ -39,6 +43,7 @@
 | **实时通信** | Spring WebSocket | `/ws/threat-alerts` 实时高危告警广播通道 |
 | **云原生编排** | Kubernetes Helm Chart | HPA 自动弹性伸缩、Liveness/Readiness 探针 |
 | **缓存与限流** | Redis 7 + Lettuce | Token 黑名单、IP 滑动窗口限流、HyperLogLog UV 统计 |
+| **单元测试** | JUnit 5 + SpringBootTest | 61/61 自动化测试用例 100% 绿灯通过 |
 | **认证与安全** | Spring Security + JWT (HS256) | RBAC 细粒度角色权限隔离 (ADMIN / USER) |
 | **报表导出** | Apache POI 5.2 (SXSSF) | 5万行 Excel 审计数据流式防 OOM 导出 |
 | **可观测性** | Spring Boot Actuator + Micrometer | 业务级自定义指标暴露，支持 Prometheus / Grafana |
