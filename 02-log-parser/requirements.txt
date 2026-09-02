@@ -1,3 +1,5 @@
 # 日志解析与异常检测工具
 pandas>=2.0.0
 openpyxl>=3.1.0
+pyarrow>=15.0.0
+duckdb>=1.0.0

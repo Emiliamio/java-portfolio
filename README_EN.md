@@ -3,8 +3,8 @@
 > A high-performance enterprise ecosystem featuring AI Agent & Hybrid RAG platforms, high-concurrency log audit telemetry, Python FSM log probes, and intelligent Security Copilot Studios.
 
 [![CI/CD Pipeline](https://github.com/Emiliamio/java-portfolio/actions/workflows/ci.yml/badge.svg)](https://github.com/Emiliamio/java-portfolio/actions/workflows/ci.yml)
-![Tests](https://img.shields.io/badge/Tests-138%20passed%20(100%25)-brightgreen)
-![Coverage](https://img.shields.io/badge/Coverage-100%25-brightgreen)
+![Tests](https://img.shields.io/badge/Tests-143%20passed%20(100%25)-brightgreen)
+![Security](https://img.shields.io/badge/Security-0%20CVEs%20%7C%20A%2B-brightgreen)
 ![Java 21](https://img.shields.io/badge/Java-21%20LTS-orange)
 ![Spring Boot 3](https://img.shields.io/badge/Spring%20Boot-3.2-blue)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16%20pgvector-blue)
@@ -20,10 +20,11 @@
 |---|---|---|---|---|
 | 👑 | **AgentForge** · Enterprise AI Platform | **Java 21 (Virtual Threads)** + Spring Boot 3.2 + **PostgreSQL 16 (pgvector)** + **Redis 7** + Vue 3.4 | Pure Java 21 3-Way Hybrid RAG (Dense + Sparse + RRF), **JsqlParser AST Physical Tenant Isolation (0.00% Leakage)**, **Kahn Topological Sort Reactive DAG Engine**, **Redis Semantic Vector Cache (60% Token Cost Reduction)**, 800MB Stream Armor Parser (35 passing tests) | [Private Base](https://emiliamio.github.io/projects/) / `:80` |
 | ① | **AuditVault** · Log Audit & Observability | Spring Boot 3 + MySQL 8 + Redis 7 + **Caffeine L1/L2 Dual-Cache** + **Kafka** + **ClickHouse** + **K8s Helm** | Datadog-grade SOC Telemetry Studio, **Caffeine 50ns In-Memory L1 Cache**, **W3C TraceContext/OTel Dual-Mode Propagation**, **Dynamic IP Threat Reputation & Auto-Ban Armor**, **Flyway Versioned Migrations**, **@AuditLog Non-invasive AOP**, **Kafka Buffer**, **ClickHouse 45x Fast Histograms**, **Kubernetes Helm Chart** (59 passing tests) | `:8080` |
-| ② | **LogScope** · Python FSM Anomaly Probe | Python 3.11 + Pandas + Finite State Machine (FSM) + **mmap** + **Apache Parquet** | **Apache Parquet 85% High-Compression Columnar Export**, **Zero-Copy mmap Memory Mapping & Multi-Core Chunk Parser**, Multiline Java Exception Stacktrace FSM Recovery, **34,317 QPS Throughput**, Sliding-Window Anomaly Detection (55 passing tests) | CLI |
+| ② | **LogScope** · Python FSM Anomaly Probe | Python 3.11 + Pandas + Finite State Machine (FSM) + **mmap** + **Parquet** + **DuckDB** | **Apache Parquet Columnar Storage + DuckDB In-Memory OLAP Aggregations**, **Zero-Copy mmap Memory Mapping & Multi-Core Chunk Parser**, Multiline Java Exception Stacktrace FSM Recovery, **34,317 QPS Throughput** (58 passing tests) | CLI |
 | ③ | **Nexus AI** · Security Copilot Studio | Spring Boot 3 + **Ollama** / DeepSeek / OpenAI + SSE + **Semantic Cache** | Security Copilot Studio, **Semantic Vector Cache (0 Token 5ms Hit)**, **Industrial Sigma Rule AST Syntax Validator & Linter**, **3-Tier Cloud/Local Failover Router**, **PII Data Sanitization Armor**, **100% Offline Privacy Shield**, CVSS 3.1 Scoring & Playbooks (21 passing tests) | `:8081` |
 | ④ | **Sample Order Service** · Microservice Integration | Spring Boot 3 + Spring AOP + JDK HttpClient | **10-Second Non-Invasive Ingestion Sample**: `@AuditLog` non-invasive AOP method interception with asynchronous dispatch to AuditVault (3 passing tests) | `:8085` |
-| ⑤ | **Architecture Blog** | Hexo + GitHub Pages | 11 In-Depth System Architecture Whitepapers, Interactive FSM Sandbox & 4-Tier Evolution Roadmap | [emiliamio.github.io](https://emiliamio.github.io) |
+| ⑤ | **@auditvault/sdk** · TypeScript Client SDK | TypeScript + W3C TraceContext + Exponential Backoff | **Node.js / Frontend Type-Safe SDK**: Auto `traceparent` injection, asynchronous non-blocking shipping & retry (2 passing tests) | `sdk/ts` |
+| ⑥ | **Architecture Blog** | Hexo + GitHub Pages | 11 In-Depth System Architecture Whitepapers, Interactive FSM Sandbox & 4-Tier Evolution Roadmap | [emiliamio.github.io](https://emiliamio.github.io) |
 
 ---
 

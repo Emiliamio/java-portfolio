@@ -30,7 +30,7 @@ jobs:
         working-directory: 01-log-audit-system
         run: mvn clean test --batch-mode
 
-  # ── 2. LogScope (Python 3.11/3.12 + FSM + mmap + Parquet) ──
+  # ── 2. LogScope (Python 3.11/3.12 + FSM + mmap + Parquet + DuckDB) ──
   logscope-test:
     name: LogScope (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
@@ -52,9 +52,9 @@ jobs:
         working-directory: 02-log-parser
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt pytest pyarrow
+          pip install -r requirements.txt pytest pyarrow duckdb
 
-      - name: Run LogScope 55 Pytest Test Suite
+      - name: Run LogScope 58 Pytest Test Suite
         working-directory: 02-log-parser
         run: python -m pytest -v
 
@@ -100,3 +100,39 @@ jobs:
       - name: Run Sample Service 3 Unit Tests
         working-directory: 04-sample-order-service
         run: mvn clean test --batch-mode
+
+  # ── 5. TypeScript SDK Test (Node.js 20 LTS) ──
+  typescript-sdk-test:
+    name: TypeScript Client SDK (Node 20)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run TypeScript SDK Tests
+        working-directory: sdk/typescript
+        run: npm test
+
+  # ── 6. Security SAST & Dependency Vulnerability Gate ──
+  security-audit:
+    name: Security SAST & CVE Audit Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy Vulnerability Scanner (Repository & Dependencies)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          ignore-unfixed: true
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '0'

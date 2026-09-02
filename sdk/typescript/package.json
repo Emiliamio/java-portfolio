@@ -1,0 +1,19 @@
+{
+  "name": "@auditvault/sdk",
+  "version": "1.0.0",
+  "description": "Official Type-Safe Client SDK for AuditVault Log Audit & SOC Telemetry Platform",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  },
+  "keywords": [
+    "auditvault",
+    "audit-log",
+    "opentelemetry",
+    "traceparent",
+    "soc-telemetry"
+  ],
+  "author": "郑锦城 (Emiliamio) <mio2110767128@163.com>",
+  "license": "MIT"
+}
