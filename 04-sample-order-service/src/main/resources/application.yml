@@ -1,0 +1,12 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: sample-order-service
+
+auditvault:
+  enabled: true
+  webhook-url: ${AUDITVAULT_WEBHOOK_URL:http://localhost:8080/api/logs/webhook}
+  token: ${AUDITVAULT_TOKEN:auditvault-webhook-default-secret-token-2026}
+  service-name: ORDER_MICROSERVICE

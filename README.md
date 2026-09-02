@@ -3,14 +3,14 @@
 > 涵盖企业级 AI Agent & 混合 RAG 中台、高并发分布式日志审计、Python 状态机探针与智能研判 Studio 全链路
 
 [![CI/CD Pipeline](https://github.com/Emiliamio/java-portfolio/actions/workflows/ci.yml/badge.svg)](https://github.com/Emiliamio/java-portfolio/actions/workflows/ci.yml)
-![Tests](https://img.shields.io/badge/Tests-130%20passed%20(100%25)-brightgreen)
+![Tests](https://img.shields.io/badge/Tests-133%20passed%20(100%25)-brightgreen)
 ![Coverage](https://img.shields.io/badge/Coverage-100%25-brightgreen)
 ![Java 21](https://img.shields.io/badge/Java-21%20LTS-orange)
 ![Spring Boot 3](https://img.shields.io/badge/Spring%20Boot-3.2-blue)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16%20pgvector-blue)
-![License](https://img.shields.io/badge/License-MIT-green)
+![Dual-License](https://img.shields.io/badge/License-MIT%20%7C%20Commercial-blue)
 
-[中文版文档 (Chinese)](README.md) | [English Documentation](README_EN.md) | [技术博客](https://emiliamio.github.io)
+[中文版文档 (Chinese)](README.md) | [English Documentation](README_EN.md) | [技术博客](https://emiliamio.github.io) | [商业授权 & SLA](COMMERCIAL_LICENSE.md)
 
 ---
 
@@ -22,11 +22,12 @@
 | ① | **AuditVault** · 日志审计中台 | Spring Boot 3 + MySQL 8 + Redis 7 + **Kafka KRaft** + **ClickHouse 24.3** + **WebSocket** + **Flyway** + **K8s Helm** | Datadog 级 SOC 遥测大屏、**W3C TraceContext/OTel 双模透传**、**IP 威胁信誉度动态计分与自动熔断黑名单**、**Flyway 版本化增量迁移**、**@AuditLog 无侵入 AOP 埋点**、**Kafka 削峰**、**ClickHouse 45x 直方图**、**SXSSF 磁盘防 OOM**、**K8s Helm 弹性伸缩** (59项单测全通) | `:8080` |
 | ② | **LogScope** · 日志解析探针 | Python 3.11 + Pandas + 有限状态机 (FSM) + **mmap 零拷贝** | **零拷贝 mmap 内存映射与多核并行分块解析**、多行 Java 异常堆栈 FSM 状态机还原、**实测 34,317 QPS 高吞吐**、时序滚动窗口异常检测、HTML/Excel/SQL 多管道输出 (53项测试全通) | CLI |
 | ③ | **Nexus AI** · 安全研判 Copilot | Spring Boot 3 + **Ollama** / DeepSeek / OpenAI + SSE | Security Copilot 研判工作台、**工业级 Sigma 告警规则 AST 语法校验器**、**云端/本地三级热备路由**、**PII 敏感信息脱敏装甲**、**100% 离线隐私盾**、CVSS 3.1 评分与 WAF 剧本生成 (18项单测全通) | `:8081` |
-| ④ | **技术博客** | Hexo + GitHub Pages | 11 篇架构深度复盘、避坑指南与四大阶梯演进路线图 | [emiliamio.github.io](https://emiliamio.github.io) |
+| ④ | **Sample Order Service** · 微服务接入示例 | Spring Boot 3 + Spring AOP + JDK 原生 HttpClient | **10 秒无侵入接入示范工程**：通过 `@AuditLog` 注解自动抓取方法耗时与 TraceId 并异步回传 AuditVault (3项单测全通) | `:8085` |
+| ⑤ | **技术博客** | Hexo + GitHub Pages | 11 篇架构深度复盘、避坑指南、交互式 FSM 演练沙盒与四大阶梯演进路线图 | [emiliamio.github.io](https://emiliamio.github.io) |
 
 ---
 
-## 🚀 30 秒极速启动
+## 🚀 30 秒极速启动与一键攻防演练
 
 唯一依赖：**Docker Desktop**。
 
@@ -35,11 +36,11 @@
 git clone https://github.com/Emiliamio/java-portfolio.git
 cd java-portfolio
 
-# 2. 复制环境变量配置模版
-cp .env.example .env
+# 2. 一键启动全套微服务环境
+bash demo.sh start
 
-# 3. 后台一键拉起全微服务集群
-docker compose up -d
+# 3. 运行一键全仿真攻防演练与 IP 威胁自动熔断 (Auto-Ban)
+bash demo.sh attack-sim
 ```
 
 | 服务 | URL | 默认凭据 / 说明 |
@@ -48,7 +49,8 @@ docker compose up -d
 | **AuditVault — 日志检索与分析** | `http://localhost:8080` | `admin / admin123` (管理员), `user / user123` (只读用户) |
 | **AuditVault — 数据仪表盘** | `http://localhost:8080/dashboard.html` | 今日事件、异常率与 Redis HyperLogLog 独立基数统计 |
 | **Nexus AI — 智能研判 Studio** | `http://localhost:8081` | SSE 实时打字机流式研判、Markdown 导出与规则引擎降级 |
-| **技术博客与演开展厅** | `https://emiliamio.github.io` | 全栈项目深度复盘与核心系统演进长文 |
+| **Sample Order Service — 示例服务** | `http://localhost:8085` | 模拟电商微服务下单与 `@AuditLog` 自动上报 |
+| **技术博客与演开展厅** | `https://emiliamio.github.io` | 全栈项目深度复盘、交互式沙盒与核心系统演进长文 |
 
 ---
 

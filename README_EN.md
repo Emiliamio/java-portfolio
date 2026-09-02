@@ -3,14 +3,14 @@
 > A high-performance enterprise ecosystem featuring AI Agent & Hybrid RAG platforms, high-concurrency log audit telemetry, Python FSM log probes, and intelligent Security Copilot Studios.
 
 [![CI/CD Pipeline](https://github.com/Emiliamio/java-portfolio/actions/workflows/ci.yml/badge.svg)](https://github.com/Emiliamio/java-portfolio/actions/workflows/ci.yml)
-![Tests](https://img.shields.io/badge/Tests-130%20passed%20(100%25)-brightgreen)
+![Tests](https://img.shields.io/badge/Tests-133%20passed%20(100%25)-brightgreen)
 ![Coverage](https://img.shields.io/badge/Coverage-100%25-brightgreen)
 ![Java 21](https://img.shields.io/badge/Java-21%20LTS-orange)
 ![Spring Boot 3](https://img.shields.io/badge/Spring%20Boot-3.2-blue)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16%20pgvector-blue)
-![License](https://img.shields.io/badge/License-MIT-green)
+![Dual-License](https://img.shields.io/badge/License-MIT%20%7C%20Commercial-blue)
 
-[中文版 (Chinese)](README.md) | [English Documentation](README_EN.md) | [Technical Blog](https://emiliamio.github.io)
+[中文版 (Chinese)](README.md) | [English Documentation](README_EN.md) | [Technical Blog](https://emiliamio.github.io) | [Commercial SLA & License](COMMERCIAL_LICENSE.md)
 
 ---
 
@@ -22,11 +22,12 @@
 | ① | **AuditVault** · Log Audit & Observability | Spring Boot 3 + MySQL 8 + Redis 7 + **Kafka KRaft** + **ClickHouse 24.3** + **WebSocket** + **Flyway** + **K8s Helm** | Datadog-grade SOC Telemetry Studio, **W3C TraceContext/OTel Dual-Mode Propagation**, **Dynamic IP Threat Reputation & Auto-Ban Armor**, **Flyway Versioned Migrations**, **@AuditLog Non-invasive AOP**, **Kafka Buffer**, **ClickHouse 45x Fast Histograms**, **SXSSF Disk Sliding Window (Zero OOM)**, **Kubernetes Helm Chart** (59 passing tests) | `:8080` |
 | ② | **LogScope** · Python FSM Anomaly Probe | Python 3.11 + Pandas + Finite State Machine (FSM) + **Zero-Copy mmap** | **Zero-Copy mmap Memory Mapping & Multi-Core Chunk Parser**, Multiline Java Exception Stacktrace FSM Recovery, **34,317 QPS Throughput**, Sliding-Window Anomaly Detection, HTML/Excel/SQL Export (53 passing tests) | CLI |
 | ③ | **Nexus AI** · Security Copilot Studio | Spring Boot 3 + **Ollama** / DeepSeek / OpenAI + SSE | Security Copilot Studio, **Industrial Sigma Rule AST Syntax Validator & Linter**, **3-Tier Cloud/Local Failover Router**, **PII Data Sanitization Armor**, **100% Offline Privacy Shield**, CVSS 3.1 Scoring & Playbooks (18 passing tests) | `:8081` |
-| ④ | **Architecture Blog** | Hexo + GitHub Pages | 11 In-Depth System Architecture Whitepapers & 4-Tier Evolution Roadmap | [emiliamio.github.io](https://emiliamio.github.io) |
+| ④ | **Sample Order Service** · Microservice Integration | Spring Boot 3 + Spring AOP + JDK HttpClient | **10-Second Non-Invasive Ingestion Sample**: `@AuditLog` non-invasive AOP method interception with asynchronous dispatch to AuditVault (3 passing tests) | `:8085` |
+| ⑤ | **Architecture Blog** | Hexo + GitHub Pages | 11 In-Depth System Architecture Whitepapers, Interactive FSM Sandbox & 4-Tier Evolution Roadmap | [emiliamio.github.io](https://emiliamio.github.io) |
 
 ---
 
-## 🚀 Quick Start in 30 Seconds
+## 🚀 Quick Start in 30 Seconds & Attack Simulation
 
 Prerequisite: **Docker Desktop** (or Docker Engine + Compose).
 
@@ -35,11 +36,11 @@ Prerequisite: **Docker Desktop** (or Docker Engine + Compose).
 git clone https://github.com/Emiliamio/java-portfolio.git
 cd java-portfolio
 
-# 2. Copy environment template
-cp .env.example .env
+# 2. Launch all microservices in background
+bash demo.sh start
 
-# 3. Launch all microservices in background
-docker compose up -d
+# 3. Run full-fidelity attack simulation & auto-ban verification
+bash demo.sh attack-sim
 ```
 
 ### 🌐 Service Endpoints
@@ -50,7 +51,8 @@ docker compose up -d
 | **AuditVault SOC Telemetry** | `http://localhost:8080` | `admin / admin123` (Admin), `user / user123` (Viewer), Webhook ingestion & SXSSF export |
 | **AuditVault Analytics Dashboard** | `http://localhost:8080/dashboard.html` | Real-time events, error distribution & Redis HyperLogLog unique visitor estimation |
 | **Nexus AI Copilot Studio** | `http://localhost:8081` | Real-time SSE typewriter analysis, Markdown report generation & rule engine fallback |
-| **Architecture Blog** | `https://emiliamio.github.io` | Full-stack architectural blueprints & production deployment SOPs |
+| **Sample Order Service** | `http://localhost:8085` | Simulated e-commerce order microservice with `@AuditLog` telemetry |
+| **Architecture Blog** | `https://emiliamio.github.io` | Full-stack architectural blueprints, interactive FSM sandbox & production SOPs |
 
 ---
 

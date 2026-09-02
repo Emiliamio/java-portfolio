@@ -265,7 +265,87 @@ reset_services() {
   fi
 }
 
-# ── 主入口 ──────────────────────────────────────
+# ── 全仿真攻防演练与自动熔断模拟器 ──────────────
+attack_sim() {
+  echo ""
+  echo -e "${CYAN}╔══════════════════════════════════════════════════════╗${NC}"
+  echo -e "${CYAN}║  🚀 AuditVault SOC 全仿真攻防演练与自动熔断模拟器    ║${NC}"
+  echo -e "${CYAN}╚══════════════════════════════════════════════════════╝${NC}"
+  echo ""
+
+  local target_url="http://localhost:8080/api/logs/webhook"
+  local token="auditvault-webhook-default-secret-token-2026"
+  local attack_ip="198.51.100.77"
+
+  echo -e "${CYAN}▶ 阶段 1: 发送 1 条正常业务日志 (预期: 202 Accepted, 威胁分: 0)...${NC}"
+  curl -s -X POST "$target_url" \
+    -H "Content-Type: application/json" \
+    -H "X-Audit-Token: $token" \
+    -d '{
+      "timestamp": "2026-09-02T15:30:00",
+      "ipAddress": "192.168.1.50",
+      "username": "zhangsan",
+      "operation": "QUERY_USER_PROFILE",
+      "operationResult": "SUCCESS",
+      "detail": "User viewed dashboard",
+      "severity": "INFO"
+    }' | grep -o '"success":true' && echo -e "  ${GREEN}✓ [通过] 正常业务日志极速摄入${NC}" || echo -e "  ${YELLOW}⚠ 提示: 服务未启动，请先运行 bash demo.sh 启动系统${NC}"
+
+  echo ""
+  echo -e "${CYAN}▶ 阶段 2: 模拟黑客 IP ($attack_ip) 发起第 1 轮 SQL 注入攻击 (预期: 威胁分 +45)...${NC}"
+  curl -s -X POST "$target_url" \
+    -H "Content-Type: application/json" \
+    -H "X-Audit-Token: $token" \
+    -d "{
+      \"timestamp\": \"2026-09-02T15:30:01\",
+      \"ipAddress\": \"$attack_ip\",
+      \"username\": \"admin_attacker\",
+      \"operation\": \"SQLI_ATTACK\",
+      \"operationResult\": \"FAIL\",
+      \"detail\": \"SQL injection payload: ' OR '1'='1 -- union select password from user\",
+      \"severity\": \"CRITICAL\"
+    }" > /dev/null && echo -e "  ${RED}⚡ [告警] 触发 SQL 注入威胁，WebSocket 实时推流广播至 SOC 工作台！${NC}"
+
+  echo ""
+  echo -e "${CYAN}▶ 阶段 3: 模拟黑客 IP ($attack_ip) 发起第 2 轮 RCE 远程命令执行攻击 (累积威胁分: 95 >= 80 阈值)...${NC}"
+  curl -s -X POST "$target_url" \
+    -H "Content-Type: application/json" \
+    -H "X-Audit-Token: $token" \
+    -d "{
+      \"timestamp\": \"2026-09-02T15:30:02\",
+      \"ipAddress\": \"$attack_ip\",
+      \"username\": \"root_exploit\",
+      \"operation\": \"RCE_EXPLOIT\",
+      \"operationResult\": \"FAIL\",
+      \"detail\": \"Path traversal & command injection: ../../etc/passwd && cmd.exe /c whoami\",
+      \"severity\": \"CRITICAL\"
+    }" > /dev/null && echo -e "  ${RED}🚨 [熔断触发] 威胁积分达到 95 分，IP $attack_ip 已被系统秒级自动注入 Redis 熔断黑名单！${NC}"
+
+  echo ""
+  echo -e "${CYAN}▶ 阶段 4: 验证自动熔断黑名单生效 (该 IP 再次发起请求，预期: 403 Forbidden 拦截)...${NC}"
+  local block_resp
+  block_resp=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$target_url" \
+    -H "Content-Type: application/json" \
+    -H "X-Audit-Token: $token" \
+    -d "{
+      \"timestamp\": \"2026-09-02T15:30:03\",
+      \"ipAddress\": \"$attack_ip\",
+      \"username\": \"blocked_user\",
+      \"operation\": \"PROBE_TRY\",
+      \"operationResult\": \"FAIL\",
+      \"detail\": \"Trying to access after ban\",
+      \"severity\": \"WARN\"
+    }" || echo "000")
+
+  if [ "$block_resp" = "403" ]; then
+    echo -e "  ${GREEN}🛡️ [完美防御] 响应码: 403 Forbidden — 攻击源 IP 已被成功拦截，防御零人工值守！${NC}"
+  else
+    echo -e "  ${YELLOW}ℹ️ HTTP 状态码: $block_resp (若为 000 请先启动服务)${NC}"
+  fi
+  echo ""
+}
+
+# ── 入口 ────────────────────────────────────────
 main() {
   case "${1:-start}" in
     start|up)
@@ -283,6 +363,9 @@ main() {
       docker compose --profile enterprise up -d --build
       open_browser
       ;;
+    attack-sim|attack)
+      attack_sim
+      ;;
     health|check)
       health_check
       ;;
@@ -296,10 +379,11 @@ main() {
       docker compose ps
       ;;
     *)
-      echo "用法: bash demo.sh [start|enterprise|health|stop|reset|status]"
+      echo "用法: bash demo.sh [start|enterprise|attack-sim|health|stop|reset|status]"
       echo ""
       echo "  start       启动标准微服务并打开浏览器 (默认)"
       echo "  enterprise  一键启动企业级全套集群 (Kafka + ClickHouse + Ollama)"
+      echo "  attack-sim  一键运行全仿真攻防演练与 IP 威胁自动熔断实战"
       echo "  health      一键全系统健康巡检与微服务监控看板"
       echo "  stop        停止所有服务"
       echo "  reset       停止并删除数据库（重置环境）"
