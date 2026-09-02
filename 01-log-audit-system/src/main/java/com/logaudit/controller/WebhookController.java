@@ -42,6 +42,7 @@ public class WebhookController {
     private final AuditLogService auditLogService;
     private final ObjectMapper objectMapper;
     private final KafkaLogProducer kafkaLogProducer;
+    private final com.logaudit.service.AuditMetricsService auditMetricsService;
 
     @Value("${app.webhook.secret-key:auditvault-webhook-default-secret-token-2026}")
     private String webhookSecretKey;
@@ -117,7 +118,10 @@ public class WebhookController {
             logEntryService.asyncBatchImport(entries);
         }
 
-        // 6. 记录审计轨迹
+        // 6. 记录审计轨迹与可观测性度量指标
+        if (auditMetricsService != null) {
+            auditMetricsService.recordWebhookIngest(dtoList.size());
+        }
         auditLogService.recordSuccess("WEBHOOK", "INGEST_LOGS",
                 "count=" + dtoList.size() + ", buffer=" + (kafkaQueued ? "KAFKA" : "THREAD_POOL") + ", sourceIp=" + clientIp, clientIp);
 

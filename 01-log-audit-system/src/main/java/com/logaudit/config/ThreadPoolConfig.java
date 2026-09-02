@@ -32,6 +32,7 @@ public class ThreadPoolConfig {
         executor.setQueueCapacity(queueCapacity);    // 阻塞队列容量：100
         executor.setKeepAliveSeconds(keepAliveSeconds); // 空闲线程存活时间
         executor.setThreadNamePrefix("log-import-"); // 线程名前缀
+        executor.setTaskDecorator(new MdcTaskDecorator()); // 异步线程池 MDC 上下文透传
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         executor.initialize();
         return executor;
