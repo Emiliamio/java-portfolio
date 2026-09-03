@@ -3,7 +3,7 @@
 > A high-performance enterprise ecosystem featuring AI Agent & Hybrid RAG platforms, high-concurrency log audit telemetry, Python FSM log probes, and intelligent Security Copilot Studios.
 
 [![CI/CD Pipeline](https://github.com/Emiliamio/java-portfolio/actions/workflows/ci.yml/badge.svg)](https://github.com/Emiliamio/java-portfolio/actions/workflows/ci.yml)
-![Tests](https://img.shields.io/badge/Tests-159%20passed%20(100%25)-brightgreen)
+![Tests](https://img.shields.io/badge/Tests-163%20passed%20(100%25)-brightgreen)
 ![Security](https://img.shields.io/badge/Security-0%20CVEs%20%7C%20A%2B-brightgreen)
 ![Java 21](https://img.shields.io/badge/Java-21%20LTS-orange)
 ![Spring Boot 3](https://img.shields.io/badge/Spring%20Boot-3.2-blue)
@@ -18,9 +18,9 @@
 
 | # | Flagship System | Core Technology Stack | Architectural Highlights | Entry / Port |
 |---|---|---|---|---|
-| 👑 | **AgentForge** · Enterprise AI Platform | **Java 21 (Virtual Threads)** + Spring Boot 3.2 + **PostgreSQL 16 (pgvector)** + **Redis 7** + Vue 3.4 | Pure Java 21 3-Way Hybrid RAG, **GraphRAG S-P-O Triplet Extraction & 2-Hop Traversal**, **Tenant Token Quota & RPM Rate Limiter (TenantTokenQuotaLimiter)**, **JsqlParser AST Tenant Isolation**, **Kahn DAG Reactive Engine**, **Anthropic MCP Native Client**, **RAG Grounding Guardrail**, **DeepSeek-R1 SSE Stream** (42 passing tests) | [GitHub Repository](https://github.com/Emiliamio/agent-forge) / `:80` |
-| ① | **AuditVault** · Log Audit & Observability | Spring Boot 3 + MySQL 8 + Redis 7 + **Resilience4j** + **Caffeine L1/L2** + **Kafka** + **ClickHouse** + **K8s Helm** | Datadog-grade SOC Telemetry Studio, **GeoIP Spatial Intelligence Engine (GeoIpEnrichmentService)**, **Prometheus 4 Golden Signals Telemetry**, **SOAR Automated Remediation & Containment (SoarAutoRemediationExecutor)**, **PII Data Masking Armor**, **ClickHouse Hourly Pre-Aggregation**, **Multi-Channel Anti-Storm Dispatcher** (68 passing tests) | `:8080` |
-| ② | **LogScope** · Python FSM Anomaly Probe | Python 3.11 + Pandas + Finite State Machine (FSM) + **mmap** + **Parquet** + **DuckDB** | **Real-Time Streaming Log Watcher Probe (TailWatcher tail -f style incremental stream)**, **Apache Parquet Columnar Storage + DuckDB In-Memory Aggregations**, **Zero-Copy mmap Multi-Core Parser**, Multiline Stacktrace FSM Recovery, **34,317 QPS** (60 passing tests) | CLI |
+| 👑 | **AgentForge** · Enterprise AI Platform | **Java 21 (Virtual Threads)** + Spring Boot 3.2 + **PostgreSQL 16 (pgvector)** + **Redis 7** + Vue 3.4 | Pure Java 21 3-Way Hybrid RAG, **Secure Code Sandbox Engine (SecureCodeSandboxEngine)**, **Model Arena Canary Splitter (ModelArenaTrafficSplitter)**, **GraphRAG S-P-O Triplet Extraction & 2-Hop Traversal**, **Tenant Token Quota & RPM Rate Limiter (TenantTokenQuotaLimiter)**, **JsqlParser AST Tenant Isolation**, **Kahn DAG Reactive Engine**, **Anthropic MCP Native Client**, **RAG Grounding Guardrail**, **DeepSeek-R1 SSE Stream** (44 passing tests) | [GitHub Repository](https://github.com/Emiliamio/agent-forge) / `:80` |
+| ① | **AuditVault** · Log Audit & Observability | Spring Boot 3 + MySQL 8 + Redis 7 + **Resilience4j** + **Caffeine L1/L2** + **Kafka** + **ClickHouse** + **K8s Helm** | Datadog-grade SOC Telemetry Studio, **3-Sigma Dynamic Baseline Anomaly Detector (DynamicBaselineAnomalyDetector)**, **Cryptographic Tamper-Proof Audit Hash Chain (AuditLogTamperProofChain)**, **GeoIP Spatial Intelligence Engine (GeoIpEnrichmentService)**, **Prometheus 4 Golden Signals Telemetry**, **SOAR Automated Remediation & Containment (SoarAutoRemediationExecutor)**, **PII Data Masking Armor**, **ClickHouse Hourly Pre-Aggregation**, **Multi-Channel Anti-Storm Dispatcher** (70 passing tests) | `:8080` |
+| ② | **LogScope** · Python FSM Anomaly Probe | Python 3.11 + Pandas + Finite State Machine (FSM) + **mmap** + **Parquet** + **DuckDB** | **Multi-Modal Schema Sniffer (SchemaSniffer)**, **Real-Time Streaming Log Watcher Probe (TailWatcher tail -f style incremental stream)**, **Apache Parquet Columnar Storage + DuckDB In-Memory Aggregations**, **Zero-Copy mmap Multi-Core Parser**, Multiline Stacktrace FSM Recovery, **34,317 QPS** (62 passing tests) | CLI |
 | ③ | **Nexus AI** · Security Copilot Studio | Spring Boot 3 + **Ollama** / DeepSeek / OpenAI + SSE + **Fast Embedding** | Security Copilot Studio, **Cross-Platform Incident-to-Investigation Pipeline**, **Pure CPU 2ms Dense Vector Embedding Engine**, **Semantic Vector Cache (0 Token 5ms Hit)**, **Industrial Sigma Rule AST Syntax Validator**, **3-Tier Cloud/Local Failover Router**, **PII Data Sanitization Armor** (26 passing tests) | `:8081` |
 | ④ | **Sample Order Service** · Microservice Integration | Spring Boot 3 + Spring AOP + JDK HttpClient | **10-Second Non-Invasive Ingestion Sample**: `@AuditLog` non-invasive AOP method interception with asynchronous dispatch to AuditVault (3 passing tests) | `:8085` |
 | ⑤ | **@auditvault/sdk** · TypeScript Client SDK | TypeScript + W3C TraceContext + Exponential Backoff | **Node.js / Frontend Type-Safe SDK**: Auto `traceparent` injection, asynchronous non-blocking shipping & retry (2 passing tests) | `sdk/ts` |
@@ -89,10 +89,10 @@ bash demo.sh attack-sim
 All modules have 100% test coverage with zero mock illusions:
 
 ```bash
-# 1. Test AuditVault Backend (68 Tests Passed)
+# 1. Test AuditVault Backend (70 Tests Passed)
 cd 01-log-audit-system && mvn test
 
-# 2. Test LogScope Python FSM Probe (60 Tests Passed)
+# 2. Test LogScope Python FSM Probe (62 Tests Passed)
 cd ../02-log-parser && python -m pytest tests/
 
 # 3. Test Nexus AI Copilot (26 Tests Passed)
@@ -101,7 +101,7 @@ cd ../03-log-ai-assistant && mvn test
 # 4. Test Sample Order & TypeScript SDK (5 Tests Passed)
 cd ../04-sample-order-service && mvn test
 cd ../sdk/typescript && npm test
-# Total: 159 tests 100% green across portfolio (201 tests total across entire ecosystem)
+# Total: 163 tests 100% green across portfolio (207 tests total across entire ecosystem)
 ```
 
 ---

@@ -6,6 +6,8 @@
 
 ## 🌟 核心功能矩阵
 
+- **时序动态基线与 3-Sigma 离群异常检测探针 (DynamicBaselineAnomalyDetector)**：采用 EMA 滑动追踪流量期望值与标准差，基于 Z-Score > 3.0 自适应触发异动告警，克服业务潮汐固定阈值误报。
+- **区块链式防篡改哈希审计链 (AuditLogTamperProofChain)**：满足等保三级最高防抵赖标准，基于 SHA-256 构建单向哈希链，秒级检出 DBA 内鬼或黑客对底表数据的物理篡改或删除。
 - **IP 地理空间情报富化引擎 (GeoIpEnrichmentService)**：自动解析 IP 物理位置（国家/省份/城市/经纬度坐标/ASN运营商），内置 RFC 1918 私网识别，赋能全球 3D 攻击地图。
 - **Prometheus 黄金四指标生产级深度度量 (PrometheusMetricsService)**：基于 Micrometer 深度度量摄取吞吐、时延分位数（p50/p95/p99）、风暴抑制计数与熔断器 Gauge 仪表。
 - **SOAR 自动化编排与自愈阻断闭环 (SoarAutoRemediationExecutor)**：接收 Nexus AI 与 AgentForge 工单，自动执行动态 IP 阻断、生成防篡改处置回执（RemediationReceipt）并同步告警通道。
@@ -46,7 +48,7 @@
 
 ## 🧪 单元测试
 
-包含全套 68 项单元与集成测试（100% 绿灯运行）：
+包含全套 70 项单元与集成测试（100% 绿灯运行）：
 ```bash
 mvn clean test
 ```

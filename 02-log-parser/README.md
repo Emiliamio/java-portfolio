@@ -10,6 +10,7 @@
 
 | 功能 | 说明 |
 |------|------|
+| **多模态 Schema 智能嗅探** | 内置 `SchemaSniffer`，自动前 50 行特征打分识别 Logback、Nginx、JSON Lines 与 Syslog，免配置即席解析 |
 | **实时流式日志监听探针** | 内置 `TailWatcher`，支持类 `tail -f` 实时增量变动监听，边解析 FSM 状态机边流式推送至 AuditVault |
 | **DuckDB 内存即席分析** | 嵌入式 DuckDB OLAP 引擎，对 Parquet 日志文件执行 0 内存暴涨毫秒级纯 SQL 聚合与特征钻取 |
 | **Apache Parquet 列存导出** | 导出压缩比高达 85% 的 Parquet 列式存储文件，无缝对接 DuckDB / ClickHouse 秒级 SQL 过滤 |
@@ -25,13 +26,14 @@
 ## 🛠️ 技术栈
 
 - **Python 3.11+**：主开发语言
+- **SchemaSniffer**：未知日志格式多模态自动嗅探与置信度推导
 - **TailWatcher**：实时流式日志文件监听与增量解析
 - **DuckDB & Apache Parquet**：高性能列式压缩存储与嵌入式即席分析引擎
 - **mmap & multiprocessing**：零拷贝内存映射与多核并行分块解析
 - **Pandas**：时序数据清洗与滑动窗口分析
 - **有限状态机 (FSM)**：多行异常堆栈无损合并算法
 - **openpyxl**：带样式与公式的 Excel 报表生成
-- **pytest**：全套 60 项自动化单元测试
+- **pytest**：全套 62 项自动化单元测试
 
 ---
 
@@ -43,6 +45,7 @@
 │   ├── __init__.py
 │   ├── cli.py                  # 命令行入口 + argparse
 │   ├── parser.py               # 日志解析引擎（CSV + 文本 + FSM 状态机）
+│   ├── schema_sniffer.py       # 多模态日志格式自动嗅探与智能类型推导
 │   ├── tail_watcher.py         # 实时流式日志监听与增量探针
 │   ├── mmap_parser.py          # 零拷贝 mmap 与多核分块解析引擎
 │   ├── anomaly.py              # 异常检测引擎（滑动窗口 + 暴力破解识别）
@@ -50,13 +53,14 @@
 │   ├── reporter.py             # 报告生成（控制台 / Excel / HTML）
 │   └── exporter.py             # SQL & Parquet 导出器（→ AuditVault 数据库）
 ├── sample_logs/                # 示例日志文件
-├── tests/                      # 单元测试 (60/60 Passed)
+├── tests/                      # 单元测试 (62/62 Passed)
 │   ├── __init__.py
 │   ├── test_duckdb_query.py
 │   ├── test_html_reporter.py
 │   ├── test_log_parser.py
 │   ├── test_mmap_parser.py
 │   ├── test_parquet_exporter.py
+│   ├── test_schema_sniffer.py
 │   └── test_tail_watcher.py
 ├── benchmark.py                # 50,000 行性能基准测试脚本
 ├── requirements.txt
