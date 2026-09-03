@@ -6,6 +6,9 @@
 
 ## 🌟 核心功能矩阵
 
+- **IP 地理空间情报富化引擎 (GeoIpEnrichmentService)**：自动解析 IP 物理位置（国家/省份/城市/经纬度坐标/ASN运营商），内置 RFC 1918 私网识别，赋能全球 3D 攻击地图。
+- **Prometheus 黄金四指标生产级深度度量 (PrometheusMetricsService)**：基于 Micrometer 深度度量摄取吞吐、时延分位数（p50/p95/p99）、风暴抑制计数与熔断器 Gauge 仪表。
+- **SOAR 自动化编排与自愈阻断闭环 (SoarAutoRemediationExecutor)**：接收 Nexus AI 与 AgentForge 工单，自动执行动态 IP 阻断、生成防篡改处置回执（RemediationReceipt）并同步告警通道。
 - **金融合规入库级 PII 实时脱敏装甲 (PiiDataMasker)**：在日志写入 MySQL/ClickHouse 物理存储前切面脱敏，口令凭据 [REDACTED_SECRET]、手机号、身份证、银行卡不可逆遮蔽，满足等保三级与 GDPR 审计合规。
 - **ClickHouse 小时级物化预聚合时序直方图**：支持千万级日志小时级预聚合查询与平滑回退，实现大数据报表零抖动。
 - **多通道安全告警分发与风暴抑制中心**：支持飞书富文本卡片、钉钉 Markdown、企业微信与通用 Webhook 分发，内置 5 分钟滑动窗口同 IP 告警降噪防风暴。
@@ -43,7 +46,7 @@
 
 ## 🧪 单元测试
 
-包含全套 65 项单元与集成测试（100% 绿灯运行）：
+包含全套 68 项单元与集成测试（100% 绿灯运行）：
 ```bash
 mvn clean test
 ```
