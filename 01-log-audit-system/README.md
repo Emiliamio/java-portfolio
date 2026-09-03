@@ -6,6 +6,8 @@
 
 ## 🌟 核心功能矩阵
 
+- **多通道安全告警分发与风暴抑制中心**：支持飞书富文本卡片、钉钉 Markdown、企业微信与通用 Webhook 分发，内置 5 分钟滑动窗口同 IP 告警降噪防风暴。
+- **冷热分层数据生命周期治理 (ILM)**：0~7天热数据极速查询，超期日志自动化批量物理淘汰与 Parquet 归档，释放数据库物理表空间。
 - **Resilience4j 动态熔断与降级装甲**：底层数据库或 ClickHouse 抖动时自动触发熔断，降级写入本地 WAL 预写缓冲，阻断雪崩。
 - **Caffeine L1 + Redis L2 双级缓存**：IP 黑名单与热点配置 50ns 本地内存极速命中，削减 90% Redis 访问开销。
 - **100vw × 100vh 全视口 Studio 布局**：自适应大屏控制台，无冗余留白，沉浸式分析体验。
@@ -29,22 +31,8 @@
 
 ## 🛠️ 技术栈
 
-| 层级 | 技术选型 | 说明 |
+| 模块 | 技术选型 | 说明 |
 |---|---|---|
-| **核心框架** | Spring Boot 3.2.0 + Java 17 / 21 LTS | 现代高性能 Java 后端，虚拟线程就绪 |
-| **高可用容灾** | Resilience4j CircuitBreaker + WAL | 动态滑动窗口熔断与本地缓冲降级 |
-| **本地近源缓存** | Caffeine Cache | 50ns 纳秒级极速本地 L1 缓存 |
-| **链路追踪** | W3C TraceContext + OTel + MDC | 兼容 traceparent 与 X-Trace-Id 双模链路标准 |
-| **主动防御** | Redis IP 信誉度评分 + Auto-Ban | 威胁分 >= 80 分自动熔断封禁 |
-| **分布式消息** | Apache Kafka 3.7 (KRaft) | 分布式日志流式削峰摄取 |
-| **时序 OLAP** | ClickHouse 24.3 (MergeTree) | 45x 毫秒级多维时序直方图分析 |
-| **持久层 & 迁移** | MyBatis 3.0 + MySQL 8.0 + Flyway | 联合索引、版本化增量迁移与慢 SQL 拦截 |
-| **无侵入埋点** | Spring AOP + `@AuditLog` | 自动抓取耗时、TraceId 并异步落库 |
-| **实时通信** | Spring WebSocket | `/ws/threat-alerts` 实时高危告警广播通道 |
-| **云原生编排** | Kubernetes Helm Chart | HPA 自动弹性伸缩、Liveness/Readiness 探针 |
-| **缓存与限流** | Redis 7 + Lettuce | Token 黑名单、IP 滑动窗口限流、HyperLogLog UV 统计 |
-| **单元测试** | JUnit 5 + SpringBootTest | 61/61 自动化测试用例 100% 绿灯通过 |
-| **认证与安全** | Spring Security + JWT (HS256) | RBAC 细粒度角色权限隔离 (ADMIN / USER) |
 | **报表导出** | Apache POI 5.2 (SXSSF) | 5万行 Excel 审计数据流式防 OOM 导出 |
 | **可观测性** | Spring Boot Actuator + Micrometer | 业务级自定义指标暴露，支持 Prometheus / Grafana |
 | **接口规范** | SpringDoc OpenAPI 3.0 | 交互式 Swagger UI 丰富入参示例 |
@@ -53,7 +41,7 @@
 
 ## 🧪 单元测试
 
-包含全套 59 项单元与集成测试（100% 绿灯运行）：
+包含全套 63 项单元与集成测试（100% 绿灯运行）：
 ```bash
 mvn clean test
 ```

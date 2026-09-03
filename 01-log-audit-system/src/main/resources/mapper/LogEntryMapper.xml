@@ -118,4 +118,9 @@
             COUNT(DISTINCT ip_address) AS uniqueIps
         FROM log_entry
     </select>
+
+    <!-- 数据生命周期治理：物理清理截断时间点前的超期日志 -->
+    <delete id="deleteBefore">
+        DELETE FROM log_entry WHERE timestamp &lt; #{cutoffTime}
+    </delete>
 </mapper>

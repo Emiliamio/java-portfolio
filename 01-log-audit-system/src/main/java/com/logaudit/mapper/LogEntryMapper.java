@@ -36,4 +36,6 @@ public interface LogEntryMapper {
     Map<String, Object> todayStats();
 
     Map<String, Object> overallStats();
+
+    int deleteBefore(@Param("cutoffTime") LocalDateTime cutoffTime);
 }

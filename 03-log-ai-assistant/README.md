@@ -10,6 +10,7 @@
 
 | 维度 | 功能说明 |
 |:---|:---|
+| **双中台跨系统安全协同工单流水线** | `IncidentInvestigationPipeline` 自动接收 AuditVault SOC 告警，执行 PII 脱敏、特征向量提取、MITRE 战术匹配与 AgentForge 工单闭环派发 |
 | **边缘极速特征向量化 (Fast Embedding)** | 纯 CPU 64 维密集特征向量映射与余弦相似度计算，2ms 极速完成威胁聚类，0 外部依赖 |
 | **语义向量诊断缓存 (Semantic Cache)** | 自动提取攻击语义特征指纹，相似/重复攻击 5ms 瞬间命中缓存，0 Token 消耗秒级返回 CVSS 与剧本 |
 | **Sigma 规则 AST 语法校验器** | 自动对大模型生成的 SIEM Sigma YAML 规则执行 AST 语法树结构校验与清洗，杜绝残缺 YAML 语法错误 |
@@ -27,6 +28,7 @@
 ## 🛠️ 技术栈
 
 - **后端核心**：Spring Boot 3.2.0 + Java 17 / 21 LTS
+- **双中台跨系统协同**：`IncidentInvestigationPipeline` 自动化工单路由与 AgentForge 任务下发
 - **边缘特征向量化**：`FastFeatureEmbeddingEngine` 纯 CPU 64 维密集向量化与余弦相似度比对
 - **语义向量缓存**：`SemanticDiagnosisCache` 攻击特征归一化与 0 Token 极速诊断缓存
 - **SIEM 规则校验**：`SigmaRuleValidator` 工业级 AST 结构化规则校验与清洗器
@@ -34,7 +36,7 @@
 - **模型路由**：云端 API (DeepSeek/OpenAI) + 本地私有化 Ollama + 离线规则引擎三级容灾
 - **流式通信**：JDK 原生 `HttpClient` + SSE (Server-Sent Events) 打字机流式长连接
 - **认证与权限**：Spring Security RBAC + JWT 跨站安全认证
-- **单元测试**：JUnit 5 (24/24 自动化测试用例 100% 绿灯通过)
+- **单元测试**：JUnit 5 (26/26 自动化测试用例 100% 绿灯通过)
 
 ---
 

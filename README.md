@@ -3,7 +3,7 @@
 > 涵盖企业级 AI Agent & 混合 RAG 中台、高并发分布式日志审计、Python 状态机探针与智能研判 Studio 全链路
 
 [![CI/CD Pipeline](https://github.com/Emiliamio/java-portfolio/actions/workflows/ci.yml/badge.svg)](https://github.com/Emiliamio/java-portfolio/actions/workflows/ci.yml)
-![Tests](https://img.shields.io/badge/Tests-148%20passed%20(100%25)-brightgreen)
+![Tests](https://img.shields.io/badge/Tests-152%20passed%20(100%25)-brightgreen)
 ![Security](https://img.shields.io/badge/Security-0%20CVEs%20%7C%20A%2B-brightgreen)
 ![Java 21](https://img.shields.io/badge/Java-21%20LTS-orange)
 ![Spring Boot 3](https://img.shields.io/badge/Spring%20Boot-3.2-blue)
@@ -18,10 +18,10 @@
 
 | # | 旗舰项目 | 核心技术栈 | 一句话核心亮点 | 入口 / 源码 |
 |---|---|---|---|---|
-| 👑 | **AgentForge (灵眸智枢)** · 企业级 AI 中台 | **Java 21 (虚拟线程)** + Spring Boot 3.2 + **PostgreSQL 16 (pgvector)** + **Redis 7** + Vue 3.4 | 纯血 Java 21 三路混合 RAG (Dense+Sparse+RRF)、**JsqlParser AST 租户强隔离 (0%越权)**、**Kahn 拓扑 DAG 响应式引擎**、**Redis 向量语义降本 60%**、800MB 装甲流式解析器 (35项单测全通) | [私有商业底座](https://emiliamio.github.io/projects/) / `:80` |
-| ① | **AuditVault** · 日志审计中台 | Spring Boot 3 + MySQL 8 + Redis 7 + **Resilience4j 熔断** + **Caffeine L1/L2** + **Kafka** + **ClickHouse** + **K8s Helm** | Datadog 级 SOC 遥测大屏、**Resilience4j 动态熔断与 WAL 降级**、**Caffeine 50ns 近源 L1 缓存**、**W3C TraceContext/OTel 双模透传**、**IP 威胁信誉度动态计分与自动熔断黑名单**、**Flyway 版本化增量迁移**、**@AuditLog 无侵入 AOP 埋点**、**ClickHouse 45x 直方图** (61项单测全通) | `:8080` |
+| 👑 | **AgentForge (灵眸智枢)** · 企业级 AI 中台 | **Java 21 (虚拟线程)** + Spring Boot 3.2 + **PostgreSQL 16 (pgvector)** + **Redis 7** + Vue 3.4 | 纯血 Java 21 三路混合 RAG (Dense+Sparse+RRF)、**JsqlParser AST 租户强隔离 (0%越权)**、**Kahn 拓扑 DAG 响应式引擎**、**Prompt 注入对抗护栏**、**LangSmith 级 Trace 瀑布流与成本精算**、800MB 装甲流式解析器 (37项单测全通) | [GitHub 官方仓库](https://github.com/Emiliamio/agent-forge) / `:80` |
+| ① | **AuditVault** · 日志审计中台 | Spring Boot 3 + MySQL 8 + Redis 7 + **Resilience4j 熔断** + **Caffeine L1/L2** + **Kafka** + **ClickHouse** + **K8s Helm** | Datadog 级 SOC 遥测大屏、**多通道告警分发与风暴抑制中心 (飞书/钉钉/企业微信)**、**冷热分层数据生命周期管理 (ILM)**、**Resilience4j 动态熔断与 WAL 降级**、**Caffeine 50ns 近源 L1 缓存**、**W3C TraceContext/OTel 双模透传**、**IP 威胁自动熔断**、**ClickHouse 45x 直方图** (63项单测全通) | `:8080` |
 | ② | **LogScope** · 日志解析探针 | Python 3.11 + Pandas + 有限状态机 (FSM) + **mmap 零拷贝** + **Parquet** + **DuckDB** | **Apache Parquet 列存 + DuckDB 内存即席分析**、**零拷贝 mmap 内存映射与多核并行分块解析**、多行 Java 异常堆栈 FSM 状态机还原、**实测 34,317 QPS 高吞吐** (58项测试全通) | CLI |
-| ③ | **Nexus AI** · 安全研判 Copilot | Spring Boot 3 + **Ollama** / DeepSeek / OpenAI + SSE + **边缘极速向量化** | Security Copilot 研判工作台、**纯 CPU 2ms 边缘密集特征向量化**、**语义特征向量缓存 (0 Token 5ms 命中)**、**工业级 Sigma 告警规则 AST 语法校验器**、**云端/本地三级热备路由**、**PII 敏感信息脱敏装甲**、**100% 离线隐私盾** (24项单测全通) | `:8081` |
+| ③ | **Nexus AI** · 安全研判 Copilot | Spring Boot 3 + **Ollama** / DeepSeek / OpenAI + SSE + **边缘极速向量化** | Security Copilot 研判工作台、**双中台跨系统协同工单流水线**、**纯 CPU 2ms 边缘密集特征向量化**、**语义特征向量缓存 (0 Token 5ms 命中)**、**工业级 Sigma 规则 AST 校验器**、**三级热备路由**、**PII 脱敏装甲** (26项单测全通) | `:8081` |
 | ④ | **Sample Order Service** · 微服务接入示例 | Spring Boot 3 + Spring AOP + JDK 原生 HttpClient | **10 秒无侵入接入示范工程**：通过 `@AuditLog` 注解自动抓取方法耗时与 TraceId 并异步回传 AuditVault (3项单测全通) | `:8085` |
 | ⑤ | **@auditvault/sdk** · TypeScript 客户端 SDK | TypeScript + W3C TraceContext + 指数退避重试 | **Node.js / 前端全类型安全 SDK**：自动注入 `traceparent` 标头与异步上报 (2项单测全通) | `sdk/ts` |
 | ⑥ | **技术博客** | Hexo + GitHub Pages | 11 篇架构深度复盘、避坑指南、交互式 FSM 演练沙盒与四大阶梯演进路线图 | [emiliamio.github.io](https://emiliamio.github.io) |
