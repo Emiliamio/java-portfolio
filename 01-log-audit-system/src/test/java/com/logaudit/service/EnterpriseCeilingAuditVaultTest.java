@@ -11,6 +11,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -93,5 +94,41 @@ class EnterpriseCeilingAuditVaultTest {
         Assertions.assertTrue(report.getDurationMs() >= 1);
 
         verify(logEntryMapper, times(1)).deleteBefore(any(LocalDateTime.class));
+    }
+
+    @Test
+    @DisplayName("测试入库级金融合规 PII 敏感数据脱敏装甲 (PiiDataMasker)")
+    void testPiiDataMasker() {
+        com.logaudit.security.PiiDataMasker masker = new com.logaudit.security.PiiDataMasker();
+
+        String raw = "Login attempt with password=SuperSecretPassword99! by user phone=13912345678, idCard=440106199505051234, bank=6222021234567890123 on file /home/app/config/secret.key";
+        String masked = masker.mask(raw);
+
+        // 验证敏感信息均被脱敏替换
+        Assertions.assertFalse(masked.contains("SuperSecretPassword99!"));
+        Assertions.assertTrue(masked.contains("[REDACTED_SECRET]"));
+        Assertions.assertFalse(masked.contains("13912345678"));
+        Assertions.assertTrue(masked.contains("139****5678"));
+        Assertions.assertFalse(masked.contains("440106199505051234"));
+        Assertions.assertTrue(masked.contains("440106********1234"));
+        Assertions.assertFalse(masked.contains("6222021234567890123"));
+        Assertions.assertTrue(masked.contains("622202********0123"));
+        Assertions.assertTrue(masked.contains("[INTERNAL_PATH]"));
+    }
+
+    @Test
+    @DisplayName("测试 ClickHouse 小时级预聚合时序直方图查询与降级")
+    void testClickHousePreAggregatedHourlyStats() {
+        com.logaudit.config.ClickHouseConfig chConfig = mock(com.logaudit.config.ClickHouseConfig.class);
+        when(chConfig.isEnabled()).thenReturn(false); // 模拟 ClickHouse 未启用触发安全降级
+
+        ClickHouseAnalyticsService analyticsService = new ClickHouseAnalyticsService(chConfig, logEntryMapper);
+        Map<String, Object> result = analyticsService.getPreAggregatedHourlyStats(12);
+
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(12, result.get("lookbackHours"));
+        Assertions.assertTrue(result.get("sourceEngine").toString().contains("Fallback"));
+        List<?> buckets = (List<?>) result.get("buckets");
+        Assertions.assertEquals(12, buckets.size());
     }
 }
