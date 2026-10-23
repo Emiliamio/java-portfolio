@@ -2,6 +2,7 @@ package com.logaudit.aspect;
 
 import com.alibaba.fastjson2.JSON;
 import com.logaudit.annotation.AuditLog;
+import com.logaudit.security.ClientIpResolver;
 import com.logaudit.service.AuditLogService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -11,6 +12,7 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -32,6 +34,10 @@ public class AuditLogAspect {
     private static final Logger log = LoggerFactory.getLogger(AuditLogAspect.class);
 
     private final AuditLogService auditLogService;
+
+    /** 可信代理链 IP 解析器（单测直接 new 本切面时可为空，回退 remoteAddr）。 */
+    @Autowired(required = false)
+    private ClientIpResolver clientIpResolver;
 
     public AuditLogAspect(AuditLogService auditLogService) {
         this.auditLogService = auditLogService;
@@ -98,16 +104,11 @@ public class AuditLogAspect {
         if (attributes == null) return "127.0.0.1";
         HttpServletRequest request = attributes.getRequest();
 
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip == null || ip.isBlank() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("X-Real-IP");
+        if (clientIpResolver != null) {
+            return clientIpResolver.resolve(request);
         }
-        if (ip == null || ip.isBlank() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getRemoteAddr();
-        }
-        if (ip != null && ip.contains(",")) {
-            ip = ip.split(",")[0].trim();
-        }
+        // 兜底：未注入解析器时只认 remoteAddr，绝不采信可伪造的代理头
+        String ip = request.getRemoteAddr();
         return ip != null ? ip : "127.0.0.1";
     }
 }

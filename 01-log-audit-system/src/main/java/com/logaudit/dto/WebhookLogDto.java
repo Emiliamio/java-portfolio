@@ -72,6 +72,43 @@ public class WebhookLogDto {
     private static final DateTimeFormatter STANDARD_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final DateTimeFormatter ISO_FORMATTER = DateTimeFormatter.ISO_DATE_TIME;
 
+    /** 外部上报字段的最大保留长度，防止超长脏数据撑爆列宽与前端渲染 */
+    private static final int MAX_FIELD_LENGTH = 128;
+
+    /** 合法严重级别白名单，非法值统一归入 INFO */
+    private static final java.util.Set<String> ALLOWED_SEVERITIES =
+            java.util.Set.of("INFO", "WARN", "ERROR", "CRITICAL", "DEBUG", "FATAL", "TRACE");
+
+    /**
+     * 清洗外部上报的可控字段：剔除 HTML 尖括号与控制字符并限制长度。
+     *
+     * webhook 是公开采集入口，username / operation 等字段会被前端原样渲染，
+     * 入库前先做字符裁剪，避免存储型 XSS 与超长脏数据（前端转义为第二道防线）。
+     */
+    private String sanitizeText(String value, int maxLength) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        if (trimmed.isEmpty()) {
+            return trimmed;
+        }
+        StringBuilder sb = new StringBuilder(trimmed.length());
+        for (int i = 0; i < trimmed.length() && sb.length() < maxLength; i++) {
+            char c = trimmed.charAt(i);
+            if (c == '<' || c == '>' || (Character.isISOControl(c) && c != '\n' && c != '\t')) {
+                continue;
+            }
+            sb.append(c);
+        }
+        return sb.toString();
+    }
+
+    /** 粗校验 IP 字面量，非法则回退到 HTTP 真实客户端 IP，避免伪造值污染审计维度 */
+    private boolean isPlausibleIp(String ip) {
+        return ip != null && ip.matches("[0-9a-fA-F:.]{2,45}");
+    }
+
     /**
      * 将 DTO 转换为系统标准实体 LogEntry，具备字段容错与智能推导能力。
      */
@@ -82,23 +119,31 @@ public class WebhookLogDto {
         entry.setTimestamp(parseTimestamp(this.timestamp));
 
         // 2. IP 地址推导（优先使用 payload 中的 IP，若无则回退到 HTTP 真实客户端 IP）
-        String resolvedIp = (this.ipAddress != null && !this.ipAddress.isBlank())
-                ? this.ipAddress.trim()
+        String reportedIp = sanitizeText(this.ipAddress, 45);
+        String resolvedIp = isPlausibleIp(reportedIp)
+                ? reportedIp
                 : (defaultClientIp != null && !defaultClientIp.isBlank() ? defaultClientIp : "127.0.0.1");
         entry.setIpAddress(resolvedIp);
 
         // 3. 用户名
-        entry.setUsername((this.username != null && !this.username.isBlank()) ? this.username.trim() : "SYSTEM");
+        String safeUsername = sanitizeText(this.username, 64);
+        entry.setUsername((safeUsername != null && !safeUsername.isBlank()) ? safeUsername : "SYSTEM");
 
-        // 4. 严重级别（统一转为大写）
-        String sev = (this.severity != null && !this.severity.isBlank()) ? this.severity.trim().toUpperCase() : "INFO";
+        // 4. 严重级别（统一转为大写，白名单外一律降级为 INFO）
+        String sev = sanitizeText(this.severity, 16);
+        sev = (sev != null && !sev.isBlank()) ? sev.toUpperCase() : "INFO";
+        if (!ALLOWED_SEVERITIES.contains(sev)) {
+            sev = "INFO";
+        }
         entry.setSeverity(sev);
 
         // 5. 操作类型
-        if (this.operation != null && !this.operation.isBlank()) {
-            entry.setOperation(this.operation.trim());
-        } else if (this.sourceFile != null && !this.sourceFile.isBlank()) {
-            entry.setOperation(this.sourceFile.trim());
+        String safeOperation = sanitizeText(this.operation, 64);
+        String safeSourceFile = sanitizeText(this.sourceFile, MAX_FIELD_LENGTH);
+        if (safeOperation != null && !safeOperation.isBlank()) {
+            entry.setOperation(safeOperation);
+        } else if (safeSourceFile != null && !safeSourceFile.isBlank()) {
+            entry.setOperation(safeSourceFile);
         } else {
             entry.setOperation("LOG_APPENDER");
         }
@@ -111,11 +156,12 @@ public class WebhookLogDto {
         }
 
         // 7. 来源标记
-        entry.setSourceFile((this.sourceFile != null && !this.sourceFile.isBlank()) ? this.sourceFile.trim() : "webhook");
+        entry.setSourceFile((safeSourceFile != null && !safeSourceFile.isBlank()) ? safeSourceFile : "webhook");
 
         // 8. 分布式链路追踪 ID
-        if (this.traceId != null && !this.traceId.isBlank()) {
-            entry.setTraceId(this.traceId.trim());
+        String safeTraceId = sanitizeText(this.traceId, 64);
+        if (safeTraceId != null && !safeTraceId.isBlank()) {
+            entry.setTraceId(safeTraceId);
         } else {
             entry.setTraceId("tr-" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 16));
         }

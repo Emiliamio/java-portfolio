@@ -65,4 +65,29 @@ class SemanticDiagnosisCacheTest {
         assertEquals(0, cache.size());
         assertEquals(0, cache.getHitCount());
     }
+
+    @Test
+    void testLruEvictionIsBounded() {
+        SemanticDiagnosisCache bounded = new SemanticDiagnosisCache(2, 60_000L);
+        bounded.put("log-a", new AnalysisResult());
+        bounded.put("log-b", new AnalysisResult());
+        bounded.put("log-c", new AnalysisResult());
+
+        assertEquals(2, bounded.size(), "容量上限必须生效，缓存不得无界增长");
+        assertEquals(1, bounded.getEvictionCount(), "超出容量应触发一次 LRU 淘汰");
+    }
+
+    @Test
+    void testExpiredEntryCountsAsMiss() throws Exception {
+        SemanticDiagnosisCache shortLived = new SemanticDiagnosisCache(10, 20L);
+        AnalysisResult result = new AnalysisResult();
+        result.setSummary("expiring");
+        shortLived.put("log-x", result);
+
+        Thread.sleep(60L);
+
+        assertNull(shortLived.get("log-x"));
+        assertEquals(1, shortLived.getMissCount());
+        assertEquals(0, shortLived.getHitCount());
+    }
 }

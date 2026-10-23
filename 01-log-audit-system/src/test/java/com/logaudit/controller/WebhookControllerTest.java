@@ -38,6 +38,9 @@ class WebhookControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private WebhookController webhookController;
+
     @MockBean
     private LogEntryService logEntryService;
 
@@ -210,5 +213,50 @@ class WebhookControllerTest {
 
         verify(kafkaLogProducer, times(1)).sendLogs(anyList());
         verify(logEntryService, never()).asyncBatchImport(anyList());
+    }
+
+    @Test
+    void testWebhookRejectsWhenSecretNotConfigured() throws Exception {
+        try {
+            webhookController.setWebhookSecretKey("");
+            Map<String, Object> logPayload = Map.of("level", "INFO", "message", "test");
+
+            mockMvc.perform(post("/api/logs/webhook")
+                            .header("X-Audit-Token", DEFAULT_TOKEN)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(logPayload)))
+                    .andExpect(status().isServiceUnavailable())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Fail-Closed")));
+        } finally {
+            webhookController.setWebhookSecretKey(DEFAULT_TOKEN);
+        }
+    }
+
+    @Test
+    void testDuplicateTraceIdIsDeduplicated() throws Exception {
+        Map<String, Object> logPayload = Map.of(
+                "level", "WARN",
+                "logger", "com.example.OrderService",
+                "message", "Payment processing retry",
+                "traceId", "trace-dedup-uuid-99999"
+        );
+
+        mockMvc.perform(post("/api/logs/webhook")
+                        .header("X-Audit-Token", DEFAULT_TOKEN)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(logPayload)))
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.accepted").value(1));
+
+        mockMvc.perform(post("/api/logs/webhook")
+                        .header("X-Audit-Token", DEFAULT_TOKEN)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(logPayload)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.deduplicated").value(true))
+                .andExpect(jsonPath("$.accepted").value(0));
     }
 }

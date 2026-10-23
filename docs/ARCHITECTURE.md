@@ -66,7 +66,8 @@ flowchart TB
 
 - **传统 XSSFWorkbook 的瓶颈**：传统的 `XSSFWorkbook` 会在 JVM 堆内存中构建一棵完整的 XML DOM 树模型。一条日志在经过 POI 的 `Row`、`Cell`、`CellStyle` 封装后，其内存开销会被放大 10~20 倍。当导出 5 万条记录时，堆内存占用可高达 1GB 以上，极易触发频繁 Full GC 乃至堆内存溢出（OOM）。
 - **SXSSFWorkbook 的滑动窗口机制**：我们在项目中采用 `new SXSSFWorkbook(100)`，在堆内存中仅保留固定 100 行的活动窗口。一旦超出 100 行，旧的行数据会被自动序列化并写入磁盘临时文件（`poi-sxssf-sheet-xml*.tmp`）。
-- **资源生命周期管理**：在 `finally` 块中严格调用 `workbook.dispose()`，该方法会主动销毁磁盘临时文件，避免长期运行导致 Linux `/tmp` 目录的磁盘或 inode 空间耗尽。
+- **必须直写响应流（关键约束）**：SXSSF 的恒定内存只在 `workbook.write(OutputStream)` 直接写入 `HttpServletResponse#getOutputStream()` 时成立。若最后一步改成 `ByteArrayOutputStream` 再 `toByteArray()` 返回 `byte[]`，整份 Excel 会重新在堆上拼装，滑动窗口的意义被完全抵消。本项目的 `/api/logs/export` 正是流式端点，旧的 `byte[] exportLogs` 已标记 `@Deprecated`，仅留给历史单元测试。
+- **资源生命周期管理**：在 `finally` 块中严格调用 `workbook.dispose()`，该方法会主动销毁磁盘临时文件，避免长期运行导致 Linux `/tmp` 目录的磁盘或 inode 空间耗尽。客户端中途取消下载会抛 `IOException`，此处只记录 warn 并优雅返回，不向上抛异常。
 
 ---
 

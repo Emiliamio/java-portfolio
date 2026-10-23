@@ -14,6 +14,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,6 +30,7 @@ import java.util.Map;
 /**
  * 认证接口 — 登录 / 登出 / 当前用户信息。
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -39,11 +42,14 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final RedisRateLimiter redisRateLimiter;
     private final TokenBlacklistService tokenBlacklistService;
+    private final com.logaudit.security.ClientIpResolver clientIpResolver;
+
+    @Value("${app.jwt.cookie-secure:false}")
+    private boolean secureCookie;
 
     @PostMapping("/login")
     @Operation(summary = "用户登录", description = "校验账号密码、执行 Redis 防爆破频控检查并写入 httpOnly Cookie")
     public ResponseEntity<Map<String, Object>> login(
-
             @Valid @RequestBody LoginRequest request,
             HttpServletRequest httpRequest,
             HttpServletResponse response) {
@@ -84,9 +90,11 @@ public class AuthController {
         cookie.setHttpOnly(true);
         cookie.setPath("/");
         cookie.setMaxAge(86400); // 24h
-        cookie.setSecure(false); // 本地 HTTP；生产 HTTPS 时置 true
+        cookie.setSecure(secureCookie); // 配置化注入：生产环境启用 HTTPS 时置 true
         cookie.setAttribute("SameSite", "Strict");
         response.addCookie(cookie);
+
+        log.info("User {} login successful from IP {}, secureCookie={}", user.getUsername(), clientIp, secureCookie);
 
         Map<String, Object> body = new HashMap<>();
         body.put("success", true);
@@ -126,12 +134,14 @@ public class AuthController {
         return null;
     }
 
+    /**
+     * 解析客户端真实 IP —— 统一走可信代理链解析器。
+     *
+     * 旧实现无条件采信 X-Forwarded-For 首段，攻击者改个头即可绕过登录防爆破限流，
+     * 或伪造受害者 IP 触发自动封禁。现在仅在直连方为可信代理时才采信代理头。
+     */
     private String clientIp(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
-        }
-        return request.getRemoteAddr();
+        return clientIpResolver.resolve(request);
     }
 
     /** 返回当前登录用户信息（前端刷新时恢复状态用）。 */

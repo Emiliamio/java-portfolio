@@ -84,4 +84,68 @@ class SigmaRuleValidatorTest {
         SigmaRuleValidator.ValidationResult result = validator.validate("");
         assertFalse(result.isValid());
     }
+
+    @Test
+    void testMalformedYamlIsRejectedByRealParser() {
+        String brokenYaml = """
+                title: [unclosed
+                logsource:
+                    category: webserver
+                """;
+
+        SigmaRuleValidator.ValidationResult result = validator.validate(brokenYaml);
+
+        assertFalse(result.isValid());
+        assertTrue(result.getErrors().get(0).contains("YAML syntax error"));
+    }
+
+    @Test
+    void testLogsourceMustBeMappingWithKnownKey() {
+        String wrongShape = """
+                title: Rule with scalar logsource
+                logsource: webserver
+                detection:
+                    condition: selection
+                """;
+
+        SigmaRuleValidator.ValidationResult result = validator.validate(wrongShape);
+
+        assertFalse(result.isValid());
+        assertTrue(result.getErrors().stream().anyMatch(e -> e.contains("'logsource' must be a YAML mapping")));
+    }
+
+    @Test
+    void testDetectionWithoutConditionIsRejected() {
+        String noCondition = """
+                title: Rule without condition
+                logsource:
+                    category: webserver
+                detection:
+                    selection:
+                        detail|contains: "../"
+                level: high
+                """;
+
+        SigmaRuleValidator.ValidationResult result = validator.validate(noCondition);
+
+        assertFalse(result.isValid());
+        assertTrue(result.getErrors().stream().anyMatch(e -> e.contains("condition")));
+    }
+
+    @Test
+    void testInvalidSeverityLevelIsRejected() {
+        String badLevel = """
+                title: Rule with bad level
+                logsource:
+                    product: spring_boot
+                detection:
+                    condition: selection
+                level: catastrophic
+                """;
+
+        SigmaRuleValidator.ValidationResult result = validator.validate(badLevel);
+
+        assertFalse(result.isValid());
+        assertTrue(result.getErrors().stream().anyMatch(e -> e.contains("Invalid severity level")));
+    }
 }

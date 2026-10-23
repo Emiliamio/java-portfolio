@@ -1,47 +1,52 @@
+# ============================================================
+# AuditVault Backend Configuration Baseline
+# Enterprise Audit Query & Streaming Platform
+# ============================================================
+
 server:
   port: 8080
+  shutdown: graceful
 
 spring:
-  # 数据源配置
+  application:
+    name: log-audit-system
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+
+  # 数据库连接池配置 (HikariCP)
   datasource:
-    url: jdbc:mysql://localhost:3306/log_audit?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://localhost:3306/log_audit?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
     username: root
     password: ${MYSQL_ROOT_PASSWORD:root123456}
     driver-class-name: com.mysql.cj.jdbc.Driver
-    # 连接池配置（HikariCP，Spring Boot 默认）
     hikari:
+      pool-name: AuditVaultHikariPool
+      maximum-pool-size: 15
       minimum-idle: 5
-      maximum-pool-size: 20
-      idle-timeout: 30000
-      max-lifetime: 1800000
       connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
 
-  # Flyway 数据库版本化迁移
+  # Redis 缓存与分布式限流配置
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 3000ms
+
+  # MyBatis 配置
+  mybatis:
+    mapper-locations: classpath:mapper/*.xml
+    type-aliases-package: com.logaudit.entity
+    configuration:
+      map-underscore-to-camel-case: true
+      log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+
+  # Flyway 数据库版本化增量迁移引擎
   flyway:
     enabled: ${FLYWAY_ENABLED:false}
     baseline-on-migrate: true
-    baseline-version: 0
     locations: classpath:db/migration
-
-  # Redis 配置
-  data:
-    redis:
-      host: localhost
-      port: 6379
-      timeout: 6000ms
-      lettuce:
-        pool:
-          max-active: 10
-          max-idle: 5
-          min-idle: 2
-
-# MyBatis 配置
-mybatis:
-  mapper-locations: classpath:mapper/*.xml
-  type-aliases-package: com.logaudit.entity
-  configuration:
-    map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 # 线程池配置
 app:
@@ -50,10 +55,25 @@ app:
     max-pool-size: 8
     queue-capacity: 100
     keep-alive-seconds: 60
-  # JWT 配置（生产环境务必通过环境变量 JWT_SECRET 覆盖）
+  # JWT 配置（生产环境务必通过环境变量 JWT_SECRET 覆盖，HTTPS 下启用 cookie-secure）
   jwt:
     secret: ${JWT_SECRET:auditvault-demo-secret-key-change-me-in-production-32bytes-min}
     expiration-ms: 86400000
+    issuer: ${JWT_ISSUER:auditvault}
+    audience: ${JWT_AUDIENCE:auditvault-web}
+    cookie-secure: ${JWT_COOKIE_SECURE:false} # 生产环境 HTTPS 部署必须置为 true
+  # OpenAPI / Swagger 接口文档暴露策略
+  api-docs:
+    public: ${API_DOCS_PUBLIC:false} # 生产环境默认 false，仅 ADMIN 角色可访问
+  # 安全加固：可信反向代理网段（逗号分隔，支持精确 IP 与 CIDR）
+  # 仅当直连方落在这些网段内时才采信 X-Forwarded-For / X-Real-IP，否则一律使用 remoteAddr。
+  # 留空 = 不信任任何代理头（最安全）；若部署在 Nginx/网关之后，请填入网关网段，如 10.0.0.0/8。
+  security:
+    trusted-proxies: ${TRUSTED_PROXIES:}
+  # WebSocket 实时威胁告警通道
+  # 留空 = 仅允许同源连接（推荐）；跨域联调时填来源模式，如 http://localhost:3000
+  websocket:
+    allowed-origins: ${WS_ALLOWED_ORIGINS:}
   # Webhook 日志采集配置
   webhook:
     secret-key: ${WEBHOOK_SECRET_KEY:auditvault-webhook-default-secret-token-2026}
@@ -79,9 +99,9 @@ management:
         include: health,info,metrics,prometheus
   endpoint:
     health:
-      show-details: when_authorized
+      show-details: when-authorized
     prometheus:
       enabled: true
   metrics:
     tags:
-      application: auditvault-backend
+      application: auditvault-backend

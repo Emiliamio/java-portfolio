@@ -23,6 +23,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import jakarta.annotation.PreDestroy;
 
 /**
  * LLM 服务 — 调用大模型 API 分析日志内容。
@@ -37,6 +40,7 @@ public class LlmService {
 
     private final AiAnalysisMapper analysisMapper;
     private final com.logai.security.PiiSanitizer piiSanitizer;
+    private final String apiKey;
     private final HttpClient httpClient;
     private final String apiUrl;
     private final String apiModel;
@@ -45,9 +49,22 @@ public class LlmService {
     private final String ollamaApiModel;
     private final int ollamaTimeoutSeconds;
 
+    /**
+     * SSE 流式分析专用线程池。
+     *
+     * 原实现用 CompletableFuture.runAsync 默认落到 ForkJoin 公共池，而流式任务内部是阻塞 HTTP 调用
+     * 加模拟打字机的 Thread.sleep，会直接占满公共池并拖垮全站并行度，因此隔离出独立池。
+     */
+    private final ExecutorService streamExecutor = Executors.newFixedThreadPool(8, runnable -> {
+        Thread thread = new Thread(runnable, "llm-stream-worker");
+        thread.setDaemon(true);
+        return thread;
+    });
+
     public LlmService(
             AiAnalysisMapper analysisMapper,
             com.logai.security.PiiSanitizer piiSanitizer,
+            @Value("${ai.api.key:}") String configuredApiKey,
             @Value("${ai.api.url}") String apiUrl,
             @Value("${ai.api.model}") String apiModel,
             @Value("${ai.api.timeout-seconds:60}") int timeoutSeconds,
@@ -57,6 +74,7 @@ public class LlmService {
     ) {
         this.analysisMapper = analysisMapper;
         this.piiSanitizer = piiSanitizer != null ? piiSanitizer : new com.logai.security.PiiSanitizer();
+        this.apiKey = (configuredApiKey != null && !configuredApiKey.isBlank()) ? configuredApiKey : System.getenv("AI_API_KEY");
         this.apiUrl = apiUrl;
         this.apiModel = apiModel;
         this.timeoutSeconds = timeoutSeconds;
@@ -77,7 +95,7 @@ public class LlmService {
             String ollamaApiModel,
             int ollamaTimeoutSeconds
     ) {
-        this(analysisMapper, new com.logai.security.PiiSanitizer(), apiUrl, apiModel, timeoutSeconds, ollamaApiUrl, ollamaApiModel, ollamaTimeoutSeconds);
+        this(analysisMapper, new com.logai.security.PiiSanitizer(), null, apiUrl, apiModel, timeoutSeconds, ollamaApiUrl, ollamaApiModel, ollamaTimeoutSeconds);
     }
 
     public boolean checkOllamaUp() {
@@ -96,7 +114,7 @@ public class LlmService {
 
     public Map<String, Object> getProviderStatus() {
         Map<String, Object> status = new HashMap<>();
-        String apiKey = System.getenv("AI_API_KEY");
+        String apiKey = this.apiKey;
         boolean cloudAvailable = apiKey != null && !apiKey.isBlank();
         boolean ollamaUp = checkOllamaUp();
 
@@ -143,7 +161,7 @@ public class LlmService {
         CompletableFuture.runAsync(() -> {
             long startTime = System.currentTimeMillis();
             String reqProvider = provider != null ? provider.toLowerCase() : "auto";
-            String apiKey = System.getenv("AI_API_KEY");
+            String apiKey = this.apiKey;
 
             if ("rule".equals(reqProvider)) {
                 log.info("Explicit rule provider requested, using simulated typewriter stream.");
@@ -241,7 +259,13 @@ public class LlmService {
                 log.error("Stream initialization failed, falling back", e);
                 simulateStreamFallback(logContent, username, startTime, emitter);
             }
-        });
+        }, streamExecutor);
+    }
+
+    /** 容器关闭时回收流式线程池，避免线程泄漏。 */
+    @PreDestroy
+    public void shutdownExecutor() {
+        streamExecutor.shutdownNow();
     }
 
     private boolean streamOllama(String logContent, String username, String model, long startTime, SseEmitter emitter) {
@@ -397,7 +421,7 @@ public class LlmService {
     public AnalysisResult analyze(String logContent, String username) {
         long startTime = System.currentTimeMillis();
 
-        String apiKey = System.getenv("AI_API_KEY");
+        String apiKey = this.apiKey;
         if (apiKey == null || apiKey.isBlank()) {
             log.warn("AI_API_KEY not set — falling back to keyword-based rule engine.");
             // 优雅降级：使用关键词规则引擎，不抛异常

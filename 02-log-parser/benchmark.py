@@ -47,12 +47,17 @@ def run_benchmark():
         start_time = time.time()
         df = parse_file(temp_log_path)
         cost_time = time.time() - start_time
-        qps = lines_count / cost_time if cost_time > 0 else 0
+        # 口径说明：吞吐按「实际物理行数/秒」统计（含多行堆栈），
+        # 同时给出「解析出的日志条目/秒」，避免把循环次数当成行数导致数字虚高。
+        physical_lines = raw_data.count("\n")
+        lines_per_sec = physical_lines / cost_time if cost_time > 0 else 0
+        entries_per_sec = len(df) / cost_time if cost_time > 0 else 0
 
         print("-" * 60)
         print("Parsing completed successfully!")
         print(f"Elapsed Time: {cost_time:.3f} s")
-        print(f"Throughput: {qps:,.0f} lines/sec (QPS)")
+        print(f"Physical lines: {physical_lines:,}")
+        print(f"Throughput: {lines_per_sec:,.0f} lines/sec | {entries_per_sec:,.0f} entries/sec")
         print(f"Valid log entries parsed: {len(df):,}")
         print(f"Identified error records: {len(df[df['severity'] == 'ERROR']):,}")
         print("-" * 60)

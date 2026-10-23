@@ -1,4 +1,4 @@
-﻿name: CI/CD Multi-Matrix Automated Pipeline
+name: CI/CD Multi-Matrix Automated Pipeline
 
 on:
   push:
@@ -26,7 +26,7 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Run AuditVault 61 Unit & Integration Tests
+      - name: Run AuditVault test suite
         working-directory: 01-log-audit-system
         run: mvn clean test --batch-mode
 
@@ -54,7 +54,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt pytest pyarrow duckdb
 
-      - name: Run LogScope 58 Pytest Test Suite
+      - name: Run LogScope test suite
         working-directory: 02-log-parser
         run: python -m pytest -v
 
@@ -77,7 +77,7 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Run Nexus AI 24 Unit Tests
+      - name: Run Nexus AI test suite
         working-directory: 03-log-ai-assistant
         run: mvn clean test --batch-mode
 
@@ -97,7 +97,7 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Run Sample Service 3 Unit Tests
+      - name: Run Sample Service test suite
         working-directory: 04-sample-order-service
         run: mvn clean test --batch-mode
 
@@ -128,7 +128,13 @@ jobs:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      - name: Run Security Audit
+      - name: Run Security Audit (fails on CRITICAL/HIGH)
         run: |
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
-          trivy fs --severity CRITICAL,HIGH --exit-code 0 . || echo "Security SAST passed with 0 critical blockers."
+          trivy fs --severity CRITICAL,HIGH --ignore-unfixed --exit-code 1 .
+
+      - name: Fail if committed secrets detected
+        run: |
+          curl -sfL https://github.com/gitleaks/gitleaks/releases/download/v8.18.2/gitleaks_8.18.2_linux_x64.tar.gz \
+            | tar -xz -C /usr/local/bin gitleaks
+          gitleaks detect --source . --verbose --redact --exit-code 1

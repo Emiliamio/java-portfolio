@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -135,11 +136,19 @@ class LogEntryControllerTest {
     @WithMockUser(username = "admin", roles = {"ADMIN"})
     void testAdminCanExportLogs() throws Exception {
         byte[] dummyExcel = new byte[]{1, 2, 3, 4};
-        when(logEntryService.exportLogs(any(), any(), any(), any(), any(), any())).thenReturn(dummyExcel);
+        when(logEntryService.countForExport(any(), any(), any(), any(), any(), any())).thenReturn(1L);
+        // 流式导出：把内容直接写进 controller 传入的响应输出流（参数下标 7）
+        doAnswer(invocation -> {
+            java.io.OutputStream out = invocation.getArgument(7);
+            out.write(dummyExcel);
+            return null;
+        }).when(logEntryService).exportLogsStreaming(
+                any(), any(), any(), any(), any(), any(), anyLong(), any());
 
         mockMvc.perform(get("/api/logs/export"))
                 .andExpect(status().isOk())
-                .andExpect(header().string("Content-Disposition", "attachment; filename=logs.xlsx"))
+                .andExpect(header().string("X-Total-Count", "1"))
+                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("filename*=UTF-8''")))
                 .andExpect(content().bytes(dummyExcel));
     }
 

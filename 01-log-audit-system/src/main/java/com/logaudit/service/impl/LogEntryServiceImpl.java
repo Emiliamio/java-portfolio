@@ -13,6 +13,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -108,28 +110,35 @@ public class LogEntryServiceImpl implements LogEntryService {
     }
 
     @Override
-    public byte[] exportLogs(LocalDateTime startTime, LocalDateTime endTime,
-                             String ipAddress, String operation, String severity, String keyword) {
-        long total = logEntryMapper.countByConditions(startTime, endTime, ipAddress, operation, severity, keyword);
+    public long countForExport(LocalDateTime startTime, LocalDateTime endTime,
+                               String ipAddress, String operation, String severity, String keyword) {
+        return logEntryMapper.countByConditions(startTime, endTime, ipAddress, operation, severity, keyword);
+    }
+
+    @Override
+    public void exportLogsStreaming(LocalDateTime startTime, LocalDateTime endTime,
+                                    String ipAddress, String operation, String severity, String keyword,
+                                    long total, OutputStream outputStream) {
         int fetchSize = (int) Math.min(total, MAX_EXPORT_LIMIT);
+        if (total > MAX_EXPORT_LIMIT) {
+            log.warn("导出条数 {} 超过上限 {}，本次仅导出前 {} 条", total, MAX_EXPORT_LIMIT, fetchSize);
+        }
 
         List<LogEntry> records = logEntryMapper.findByConditions(
                 startTime, endTime, ipAddress, operation, severity, keyword, 0, fetchSize);
 
-        // 使用 SXSSFWorkbook 流式写入（内存保留 100 行窗口，其余溢出到临时文件），彻底防止 OOM
+        // SXSSFWorkbook 内存保留 100 行窗口，其余溢出到压缩临时文件，最后直接写入 HTTP 响应流
         SXSSFWorkbook workbook = new SXSSFWorkbook(100);
-        try (workbook; ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+        try {
             workbook.setCompressTempFiles(true);
             Sheet sheet = workbook.createSheet("日志记录");
 
-            // 表头
             Row header = sheet.createRow(0);
             String[] columns = {"ID", "TraceId", "时间", "IP地址", "用户名", "操作类型", "操作结果", "详情", "严重程度", "来源文件"};
             for (int i = 0; i < columns.length; i++) {
                 header.createCell(i).setCellValue(columns[i]);
             }
 
-            // 数据行
             int rowNum = 1;
             for (LogEntry logEntry : records) {
                 Row row = sheet.createRow(rowNum++);
@@ -145,13 +154,33 @@ public class LogEntryServiceImpl implements LogEntryService {
                 row.createCell(9).setCellValue(logEntry.getSourceFile() != null ? logEntry.getSourceFile() : "");
             }
 
-            workbook.write(out);
-            return out.toByteArray();
+            // 关键改造点：直接写调用方输出流，全程不构造 byte[]，内存占用与数据量无关
+            workbook.write(outputStream);
+            outputStream.flush();
+            log.info("流式导出完成，实际写入 {} 条（命中总条数 {}）", rowNum - 1, total);
+        } catch (IOException e) {
+            // 客户端取消下载 / 断网属正常场景，不向上抛异常污染全局错误处理
+            log.warn("客户端连接已断开，导出提前终止：{}", e.getMessage());
         } catch (Exception e) {
             log.error("导出Excel失败", e);
             throw new RuntimeException("导出Excel失败", e);
         } finally {
             workbook.dispose(); // 清理临时磁盘文件
+            try {
+                workbook.close();
+            } catch (IOException ignored) {
+                // 资源关闭异常无需上报
+            }
         }
+    }
+
+    @Override
+    @Deprecated
+    public byte[] exportLogs(LocalDateTime startTime, LocalDateTime endTime,
+                             String ipAddress, String operation, String severity, String keyword) {
+        long total = countForExport(startTime, endTime, ipAddress, operation, severity, keyword);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        exportLogsStreaming(startTime, endTime, ipAddress, operation, severity, keyword, total, out);
+        return out.toByteArray();
     }
 }

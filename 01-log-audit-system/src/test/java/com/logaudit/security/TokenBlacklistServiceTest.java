@@ -63,4 +63,26 @@ class TokenBlacklistServiceTest {
 
         assertFalse(tokenBlacklistService.isBlacklisted("any.token"));
     }
+
+    @Test
+    void testLocalBlacklistSurvivesRedisOutage() {
+        lenient().when(redisTemplate.hasKey(anyString())).thenThrow(new RuntimeException("Redis connection refused"));
+
+        String token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.blacklisted.payload";
+        tokenBlacklistService.blacklistToken(token, 120000);
+
+        // When Redis throws, local write-through map guarantees token is still detected as blacklisted
+        assertTrue(tokenBlacklistService.isBlacklisted(token));
+    }
+
+    @Test
+    void testBlacklistKeyIsHashedNotRawToken() {
+        String rawToken = "eyJhbGciOiJIUzI1NiJ9.sensitive.token";
+        tokenBlacklistService.blacklistToken(rawToken, 60000);
+
+        // The in-memory map must never hold plaintext JWT tokens
+        assertFalse(tokenBlacklistService.getLocalBlacklist().containsKey(rawToken));
+        String expectedHash = tokenBlacklistService.hashToken(rawToken);
+        assertTrue(tokenBlacklistService.getLocalBlacklist().containsKey(expectedHash));
+    }
 }

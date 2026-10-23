@@ -1,0 +1,20 @@
+# gitleaks 配置 —— 仅放行「演示默认值」，真实密钥一律不进仓库。
+#
+# 放行原因：本项目是可直接 docker compose up 的演示作品集，application.yml /
+# application.properties 里的 JWT_SECRET、webhook token、MySQL 口令均为占位默认值，
+# 生产部署必须通过环境变量覆盖（见 README 与 .env.example）。
+# 若在这些文件中写入真实密钥，请改为环境变量注入，而不是加白名单。
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Demo default secrets, overridden by env vars in production"
+paths = [
+  '''01-log-audit-system/src/main/resources/application\.yml''',
+  '''03-log-ai-assistant/src/main/resources/application\.properties''',
+  '''04-sample-order-service/src/main/resources/application\.yml''',
+  '''\.env\.example''',
+  '''demo\.sh''',
+  '''docker-compose.*\.yml''',
+]

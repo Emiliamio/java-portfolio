@@ -76,7 +76,22 @@ class RedisRateLimiterTest {
     void testFallbackWhenRedisException() {
         when(valueOperations.get(anyString())).thenThrow(new RuntimeException("Redis connection lost"));
 
-        // Should gracefully fallback to allowed (Fail-Open)
+        // With zero prior failures, should fallback to allowed via clean local window
         assertTrue(rateLimiter.isAllowed("127.0.0.1"));
+    }
+
+    @Test
+    void testRedisDownFallsBackToLocalCounter() {
+        when(valueOperations.get(anyString())).thenThrow(new RuntimeException("Redis connection lost"));
+        when(valueOperations.increment(anyString())).thenThrow(new RuntimeException("Redis connection lost"));
+
+        String ip = "192.168.1.100";
+        for (int i = 0; i < 4; i++) {
+            rateLimiter.recordFailure(ip);
+            assertTrue(rateLimiter.isAllowed(ip), "Should allow attempts up to 4");
+        }
+        rateLimiter.recordFailure(ip); // 5th failure reaches MAX_FAILED_ATTEMPTS
+        assertFalse(rateLimiter.isAllowed(ip), "Should block IP on 5th failure when Redis is down");
+        assertTrue(rateLimiter.getRemainingLockSeconds(ip) > 0);
     }
 }

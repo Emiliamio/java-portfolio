@@ -228,7 +228,7 @@ function renderTableView(records) {
     const isSelected = state.activeDrawerLog && state.activeDrawerLog.id === item.id;
 
     return `
-      <tr class="${isSelected ? 'selected' : ''}" onclick="openDetailDrawer(${item.id})">
+      <tr class="${isSelected ? 'selected' : ''}" data-log-id="${Number(item.id)}">
         <td class="col-id">#${item.id}</td>
         <td class="col-time">${formatTimestamp(item.timestamp)}</td>
         <td class="col-ip">${escHtml(item.ipAddress || '—')}</td>
@@ -238,7 +238,7 @@ function renderTableView(records) {
         <td>${sevBadge}</td>
         <td class="col-message" title="${escHtml(item.detail || '')}">${escHtml(truncateText(item.detail || item.sourceFile || '—', 80))}</td>
         <td style="text-align:right;">
-          <button class="btn btn-secondary" style="height:26px;padding:0 8px;font-size:11.5px;" onclick="event.stopPropagation(); openDetailDrawer(${item.id})">
+          <button class="btn btn-secondary" style="height:26px;padding:0 8px;font-size:11.5px;" data-stop-propagation="true" data-log-id="${Number(item.id)}">
             详情 ↗
           </button>
         </td>
@@ -267,14 +267,19 @@ function renderStreamView(records) {
       debug: 'var(--text-muted)'
     };
     const color = colorMap[sevClass] || 'var(--text-secondary)';
+    // 严重级别走白名单映射：severity 来自外部 webhook，绝不允许直接回显进 HTML
+    const sevLabelMap = {
+      critical: 'CRITICAL', error: 'ERROR', warn: 'WARN', debug: 'DEBUG', info: 'INFO'
+    };
+    const sevLabel = sevLabelMap[sevClass] || 'INFO';
 
     return `
-      <div class="stream-line" onclick="openDetailDrawer(${item.id})">
+      <div class="stream-line" data-log-id="${Number(item.id)}">
         <span class="stream-time">[${formatTimestamp(item.timestamp)}]</span>
-        <span class="stream-level" style="color:${color}; font-weight:700;">[${item.severity || 'INFO'}]</span>
-        <span style="color:var(--accent-cyan);">${item.ipAddress || '0.0.0.0'}</span>
-        <span style="color:var(--text-tertiary);">&lt;${item.username || 'SYS'}&gt;</span>
-        <span style="color:var(--accent-amber);">${item.operation || 'OP'}</span>
+        <span class="stream-level" style="color:${color}; font-weight:700;">[${sevLabel}]</span>
+        <span style="color:var(--accent-cyan);">${escHtml(item.ipAddress || '0.0.0.0')}</span>
+        <span style="color:var(--text-tertiary);">&lt;${escHtml(item.username || 'SYS')}&gt;</span>
+        <span style="color:var(--accent-amber);">${escHtml(item.operation || 'OP')}</span>
         <span class="stream-body">${escHtml(item.detail || '')}</span>
       </div>
     `;
@@ -324,7 +329,7 @@ function renderPatternsView(records) {
             出现 ${p.count} 次 (${Math.round(p.count / records.length * 100)}%)
           </span>
         </div>
-        <button class="btn btn-secondary" style="height:26px;padding:0 8px;font-size:11.5px;" onclick="openDetailDrawer(${p.sampleItem.id})">
+        <button class="btn btn-secondary" style="height:26px;padding:0 8px;font-size:11.5px;" data-log-id="${Number(p.sampleItem.id)}">
           查看样本 ↗
         </button>
       </div>
@@ -446,7 +451,7 @@ function updateFacetAggregations(records, total) {
     opList.innerHTML = Object.entries(opCounts).map(([op, cnt]) => {
       const isSelected = state.selectedFacets.operation.has(op);
       return `
-        <li class="facet-item ${isSelected ? 'selected' : ''}" data-facet="operation" data-val="${escHtml(op)}" onclick="toggleFacet('operation', '${escHtml(op)}', this)">
+        <li class="facet-item ${isSelected ? 'selected' : ''}" data-facet="operation" data-val="${escHtml(op)}">
           <div class="facet-item-left">
             <span class="facet-checkbox"></span>
             <span>${escHtml(op)}</span>
@@ -464,7 +469,7 @@ function updateFacetAggregations(records, total) {
     ipList.innerHTML = topIps.map(([ip, cnt]) => {
       const isSelected = state.selectedFacets.ip.has(ip);
       return `
-        <li class="facet-item ${isSelected ? 'selected' : ''}" data-facet="ip" data-val="${escHtml(ip)}" onclick="toggleFacet('ip', '${escHtml(ip)}', this)">
+        <li class="facet-item ${isSelected ? 'selected' : ''}" data-facet="ip" data-val="${escHtml(ip)}">
           <div class="facet-item-left">
             <span class="facet-checkbox"></span>
             <span style="font-family:var(--font-mono);font-size:12px;">${escHtml(ip)}</span>
@@ -540,15 +545,15 @@ function renderPagination(total, page, pageSize) {
   info.innerText = `显示 ${(page - 1) * pageSize + 1} - ${Math.min(page * pageSize, total)} 条 / 共 ${total} 条事件`;
 
   let html = `
-    <button class="pgn-btn" ${page <= 1 ? 'disabled' : ''} onclick="loadData(${page - 1})">❮</button>
+    <button class="pgn-btn" ${page <= 1 ? 'disabled' : ''} data-page="${Number(page - 1)}">❮</button>
   `;
 
   for (let p = Math.max(1, page - 2); p <= Math.min(totalPages, page + 2); p++) {
-    html += `<button class="pgn-btn ${p === page ? 'active' : ''}" onclick="loadData(${p})">${p}</button>`;
+    html += `<button class="pgn-btn ${p === page ? 'active' : ''}" data-page="${Number(p)}">${p}</button>`;
   }
 
   html += `
-    <button class="pgn-btn" ${page >= totalPages ? 'disabled' : ''} onclick="loadData(${page + 1})">❯</button>
+    <button class="pgn-btn" ${page >= totalPages ? 'disabled' : ''} data-page="${Number(page + 1)}">❯</button>
   `;
 
   btns.innerHTML = html;
@@ -636,11 +641,11 @@ function switchDrawerTab(tab) {
       <div style="font-size:12.5px;color:var(--text-tertiary);margin-bottom:8px;">还原事件前后上下文调用链 (±5条):</div>
       <div class="surrounding-list">
         ${contextList.map(c => `
-          <div class="surrounding-item ${c.id === log.id ? 'target' : ''}" onclick="openDetailDrawer(${c.id})">
-            <span style="color:var(--text-muted);">[#${c.id}]</span>
+          <div class="surrounding-item ${c.id === log.id ? 'target' : ''}" data-log-id="${Number(c.id)}">
+            <span style="color:var(--text-muted);">[#${Number(c.id)}]</span>
             <span style="color:var(--text-tertiary);">${formatTimestamp(c.timestamp)}</span>
             ${formatSevBadge(c.severity)}
-            <span style="color:var(--accent-cyan);">${c.ipAddress || '0.0.0.0'}</span>
+            <span style="color:var(--accent-cyan);">${escHtml(c.ipAddress || '0.0.0.0')}</span>
             <span style="color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(c.detail || c.operation)}</span>
           </div>
         `).join('')}
@@ -892,6 +897,35 @@ function showThreatModal(alert) {
 }
 
 // ── DOM Ready Initialization ────────────────────────────────
+// 全局事件委托（消除所有内联 onclick 事件，支持严格 CSP 内容安全策略）
+document.addEventListener('click', (e) => {
+  const stopProp = e.target.closest('[data-stop-propagation]');
+  if (stopProp) {
+    e.stopPropagation();
+  }
+  const facet = e.target.closest('.facet-item[data-facet]');
+  if (facet) {
+    toggleFacet(facet.dataset.facet, facet.dataset.val, facet);
+    return;
+  }
+  const pageBtn = e.target.closest('[data-page]');
+  if (pageBtn && !pageBtn.disabled) {
+    const pageNum = Number(pageBtn.dataset.page);
+    if (!isNaN(pageNum) && pageNum > 0) {
+      loadData(pageNum);
+    }
+    return;
+  }
+  const row = e.target.closest('[data-log-id]');
+  if (row) {
+    const logId = Number(row.dataset.logId);
+    if (!isNaN(logId)) {
+      openDetailDrawer(logId);
+    }
+    return;
+  }
+});
+
 document.addEventListener('DOMContentLoaded', async () => {
   const authed = await requireAuth();
   if (authed) {
