@@ -138,3 +138,64 @@ jobs:
           curl -sfL https://github.com/gitleaks/gitleaks/releases/download/v8.18.2/gitleaks_8.18.2_linux_x64.tar.gz \
             | tar -xz -C /usr/local/bin gitleaks
           gitleaks detect --source . --verbose --redact --exit-code 1
+
+  # ── 7. Compose 端到端冒烟：真正把服务拉起来打请求 ──
+  # 单元测试无法覆盖「配置缩进错误导致 Mapper 不绑定」「Flyway 误启用」「healthcheck 打鉴权端点」
+  # 这类启动即崩的问题，只有真实启动一次才能拦住。
+  smoke-e2e:
+    name: Compose End-to-End Smoke (startup gate)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build runnable jars
+        run: |
+          (cd 01-log-audit-system && mvn -B package -DskipTests -q)
+          (cd 03-log-ai-assistant && mvn -B package -DskipTests -q)
+
+      - name: Start the full stack
+        run: docker compose up -d --build
+
+      - name: Wait for AuditVault to become healthy
+        run: |
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:8080/actuator/health | grep -q '"status":"UP"'; then
+              echo "AuditVault is UP after ${i} polls"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "AuditVault did not become healthy in time"
+          docker compose logs audit-backend | tail -n 100
+          exit 1
+
+      - name: Assert login and list endpoints
+        run: |
+          CODE=$(curl -s -o /tmp/login.json -w '%{http_code}' \
+            -X POST http://localhost:8080/api/auth/login \
+            -H 'Content-Type: application/json' \
+            -d '{"username":"admin","password":"admin123"}')
+          cat /tmp/login.json
+          test "$CODE" = "200"
+          grep -q '"success":true' /tmp/login.json
+
+          curl -sf -c /tmp/cookies.txt -X POST http://localhost:8080/api/auth/login \
+            -H 'Content-Type: application/json' \
+            -d '{"username":"admin","password":"admin123"}' > /dev/null
+          curl -sf -b /tmp/cookies.txt 'http://localhost:8080/api/logs?page=1&pageSize=3' | grep -q '"total"'
+
+      - name: Assert Nexus AI is reachable
+        run: curl -sf http://localhost:8081/ > /dev/null && echo "Nexus AI OK"
+
+      - name: Dump container status on failure
+        if: failure()
+        run: docker compose ps && docker compose logs --tail 100
