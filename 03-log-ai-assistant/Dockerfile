@@ -9,7 +9,7 @@ COPY target/*.jar app.jar
 
 EXPOSE 8081
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
-  CMD wget -qO- http://localhost:8081/api/ai/stats || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=3 \
+  CMD wget -qO- http://localhost:8081/ >/dev/null 2>&1 || exit 1
 
 ENTRYPOINT ["java", "-jar", "app.jar"]

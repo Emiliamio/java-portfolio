@@ -42,6 +42,38 @@ check_deps() {
   echo -e "${GREEN}✓${NC} Docker 已就绪"
 }
 
+# ── 端口预检：Redis 宿主端口可自动避让，业务端口冲突则明确报错 ──
+port_in_use() {
+  local port="$1"
+  if command -v ss &>/dev/null; then
+    ss -ltn 2>/dev/null | grep -qE "[:.]${port}[[:space:]]" && return 0
+  elif command -v netstat &>/dev/null; then
+    netstat -an 2>/dev/null | grep -qE "[:.]${port}[[:space:]].*LISTEN" && return 0
+  fi
+  return 1
+}
+
+check_ports() {
+  # Redis 仅作内部缓存，宿主端口冲突时自动降级，不阻塞一键启动
+  if [ -z "${REDIS_HOST_PORT:-}" ] && port_in_use 6379; then
+    export REDIS_HOST_PORT=6380
+    echo -e "${YELLOW}⚠ 宿主 6379 已被占用（可能是其他项目的 Redis），本演示自动改用 6380${NC}"
+  fi
+
+  # 业务端口与 README / 前端硬编码的 URL 绑定，不自动改，给出明确指引
+  local blockers=()
+  port_in_use 8080 && blockers+=("8080 (AuditVault)")
+  port_in_use 8081 && blockers+=("8081 (Nexus AI)")
+
+  if [ ${#blockers[@]} -gt 0 ]; then
+    echo -e "${RED}[错误] 以下端口已被占用，无法启动：${blockers[*]}${NC}"
+    echo "  请先释放端口后重试，例如："
+    echo "    docker ps --format '{{.Names}}: {{.Ports}}' | grep 8080"
+    echo "    bash demo.sh stop   # 或手动停止占用该端口的服务"
+    exit 1
+  fi
+}
+
 # ── 检查 API Key ────────────────────────────────
 check_api_key() {
   if [ -f .env ]; then
@@ -67,6 +99,7 @@ check_api_key() {
 
 # ── 启动服务 ────────────────────────────────────
 start_services() {
+  check_ports
   echo ""
   echo -e "${CYAN}▶ 本地 Maven 打包 (跳过 Docker 内下载依赖)...${NC}"
 

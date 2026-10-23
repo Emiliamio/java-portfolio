@@ -34,19 +34,22 @@ spring:
       port: ${REDIS_PORT:6379}
       timeout: 3000ms
 
-  # MyBatis 配置
-  mybatis:
-    mapper-locations: classpath:mapper/*.xml
-    type-aliases-package: com.logaudit.entity
-    configuration:
-      map-underscore-to-camel-case: true
-      log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
-
-  # Flyway 数据库版本化增量迁移引擎
+  # Flyway 数据库版本化增量迁移引擎（必须位于 spring 下；缩进错位会导致其默认启用，
+  # 在已有表但无 flyway_schema_history 的库上直接启动失败）
   flyway:
     enabled: ${FLYWAY_ENABLED:false}
     baseline-on-migrate: true
+    baseline-version: 0
     locations: classpath:db/migration
+
+# MyBatis 配置（根级；缩进进 spring 会导致 mapper-locations 不生效，
+# 启动时表现为 Invalid bound statement (not found)）
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.logaudit.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
 
 # 线程池配置
 app:

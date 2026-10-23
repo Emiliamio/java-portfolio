@@ -61,6 +61,7 @@ public class LlmService {
         return thread;
     });
 
+    @org.springframework.beans.factory.annotation.Autowired
     public LlmService(
             AiAnalysisMapper analysisMapper,
             com.logai.security.PiiSanitizer piiSanitizer,
