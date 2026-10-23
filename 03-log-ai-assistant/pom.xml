@@ -8,7 +8,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.0</version>
+        <version>3.5.7</version>
     </parent>
 
     <groupId>com.logai</groupId>
@@ -19,7 +19,7 @@
     <description>日志智能分析助手 — LLM 驱动的日志安全分析</description>
 
     <properties>
-        <java.version>17</java.version>
+                <java.version>17</java.version>
     </properties>
 
     <dependencies>

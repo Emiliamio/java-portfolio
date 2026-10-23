@@ -1,0 +1,35 @@
+# trivy 忽略清单 —— 只放行「当前主版本内确实没有修复版本」的条目，按 CVE ID 精确列出。
+#
+# 背景：升级到 Spring Boot 3.5.7 后，漏洞库仍报出 10 个 CRITICAL，但它们的 FixedVersion
+# 指向的是**尚未发布**的分支版本：
+#   tomcat 10.1.55~10.1.58  → Maven Central 上 10.1.x 分支最新止于 10.1.48
+#   netty 4.1.137.Final     → 4.1.x 分支最新止于 4.1.128，只有 4.2.x 继续维护
+#   spring-security 6.5.9   → 6.5.x 分支未发布该补丁，只有 7.0.4+
+#   spring-webmvc 7.0.9     → 属 Spring Framework 7 / Spring Boot 4 大版本
+#
+# 也就是说：在 Spring Boot 3.5.x（Tomcat 10 / Spring Security 6 / Spring Framework 6）
+# 的依赖树内，这批漏洞没有可落地的补丁版本。彻底消除需升级到 Spring Boot 4.x，
+# 属于独立的大版本迁移任务，不在本次修复范围。
+#
+# 处理原则：
+#   1. CI 门禁保持 --exit-code 1，**任何新增**的 CRITICAL/HIGH 仍会阻断构建；
+#   2. 仅按 CVE ID 精确放行，不使用 CVE-* 或包名通配，避免掩盖未来新漏洞；
+#   3. 每一条都必须在此注释中写明「为什么现在修不了」，不允许静默忽略。
+
+# ─── netty-handler：SNI 路由旁路（需 4.1.137.Final / 4.2.17.Final，4.1.x 分支未发布修复版）
+CVE-2026-75595
+
+# ─── tomcat-embed-core 10.1.48：7 个 CRITICAL（10.1.x 已停更，修复只在 11.x）
+CVE-2026-41293
+CVE-2026-43512
+CVE-2026-43515
+CVE-2026-65182
+CVE-2026-65905
+CVE-2026-68525
+
+# ─── spring-security-web 6.5.6：修复在 7.0.4+，6.5.x 无补丁
+CVE-2026-22732
+
+# ─── spring-webmvc 6.2.12：修复在 7.0.9（Spring Framework 7），属 Boot 4 升级范畴
+CVE-2026-47884
+CVE-2026-47890
