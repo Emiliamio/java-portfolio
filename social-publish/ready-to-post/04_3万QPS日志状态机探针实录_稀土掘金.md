@@ -133,7 +133,7 @@ python -m log_parser.cli -i sample_logs/access.csv -o ./output --excel --html --
 * **实测结果**：
   * **解析总耗时**：**1.457 秒**
   * **吞吐速率 (Throughput)**：**34,317 行/秒 (QPS)**
-  * **单测覆盖**：全套 62 项 pytest 单元与集成测试 100% 绿灯通过。
+  * **单测覆盖**：全套 63 项 pytest 单元与集成测试通过。
 
 ---
 

@@ -142,7 +142,7 @@ public class MdcTaskDecorator implements TaskDecorator {
 
 ## 📈 七、总结与落地成效
 
-通过将 **密码学 Merkle Tree 默克尔树根哈希防伪存证 (`MerkleAuditTreeService`)**、**时序动态基线与 3-Sigma 离群异常检测探针 (`DynamicBaselineAnomalyDetector`)**、**区块链式防篡改哈希审计链 (`AuditLogTamperProofChain`)**、**IP 地理空间情报富化引擎 (`GeoIpEnrichmentService`)**、**Prometheus 黄金四指标生产级深度度量 (`PrometheusMetricsService`)**、**SOAR 自动化自愈处置与防篡改回执 (`SoarAutoRemediationExecutor`)**、**金融合规入库级 PII 实时脱敏装甲 (`PiiDataMasker`)**、**ClickHouse 小时级物化预聚合时序直方图**、**多通道告警分发与 5 分钟防风暴收敛中心 (`AlertDispatcherService`)**、**冷热分层数据生命周期治理 (`DataLifecycleService`)**、**异步非阻塞摄取**、**Caffeine 50ns L1 堆缓存 + Redis L2 双级近源缓存**、**Resilience4j 动态滑动窗口熔断器与本地 WAL 降级缓冲**、**SXSSFWorkbook 内存防爆流式导出**、**分布式 MDC TraceId 链路追踪**、**MyBatis 慢 SQL 拦截**、**WebSocket 实时威胁推流** 与 **Redis HyperLogLog 独立基数统计** 深度结合，AuditVault 在低资源占用下稳定支撑了海量日志查询与可视化审计需求，全套 **72 项自动化单元与集成测试 100% 绿灯通过**，为后续演进至分布式流式架构奠定了坚实基础。
+通过将 **密码学 Merkle Tree 默克尔树根哈希防伪存证 (`MerkleAuditTreeService`)**、**时序动态基线与 3-Sigma 离群异常检测探针 (`DynamicBaselineAnomalyDetector`)**、**区块链式防篡改哈希审计链 (`AuditLogTamperProofChain`)**、**IP 地理空间情报富化引擎 (`GeoIpEnrichmentService`)**、**Prometheus 黄金四指标生产级深度度量 (`PrometheusMetricsService`)**、**SOAR 自动化自愈处置与防篡改回执 (`SoarAutoRemediationExecutor`)**、**金融合规入库级 PII 实时脱敏装甲 (`PiiDataMasker`)**、**ClickHouse 小时级物化预聚合时序直方图**、**多通道告警分发与 5 分钟防风暴收敛中心 (`AlertDispatcherService`)**、**冷热分层数据生命周期治理 (`DataLifecycleService`)**、**异步非阻塞摄取**、**Caffeine 50ns L1 堆缓存 + Redis L2 双级近源缓存**、**Resilience4j 动态滑动窗口熔断器与本地 WAL 降级缓冲**、**SXSSFWorkbook 内存防爆流式导出**、**分布式 MDC TraceId 链路追踪**、**MyBatis 慢 SQL 拦截**、**WebSocket 实时威胁推流** 与 **Redis HyperLogLog 独立基数统计** 深度结合，AuditVault 在低资源占用下稳定支撑了海量日志查询与可视化审计需求，全套 **100 项自动化单元与集成测试通过**，为后续演进至分布式流式架构奠定了坚实基础。
 
 ---
 
