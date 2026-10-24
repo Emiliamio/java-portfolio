@@ -105,7 +105,7 @@ cd ../03-log-ai-assistant && mvn test
 # 4. 验证 Sample Order 示例服务与 TypeScript SDK (5 项测试通过)
 cd ../04-sample-order-service && mvn test
 cd ../sdk/typescript && npm test
-# 作品集模块总计 198 项自动化测试 100% 绿灯通过 (全生态包含 AgentForge 共 244 项通过)
+# 作品集模块总计 198 项自动化测试通过 (全生态包含 AgentForge 共 244 项)
 ```
 
 ---

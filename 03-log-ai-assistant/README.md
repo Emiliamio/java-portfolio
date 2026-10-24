@@ -36,7 +36,7 @@
 - **模型路由**：云端 API (DeepSeek/OpenAI) + 本地私有化 Ollama + 离线规则引擎三级容灾
 - **流式通信**：JDK 原生 `HttpClient` + SSE (Server-Sent Events) 打字机流式长连接
 - **认证与权限**：Spring Security RBAC + JWT 跨站安全认证
-- **单元测试**：JUnit 5 (26/26 自动化测试用例 100% 绿灯通过)
+- **单元测试**：JUnit 5 (26/26 自动化测试用例通过)
 
 ---
 
